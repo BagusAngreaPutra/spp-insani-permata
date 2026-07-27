@@ -50,19 +50,19 @@
                         <summary><i class="fas fa-building-columns"></i><span>Data sekolah</span><i class="fas fa-chevron-down"></i></summary>
                         <div>
                             @if($adminUser->hasPermission('sekolah.manage'))
-                                <a href="{{ route('sekolah.index') }}" class="{{ request()->routeIs('sekolah.*') ? 'is-active' : '' }}">Sekolah</a>
+                                <a href="{{ route('sekolah.index') }}" class="{{ request()->routeIs('sekolah.*') ? 'is-active' : '' }}"><i class="fas fa-school"></i><span>Sekolah</span></a>
                             @endif
                             @if($adminUser->hasPermission('tahun_ajaran.manage'))
-                                <a href="{{ route('tahun_ajaran.index') }}" class="{{ request()->routeIs('tahun_ajaran.*') ? 'is-active' : '' }}">Tahun ajaran</a>
+                                <a href="{{ route('tahun_ajaran.index') }}" class="{{ request()->routeIs('tahun_ajaran.*') ? 'is-active' : '' }}"><i class="fas fa-calendar-days"></i><span>Tahun ajaran</span></a>
                             @endif
                             @if($adminUser->hasPermission('kelas.manage'))
-                                <a href="{{ route('kelas.index') }}" class="{{ request()->routeIs('kelas.*') ? 'is-active' : '' }}">Kelas</a>
+                                <a href="{{ route('kelas.index') }}" class="{{ request()->routeIs('kelas.*') ? 'is-active' : '' }}"><i class="fas fa-chalkboard"></i><span>Kelas</span></a>
                             @endif
                             @if($adminUser->hasPermission('siswa.manage'))
-                                <a href="{{ route('siswa.index') }}" class="{{ request()->routeIs('siswa.*') ? 'is-active' : '' }}">Siswa</a>
+                                <a href="{{ route('siswa.index') }}" class="{{ request()->routeIs('siswa.*') ? 'is-active' : '' }}"><i class="fas fa-user-graduate"></i><span>Siswa</span></a>
                             @endif
                             @if($adminUser->hasPermission('admin.manage'))
-                                <a href="{{ route('admin.index') }}" class="{{ request()->routeIs('admin.*') ? 'is-active' : '' }}">Guru & admin</a>
+                                <a href="{{ route('admin.index') }}" class="{{ request()->routeIs('admin.*') ? 'is-active' : '' }}"><i class="fas fa-user-tie"></i><span>Guru & admin</span></a>
                             @endif
                         </div>
                     </details>
@@ -73,16 +73,16 @@
                         <summary><i class="fas fa-arrow-right-arrow-left"></i><span>Transaksi</span><i class="fas fa-chevron-down"></i></summary>
                         <div>
                             @if($adminUser->hasPermission('jenis_pembayaran.manage'))
-                                <a href="{{ route('jenis_pembayaran.index') }}" class="{{ request()->routeIs('jenis_pembayaran.*') ? 'is-active' : '' }}">Jenis pembayaran</a>
+                                <a href="{{ route('jenis_pembayaran.index') }}" class="{{ request()->routeIs('jenis_pembayaran.*') ? 'is-active' : '' }}"><i class="fas fa-tags"></i><span>Jenis pembayaran</span></a>
                             @endif
                             @if($adminUser->hasAnyPermission(['koperasi.barang.manage', 'koperasi.stok.manage']))
-                                <a href="{{ route('koperasi.index') }}" class="{{ request()->routeIs('koperasi.index', 'koperasi.create', 'koperasi.edit', 'koperasi.stok.*') ? 'is-active' : '' }}">Barang koperasi</a>
+                                <a href="{{ route('koperasi.index') }}" class="{{ request()->routeIs('koperasi.index', 'koperasi.create', 'koperasi.edit', 'koperasi.stok.*') ? 'is-active' : '' }}"><i class="fas fa-box"></i><span>Barang koperasi</span></a>
                             @endif
                             @if($adminUser->hasPermission('koperasi.penjualan.manage'))
-                                <a href="{{ route('koperasi.penjualan.index') }}" class="{{ request()->routeIs('koperasi.penjualan.*') ? 'is-active' : '' }}">Penjualan koperasi</a>
+                                <a href="{{ route('koperasi.penjualan.index') }}" class="{{ request()->routeIs('koperasi.penjualan.*') ? 'is-active' : '' }}"><i class="fas fa-cart-shopping"></i><span>Penjualan koperasi</span></a>
                             @endif
                             @if($adminUser->hasPermission('riwayat.view'))
-                                <a href="{{ route('riwayat.index') }}" class="{{ request()->routeIs('riwayat.*') ? 'is-active' : '' }}">Riwayat pembayaran</a>
+                                <a href="{{ route('riwayat.index') }}" class="{{ request()->routeIs('riwayat.*') ? 'is-active' : '' }}"><i class="fas fa-clock-rotate-left"></i><span>Riwayat pembayaran</span></a>
                             @endif
                         </div>
                     </details>
@@ -93,13 +93,13 @@
                         <summary><i class="fas fa-chart-line"></i><span>Keuangan</span><i class="fas fa-chevron-down"></i></summary>
                         <div>
                             @if($adminUser->hasPermission('pemasukan.manage'))
-                                <a href="{{ route('pemasukan.index') }}" class="{{ request()->routeIs('pemasukan.*') ? 'is-active' : '' }}">Pemasukan</a>
+                                <a href="{{ route('pemasukan.index') }}" class="{{ request()->routeIs('pemasukan.*') ? 'is-active' : '' }}"><i class="fas fa-arrow-trend-up"></i><span>Pemasukan</span></a>
                             @endif
                             @if($adminUser->hasPermission('pengeluaran.manage'))
-                                <a href="{{ route('pengeluaran.index') }}" class="{{ request()->routeIs('pengeluaran.*') ? 'is-active' : '' }}">Pengeluaran</a>
+                                <a href="{{ route('pengeluaran.index') }}" class="{{ request()->routeIs('pengeluaran.*') ? 'is-active' : '' }}"><i class="fas fa-arrow-trend-down"></i><span>Pengeluaran</span></a>
                             @endif
                             @if($adminUser->hasPermission('keuangan_kas.view'))
-                                <a href="{{ route('keuangan.kas.index') }}" class="{{ request()->routeIs('keuangan.kas.*') ? 'is-active' : '' }}">Saldo kas</a>
+                                <a href="{{ route('keuangan.kas.index') }}" class="{{ request()->routeIs('keuangan.kas.*') ? 'is-active' : '' }}"><i class="fas fa-wallet"></i><span>Saldo kas</span></a>
                             @endif
                         </div>
                     </details>
@@ -110,10 +110,10 @@
                         <summary><i class="fas fa-graduation-cap"></i><span>Akademik</span><i class="fas fa-chevron-down"></i></summary>
                         <div>
                             @if($adminUser->hasPermission('kenaikan.manage'))
-                                <a href="{{ route('kenaikan.index') }}" class="{{ request()->routeIs('kenaikan.*') ? 'is-active' : '' }}">Kenaikan kelas</a>
+                                <a href="{{ route('kenaikan.index') }}" class="{{ request()->routeIs('kenaikan.*') ? 'is-active' : '' }}"><i class="fas fa-arrow-up-right-dots"></i><span>Kenaikan kelas</span></a>
                             @endif
                             @if($adminUser->hasPermission('kelulusan.manage'))
-                                <a href="{{ route('kelulusan.index') }}" class="{{ request()->routeIs('kelulusan.*') ? 'is-active' : '' }}">Kelulusan</a>
+                                <a href="{{ route('kelulusan.index') }}" class="{{ request()->routeIs('kelulusan.*') ? 'is-active' : '' }}"><i class="fas fa-medal"></i><span>Kelulusan</span></a>
                             @endif
                         </div>
                     </details>
@@ -131,30 +131,30 @@
                             <details class="app-nav-subgroup" {{ request()->routeIs('laporan.pembayaran*', 'laporan.pemasukan*', 'laporan.pengeluaran*', 'laporan.koperasi*') ? 'open' : '' }}>
                                 <summary><span>Keuangan</span><i class="fas fa-chevron-down"></i></summary>
                                 <div>
-                                    <a href="{{ route('laporan.pembayaran') }}" class="{{ request()->routeIs('laporan.pembayaran*') ? 'is-active' : '' }}">Pembayaran</a>
-                                    <a href="{{ route('laporan.pemasukan') }}" class="{{ request()->routeIs('laporan.pemasukan*') ? 'is-active' : '' }}">Pemasukan</a>
-                                    <a href="{{ route('laporan.pengeluaran') }}" class="{{ request()->routeIs('laporan.pengeluaran*') ? 'is-active' : '' }}">Pengeluaran</a>
-                                    <a href="{{ route('laporan.koperasi') }}" class="{{ request()->routeIs('laporan.koperasi*') ? 'is-active' : '' }}">Koperasi</a>
+                                    <a href="{{ route('laporan.pembayaran') }}" class="{{ request()->routeIs('laporan.pembayaran*') ? 'is-active' : '' }}"><i class="fas fa-file-invoice-dollar"></i><span>Pembayaran</span></a>
+                                    <a href="{{ route('laporan.pemasukan') }}" class="{{ request()->routeIs('laporan.pemasukan*') ? 'is-active' : '' }}"><i class="fas fa-arrow-trend-up"></i><span>Pemasukan</span></a>
+                                    <a href="{{ route('laporan.pengeluaran') }}" class="{{ request()->routeIs('laporan.pengeluaran*') ? 'is-active' : '' }}"><i class="fas fa-arrow-trend-down"></i><span>Pengeluaran</span></a>
+                                    <a href="{{ route('laporan.koperasi') }}" class="{{ request()->routeIs('laporan.koperasi*') ? 'is-active' : '' }}"><i class="fas fa-store"></i><span>Koperasi</span></a>
                                 </div>
                             </details>
 
                             <details class="app-nav-subgroup" {{ request()->routeIs('laporan.siswa*', 'laporan.kelas*', 'laporan.sekolah*', 'laporan.tahun_ajaran*') ? 'open' : '' }}>
                                 <summary><span>Data sekolah</span><i class="fas fa-chevron-down"></i></summary>
                                 <div>
-                                    <a href="{{ route('laporan.siswa') }}" class="{{ request()->routeIs('laporan.siswa*') ? 'is-active' : '' }}">Siswa</a>
-                                    <a href="{{ route('laporan.kelas') }}" class="{{ request()->routeIs('laporan.kelas*') ? 'is-active' : '' }}">Kelas</a>
-                                    <a href="{{ route('laporan.sekolah') }}" class="{{ request()->routeIs('laporan.sekolah*') ? 'is-active' : '' }}">Sekolah</a>
-                                    <a href="{{ route('laporan.tahun_ajaran') }}" class="{{ request()->routeIs('laporan.tahun_ajaran*') ? 'is-active' : '' }}">Tahun ajaran</a>
+                                    <a href="{{ route('laporan.siswa') }}" class="{{ request()->routeIs('laporan.siswa*') ? 'is-active' : '' }}"><i class="fas fa-user-graduate"></i><span>Siswa</span></a>
+                                    <a href="{{ route('laporan.kelas') }}" class="{{ request()->routeIs('laporan.kelas*') ? 'is-active' : '' }}"><i class="fas fa-chalkboard"></i><span>Kelas</span></a>
+                                    <a href="{{ route('laporan.sekolah') }}" class="{{ request()->routeIs('laporan.sekolah*') ? 'is-active' : '' }}"><i class="fas fa-school"></i><span>Sekolah</span></a>
+                                    <a href="{{ route('laporan.tahun_ajaran') }}" class="{{ request()->routeIs('laporan.tahun_ajaran*') ? 'is-active' : '' }}"><i class="fas fa-calendar-days"></i><span>Tahun ajaran</span></a>
                                 </div>
                             </details>
 
                             <details class="app-nav-subgroup" {{ request()->routeIs('laporan.jenis_pembayaran*', 'laporan.kenaikan*', 'laporan.kelulusan*', 'laporan.admin*') ? 'open' : '' }}>
                                 <summary><span>Akademik & sistem</span><i class="fas fa-chevron-down"></i></summary>
                                 <div>
-                                    <a href="{{ route('laporan.jenis_pembayaran') }}" class="{{ request()->routeIs('laporan.jenis_pembayaran*') ? 'is-active' : '' }}">Jenis pembayaran</a>
-                                    <a href="{{ route('laporan.kenaikan') }}" class="{{ request()->routeIs('laporan.kenaikan*') ? 'is-active' : '' }}">Kenaikan kelas</a>
-                                    <a href="{{ route('laporan.kelulusan') }}" class="{{ request()->routeIs('laporan.kelulusan*') ? 'is-active' : '' }}">Kelulusan</a>
-                                    <a href="{{ route('laporan.admin') }}" class="{{ request()->routeIs('laporan.admin*') ? 'is-active' : '' }}">Guru & admin</a>
+                                    <a href="{{ route('laporan.jenis_pembayaran') }}" class="{{ request()->routeIs('laporan.jenis_pembayaran*') ? 'is-active' : '' }}"><i class="fas fa-tags"></i><span>Jenis pembayaran</span></a>
+                                    <a href="{{ route('laporan.kenaikan') }}" class="{{ request()->routeIs('laporan.kenaikan*') ? 'is-active' : '' }}"><i class="fas fa-arrow-up-right-dots"></i><span>Kenaikan kelas</span></a>
+                                    <a href="{{ route('laporan.kelulusan') }}" class="{{ request()->routeIs('laporan.kelulusan*') ? 'is-active' : '' }}"><i class="fas fa-medal"></i><span>Kelulusan</span></a>
+                                    <a href="{{ route('laporan.admin') }}" class="{{ request()->routeIs('laporan.admin*') ? 'is-active' : '' }}"><i class="fas fa-user-tie"></i><span>Guru & admin</span></a>
                                 </div>
                             </details>
                         </div>
@@ -171,16 +171,16 @@
                         <summary><i class="fas fa-sliders"></i><span>Pengaturan data</span><i class="fas fa-chevron-down"></i></summary>
                         <div>
                             @if($adminUser->hasPermission('log.view'))
-                                <a href="{{ route('log_aktivitas.index') }}" class="{{ request()->routeIs('log_aktivitas.*') ? 'is-active' : '' }}">Aktivitas</a>
+                                <a href="{{ route('log_aktivitas.index') }}" class="{{ request()->routeIs('log_aktivitas.*') ? 'is-active' : '' }}"><i class="fas fa-clock-rotate-left"></i><span>Aktivitas</span></a>
                             @endif
                             @if($adminUser->hasPermission('import_excel.manage'))
-                                <a href="{{ route('import.form') }}" class="{{ request()->routeIs('import.*') ? 'is-active' : '' }}">Import data</a>
+                                <a href="{{ route('import.form') }}" class="{{ request()->routeIs('import.*') ? 'is-active' : '' }}"><i class="fas fa-file-import"></i><span>Import data</span></a>
                             @endif
                             @if($adminUser->hasPermission('export_excel.manage'))
-                                <a href="{{ route('export_excel.index') }}" class="{{ request()->routeIs('export_excel.*') ? 'is-active' : '' }}">Export data</a>
+                                <a href="{{ route('export_excel.index') }}" class="{{ request()->routeIs('export_excel.*') ? 'is-active' : '' }}"><i class="fas fa-file-export"></i><span>Export data</span></a>
                             @endif
                             @if($adminUser->hasPermission('backup.manage'))
-                                <a href="{{ route('backup.index') }}" class="{{ request()->routeIs('backup.*') ? 'is-active' : '' }}">Backup</a>
+                                <a href="{{ route('backup.index') }}" class="{{ request()->routeIs('backup.*') ? 'is-active' : '' }}"><i class="fas fa-database"></i><span>Backup</span></a>
                             @endif
                         </div>
                     </details>

@@ -29,6 +29,8 @@ class UiSmokeTest extends TestCase
             ->assertSee('Ringkasan')
             ->assertSee('Cari menu')
             ->assertSee('Pusat laporan')
+            ->assertSee('fa-school', false)
+            ->assertSee('fa-file-import', false)
             ->assertSee('app-sidebar-footer', false);
     }
 

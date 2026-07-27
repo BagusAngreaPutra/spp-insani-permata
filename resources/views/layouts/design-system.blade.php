@@ -266,6 +266,10 @@
     }
 
     .app-nav-group > div a {
+        display: grid !important;
+        grid-template-columns: 14px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 7px !important;
         min-height: 28px !important;
         padding: 6px 8px !important;
         overflow: hidden !important;
@@ -278,10 +282,29 @@
         white-space: nowrap !important;
     }
 
+    .app-nav-group > div a > i {
+        width: 14px !important;
+        color: var(--pi-quiet) !important;
+        font-size: 9px !important;
+        text-align: center !important;
+    }
+
+    .app-nav-group > div a > span {
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
     .app-nav-group > div a:hover,
     .app-nav-group > div a.is-active {
         color: var(--pi-blue) !important;
         background: var(--pi-blue-soft) !important;
+    }
+
+    .app-nav-group > div a:hover > i,
+    .app-nav-group > div a.is-active > i {
+        color: var(--pi-blue) !important;
     }
 
     .app-report-group > .app-report-panel {
