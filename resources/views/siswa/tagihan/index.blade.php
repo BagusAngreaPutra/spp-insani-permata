@@ -1,0 +1,165 @@
+{{-- resources/views/siswa/tagihan/index.blade.php --}}
+@extends('layouts.app')
+@include('layouts.sidebar-siswa')
+
+@section('content')
+<style>
+    .main-content {
+        margin-left: 280px;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: calc(100% - 280px);
+    }
+
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0;
+            width: 100%;
+            position: relative;
+        }
+    }
+
+    .content-area {
+        padding: 3rem 2.5rem;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        padding: 2rem;
+        border-radius: 24px;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #166534, #14532d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .table-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        overflow-x: auto;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+
+    .modern-table th,
+    .modern-table td {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(220, 252, 231, 0.8);
+        text-align: left;
+    }
+
+    .modern-table th {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        font-weight: 700;
+        color: #166534;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .modern-table tbody tr:hover {
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .badge-lunas {
+        background-color: #bbf7d0;
+        color: #166534;
+        padding: 0.4rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-belum {
+        background-color: #fecaca;
+        color: #b91c1c;
+        padding: 0.4rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="main-content">
+    @include('layouts.header-siswa')
+
+    <div class="content-area">
+        <div class="page-header">
+            <h2 class="page-title">
+                <i class="fas fa-file-invoice-dollar"></i> Tagihan Saya
+            </h2>
+        </div>
+
+        <div class="table-container">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Jenis Tagihan</th>
+                        <th>Tipe</th>
+                        <th>Periode</th>
+                        <th>Jatuh Tempo</th>
+                        <th>Nominal</th>
+                        <th>Status</th>
+                        <th>Sisa Cicilan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($tagihanSaya as $index => $tagihan)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $tagihan->nama_tagihan_dinamis }}</td>
+                            <td>{{ ucfirst($tagihan->tipe) }}</td>
+                            <td>{{ $tagihan->periode ?? '-' }}</td>
+                            <td>{{ $tagihan->tanggal_jatuh_tempo?->format('d/m/Y') ?? '-' }}</td>
+                            <td>Rp {{ number_format($tagihan->nominal, 0, ',', '.') }}</td>
+                            <td>
+                                @if($tagihan->status === 'lunas')
+                                    <span class="badge-lunas">Lunas</span>
+                                @else
+                                    <span class="badge-belum">Belum Lunas</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($tagihan->tipe === 'bulanan')
+                                    {{ $tagihan->sisa_cicilan }} bulan
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-gray-500">
+                                Tidak ada tagihan.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endsection
