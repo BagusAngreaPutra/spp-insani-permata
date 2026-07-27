@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\TagihanController;
 use App\Models\Admin;
 use App\Models\Pembayaran;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -137,12 +139,43 @@ class UiSmokeTest extends TestCase
         $this->get(route('tagihan.index.original'))
             ->assertRedirect(route('tagihan.index.grouped'));
 
-        $this->get(route('tagihan.proses.siswa', $siswa->id))
+        $response = $this->get(route('tagihan.proses.siswa', $siswa->id));
+        $response
             ->assertOk()
             ->assertSee('Pilih tagihan')
             ->assertSee('Lanjut pembayaran')
             ->assertSee('Atur pembayaran')
-            ->assertSee('payment-summary-bar', false);
+            ->assertSee('payment-summary-bar', false)
+            ->assertSee('payment-summary-value', false)
+            ->assertSee('Tahun ajaran');
+
+        $monthlyGroup = collect($response->viewData('tagihanList'))
+            ->firstWhere('is_grouped', true);
+
+        if ($monthlyGroup) {
+            $displayedMonths = collect($monthlyGroup['bulan_tagihan'])
+                ->pluck('periode')
+                ->map(fn ($period) => (int) substr($period, 5, 2))
+                ->values();
+            $academicOrder = $displayedMonths
+                ->sortBy(fn ($month) => ($month + 5) % 12)
+                ->values();
+
+            $this->assertSame($academicOrder->all(), $displayedMonths->all());
+
+            $academicYears = collect($monthlyGroup['bulan_tagihan'])
+                ->pluck('periode')
+                ->map(function ($period) {
+                    $year = (int) substr($period, 0, 4);
+                    $month = (int) substr($period, 5, 2);
+
+                    return $month >= 7 ? $year : $year - 1;
+                })
+                ->unique()
+                ->values();
+
+            $this->assertSame([$monthlyGroup['academic_year_start']], $academicYears->all());
+        }
 
         $pembayaran = Pembayaran::query()->first();
         if ($pembayaran) {
@@ -167,6 +200,37 @@ class UiSmokeTest extends TestCase
                 ->assertSee('Kwitansi pembayaran')
                 ->assertSee($paymentGroup->count() . ' tagihan');
         }
+    }
+
+    public function test_generated_billing_period_uses_the_academic_year(): void
+    {
+        $student = new Siswa();
+        $student->setRelation('tahunAjaran', new TahunAjaran([
+            'nama_tahun' => '2025/2026',
+        ]));
+
+        $controller = app(TagihanController::class);
+        $method = new \ReflectionMethod($controller, 'getAcademicYearMonths');
+        $method->setAccessible(true);
+
+        $periods = collect($method->invoke($controller, $student))
+            ->map(fn ($period) => $period->format('Y-m'))
+            ->all();
+
+        $this->assertSame([
+            '2025-07',
+            '2025-08',
+            '2025-09',
+            '2025-10',
+            '2025-11',
+            '2025-12',
+            '2026-01',
+            '2026-02',
+            '2026-03',
+            '2026-04',
+            '2026-05',
+            '2026-06',
+        ], $periods);
     }
 
     public function test_primary_student_pages_render(): void

@@ -731,7 +731,17 @@
     }
 
     .payment-summary-copy {
-        gap: 22px;
+        gap: 0;
+    }
+
+    .payment-summary-item {
+        min-width: 104px;
+        padding-right: 18px;
+    }
+
+    .payment-summary-item + .payment-summary-item {
+        padding-left: 18px;
+        border-left: 1px solid #e4e7ec;
     }
 
     .payment-summary-item span,
@@ -751,6 +761,22 @@
         color: #101828;
         font-size: 11px;
         font-weight: 650;
+    }
+
+    .payment-summary-item .payment-summary-value {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        white-space: nowrap;
+    }
+
+    .payment-summary-item .payment-summary-value span {
+        display: inline;
+        margin: 0;
+        color: inherit;
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: none;
     }
 
     .payment-form-body {
@@ -1243,7 +1269,13 @@
         }
 
         .payment-summary-copy {
+            width: 100%;
             justify-content: space-between;
+        }
+
+        .payment-summary-item {
+            flex: 1 1 50%;
+            min-width: 0;
         }
 
         .payment-summary-bar .payment-button {
@@ -1386,7 +1418,10 @@
                         <div class="payment-summary-copy">
                             <div class="payment-summary-item">
                                 <span>Dipilih</span>
-                                <strong><span id="selectedBillCount">0</span> tagihan</strong>
+                                <strong class="payment-summary-value">
+                                    <span id="selectedBillCount">0</span>
+                                    <span>tagihan</span>
+                                </strong>
                             </div>
                             <div class="payment-summary-item">
                                 <span>Total sisa</span>
@@ -1425,7 +1460,10 @@
                                             <div class="payment-group-copy">
                                                 <strong>{{ $tagihan['nama_tagihan'] }}</strong>
                                                 <div class="payment-group-subline">
-                                                    <span>{{ count($tagihan['bulan_tagihan']) }} periode &middot; {{ ucfirst($tagihan['tipe']) }}</span>
+                                                    <span>
+                                                        {{ count($tagihan['bulan_tagihan']) }} periode
+                                                        &middot; Tahun ajaran {{ $tagihan['academic_year_label'] }}
+                                                    </span>
                                                     <span class="payment-row-kind is-expandable">
                                                         <i class="fas fa-table-list" aria-hidden="true"></i>
                                                         <span class="payment-kind-closed">Buka rincian</span>
