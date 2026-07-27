@@ -219,7 +219,7 @@
 
     <div class="content-area">
         <div class="form-container">
-            <h2><i class="fas fa-money-check-alt"></i> Tambah Jenis Pembayaran</h2>
+            <h2>Tambah jenis pembayaran</h2>
 
             @if ($errors->any())
                 <div class="alert-danger">

@@ -371,7 +371,7 @@
         <div class="page-header">
             <h2 class="page-title">
                 <i class="fas fa-file-invoice-dollar"></i> 
-                Manajemen Tagihan Siswa
+                Tagihan siswa
             </h2>
             <div>
                 <button type="button" class="btn-generate" data-bs-toggle="modal" data-bs-target="#generateModal">

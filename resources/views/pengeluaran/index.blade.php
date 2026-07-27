@@ -153,7 +153,7 @@
 
         <div class="page-header">
             <h2 class="page-title">
-                <i class="fas fa-file-invoice-dollar"></i> Daftar Pengeluaran
+                <i class="fas fa-file-invoice-dollar"></i> Pengeluaran
             </h2>
             <a href="{{ route('pengeluaran.create') }}" class="btn-primary">
                 + Tambah Pengeluaran

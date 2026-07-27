@@ -285,7 +285,7 @@
 
         <div class="page-header">
             <h2 class="page-title">
-                <i class="fas fa-money-check-alt"></i> Daftar Jenis Pembayaran
+                <i class="fas fa-money-check-alt"></i> Jenis pembayaran
             </h2>
             <a href="{{ route('jenis_pembayaran.create') }}" class="btn-primary">
                 + Tambah Jenis Pembayaran

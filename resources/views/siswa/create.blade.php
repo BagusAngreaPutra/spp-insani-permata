@@ -273,7 +273,7 @@
     <div class="content-area">
         {{-- Page Header --}}
         <div class="page-header">
-            <h1><i class="fas fa-user-plus"></i> Tambah Data Siswa Baru</h1>
+            <h1>Tambah siswa</h1>
         </div>
 
         {{-- Error Messages --}}
@@ -294,7 +294,7 @@
             <div class="cards-container">
                 {{-- Card 1: Data Sekolah & Kelas --}}
                 <div class="form-card">
-                    <h3><i class="fas fa-school"></i> Data Sekolah & Kelas</h3>
+                    <h3>Sekolah dan kelas</h3>
                     <div class="form-grid three-columns">
                         <!-- Sekolah -->
                         <div class="form-group">
@@ -383,7 +383,7 @@
                 
                 {{-- Card 2: Data Login --}}
                 <div class="form-card">
-                    <h3><i class="fas fa-key"></i> Data Login</h3>
+                    <h3>Akun siswa</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Username</label>
@@ -393,25 +393,23 @@
 
                         <div class="form-group">
                             <label class="form-label">
-                                Password
-                                <small class="text-muted">(wajib diisi untuk akun baru)</small>
+                                Password *
                             </label>
                             <div class="input-group" style="display:flex; gap:8px;">
                                 <input type="text" name="password" id="password-field"
                                     class="form-control"
                                     placeholder="••••••••" required>
                                 <button type="button" class="btn btn-success" id="generate-password">
-                                    <i class="fas fa-random"></i> Generate
+                                    <i class="fas fa-random"></i> Buat acak
                                 </button>
                             </div>
-                            <small class="text-muted">Klik tombol untuk buat password acak</small>
                         </div>
                     </div>
                 </div>
 
                 {{-- Card 3: Data Utama Siswa --}}
                 <div class="form-card full-width-card">
-                    <h3><i class="fas fa-user"></i> Data Utama Siswa</h3>
+                    <h3>Data utama</h3>
                     <div class="form-grid two-columns">
                         <div class="form-group">
                             <label class="form-label">NIS *</label>
@@ -446,7 +444,7 @@
 
                 {{-- Card 4: Data Pribadi Tambahan --}}
                 <div class="form-card">
-                    <h3><i class="fas fa-id-card"></i> Data Pribadi Tambahan</h3>
+                    <h3>Data tambahan</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Agama</label>
@@ -467,7 +465,7 @@
 
                 {{-- Card 5: Data Ayah --}}
                 <div class="form-card">
-                    <h3><i class="fas fa-male"></i> Data Ayah</h3>
+                    <h3>Data ayah</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Nama Ayah</label>
@@ -497,7 +495,7 @@
 
                 {{-- Card 6: Data Ibu --}}
                 <div class="form-card">
-                    <h3><i class="fas fa-female"></i> Data Ibu</h3>
+                    <h3>Data ibu</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Nama Ibu</label>
@@ -527,7 +525,7 @@
 
                 {{-- Card 7: Informasi Kontak --}}
                 <div class="form-card">
-                    <h3><i class="fas fa-phone"></i> Informasi Kontak</h3>
+                    <h3>Kontak</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">No. Telepon Rumah</label>
@@ -548,7 +546,7 @@
 
                 {{-- Card 8: Pengaturan SPP --}}
                 <div class="form-card">
-                    <h3><i class="fas fa-money-bill-wave"></i> Pengaturan SPP</h3>
+                    <h3>Nominal SPP</h3>
 
                     <div id="validation-alert" class="alert-warning">
                         <i class="fas fa-exclamation-triangle"></i>

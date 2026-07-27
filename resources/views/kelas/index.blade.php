@@ -266,7 +266,7 @@
 
         <div class="page-header">
             <h2 class="page-title">
-                <i class="fas fa-chalkboard"></i> Daftar Kelas
+                <i class="fas fa-chalkboard"></i> Kelas
             </h2>
             <a href="{{ route('kelas.create') }}" class="btn-primary">
                 + Tambah Kelas

@@ -510,7 +510,7 @@
 
         <div class="page-header no-print">
             <h2 class="page-title">
-                <i class="fas fa-wallet"></i> Laporan Data Pengeluaran
+                <i class="fas fa-wallet"></i> Laporan pengeluaran
             </h2>
             <div>
                 <button onclick="window.print()" class="btn-primary">
@@ -598,3 +598,6 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+@endsection

@@ -288,7 +288,7 @@
         <div class="page-header">
             <h1 class="page-title">
                 <i class="fas fa-users"></i>
-                Laporan Data Siswa
+                Laporan siswa
             </h1>
             <div class="header-actions">
                 <a href="#" class="btn-primary print-btn" onclick="window.print()">
@@ -431,3 +431,6 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+@endsection

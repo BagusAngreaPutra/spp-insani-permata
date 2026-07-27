@@ -138,21 +138,20 @@
 
         <div class="page-header">
             <h2 class="page-title">
-                🎓 Siswa Siap Lulus
+                Kelulusan siswa
             </h2>
             <a href="{{ route('siswa.index') }}" class="btn-secondary">
-                📋 Lihat Data Siswa
+                Lihat data siswa
             </a>
         </div>
 
         {{-- FILTER FORM --}}
-        <div class="table-container mb-6">
-            <form method="GET" action="{{ route('kelulusan.index') }}" class="flex flex-wrap gap-4 p-6 bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-md">
+        <form method="GET" action="{{ route('kelulusan.index') }}" class="filter-form graduation-filter">
 
                 {{-- Sekolah --}}
-                <div class="flex flex-col">
-                    <label for="sekolah_id" class="text-sm font-semibold text-green-700 mb-1">Sekolah</label>
-                    <select name="sekolah_id" id="sekolah_id" onchange="this.form.submit()" class="rounded-xl px-4 py-2 border border-green-200 focus:ring focus:ring-green-400">
+                <div class="form-group">
+                    <label for="sekolah_id">Sekolah</label>
+                    <select name="sekolah_id" id="sekolah_id" onchange="this.form.submit()">
                         <option value="">-- Pilih Sekolah --</option>
                         @foreach ($sekolah as $s)
                             <option value="{{ $s->id }}" {{ $selectedSekolah == $s->id ? 'selected' : '' }}>{{ $s->nama_sekolah }}</option>
@@ -161,9 +160,9 @@
                 </div>
 
                 {{-- Kelas --}}
-                <div class="flex flex-col">
-                    <label for="kelas_id" class="text-sm font-semibold text-green-700 mb-1">Kelas</label>
-                    <select name="kelas_id" id="kelas_id" onchange="this.form.submit()" class="rounded-xl px-4 py-2 border border-green-200 focus:ring focus:ring-green-400">
+                <div class="form-group">
+                    <label for="kelas_id">Kelas</label>
+                    <select name="kelas_id" id="kelas_id" onchange="this.form.submit()">
                         <option value="">-- Pilih Kelas --</option>
                         @foreach ($kelas as $k)
                             <option value="{{ $k->id }}" {{ $selectedKelas == $k->id ? 'selected' : '' }}>Tingkat {{ $k->tingkat }} {{ $k->nama_kelas }}</option>
@@ -172,9 +171,9 @@
                 </div>
 
                 {{-- Tahun Ajaran --}}
-                <div class="flex flex-col">
-                    <label for="tahun_ajaran_id" class="text-sm font-semibold text-green-700 mb-1">Tahun Ajaran</label>
-                    <select name="tahun_ajaran_id" id="tahun_ajaran_id" onchange="this.form.submit()" class="rounded-xl px-4 py-2 border border-green-200 focus:ring focus:ring-green-400">
+                <div class="form-group">
+                    <label for="tahun_ajaran_id">Tahun ajaran</label>
+                    <select name="tahun_ajaran_id" id="tahun_ajaran_id" onchange="this.form.submit()">
                         <option value="">-- Pilih Tahun Ajaran --</option>
                         @foreach ($tahunAjaran as $ta)
                             <option value="{{ $ta->id }}" {{ $selectedTahunAjaran == $ta->id ? 'selected' : '' }}>
@@ -185,22 +184,20 @@
                 </div>
 
                 {{-- Pencarian --}}
-                <div class="flex flex-col flex-grow">
-                    <label for="search" class="text-sm font-semibold text-green-700 mb-1">Cari Nama / NIS</label>
+                <div class="form-group">
+                    <label for="search">Cari nama / NIS</label>
                     <input type="text" name="search" id="search" value="{{ $search }}" placeholder="Ketik nama atau NIS" onkeydown="if(event.key === 'Enter'){ this.form.submit(); }"
-                        class="rounded-xl px-4 py-2 border border-green-200 focus:ring focus:ring-green-400 w-full">
+                        >
                 </div>
 
                 {{-- Tombol --}}
-                <div class="flex flex-col justify-end">
-                    <label class="text-sm font-semibold text-transparent mb-1">Tombol</label>
-                    <button type="submit" class="btn-primary">🔍 Filter</button>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-primary">Filter</button>
                 </div>
-            </form>
-        </div>
+        </form>
 
 
-        <div class="form-container" style="padding:0; box-shadow:none; background:none;">
+        <div class="table-container">
             <table>
                 <thead>
                     <tr>
@@ -224,9 +221,9 @@
                             </td>
                             <td>
                                 @if($siswa->status === 'lulus')
-                                    ✅ Lulus
+                                    <span class="badge badge-success">Lulus</span>
                                 @else
-                                    🔄 Belum Lulus
+                                    <span class="badge badge-info">Belum lulus</span>
                                 @endif
                             </td>
                             <td>
@@ -236,7 +233,7 @@
                                         <button type="submit" class="btn-primary">Luluskan</button>
                                     </form>
                                 @else
-                                    <span style="color:green;font-weight:600;">✔ Sudah Lulus</span>
+                                    <span class="badge badge-success">Sudah lulus</span>
                                 @endif
                             </td>
                         </tr>

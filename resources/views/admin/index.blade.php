@@ -623,7 +623,7 @@ body {
             <div class="page-header">
                 <h2 class="page-title">
                     <i class="fas fa-users-cog"></i>
-                    Manajemen Admin
+                    Guru & admin
                 </h2>
                 <a href="{{ route('admin.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i>

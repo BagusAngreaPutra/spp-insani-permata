@@ -120,7 +120,7 @@
 
     <div class="content-area">
         <div class="form-container">
-            <h2><i class="fas fa-money-bill-wave"></i> Tambah Pemasukan</h2>
+            <h2>Tambah pemasukan</h2>
 
             @if ($errors->any())
                 <div class="alert-danger">

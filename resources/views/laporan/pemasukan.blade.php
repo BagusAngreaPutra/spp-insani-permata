@@ -296,7 +296,7 @@
 
         <div class="page-header no-print">
             <h2 class="page-title">
-                <i class="fas fa-money-bill-wave"></i> Laporan Data Pemasukan
+                <i class="fas fa-money-bill-wave"></i> Laporan pemasukan
             </h2>
             <div>
                 <button onclick="window.print()" class="btn-primary">

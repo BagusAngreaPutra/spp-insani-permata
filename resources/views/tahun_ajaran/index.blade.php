@@ -161,7 +161,7 @@
 
         <div class="page-header">
             <h2 class="page-title">
-                <i class="fas fa-calendar-alt"></i> Daftar Tahun Ajaran
+                <i class="fas fa-calendar-alt"></i> Tahun ajaran
             </h2>
             <a href="{{ route('tahun_ajaran.create') }}" class="btn-primary">
                 + Tambah Tahun Ajaran

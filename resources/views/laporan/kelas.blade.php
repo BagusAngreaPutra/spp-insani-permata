@@ -504,7 +504,7 @@
         <div class="page-header no-print">
             <h2 class="page-title">
                 <i class="fas fa-chalkboard"></i>
-                Laporan Data Kelas
+                Laporan kelas
             </h2>
             <div>
                 <a href="javascript:window.print()" class="btn-primary">

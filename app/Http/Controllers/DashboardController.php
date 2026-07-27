@@ -15,6 +15,7 @@ use App\Models\TahunAjaran;
 use App\Models\KoperasiPenjualan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -36,6 +37,7 @@ class DashboardController extends Controller
         $tahun = $request->input('tahun');
 
         $sekolahList = Sekolah::all();
+        $hasKoperasiSales = Schema::hasTable('koperasi_penjualan');
         $data = [];
         $setupStats = [
             'sekolah' => Sekolah::count(),
@@ -58,7 +60,9 @@ class DashboardController extends Controller
 
             // ✅ Total dari tabel pemasukan (manual)
             $pemasukanQuery = Pemasukan::where('sekolah_id', $sekolah->id);
-            $koperasiQuery = KoperasiPenjualan::where('sekolah_id', $sekolah->id);
+            $koperasiQuery = $hasKoperasiSales
+                ? KoperasiPenjualan::where('sekolah_id', $sekolah->id)
+                : null;
 
             // ✅ Total pengeluaran dari tabel pengeluaran
             $pengeluaranQuery = Pengeluaran::where('sekolah_id', $sekolah->id);
@@ -67,7 +71,7 @@ class DashboardController extends Controller
             if ($tahun) {
                 $pembayaranQuery->whereYear('tanggal_bayar', $tahun);
                 $pemasukanQuery->whereYear('tanggal', $tahun);
-                $koperasiQuery->whereYear('tanggal', $tahun);
+                $koperasiQuery?->whereYear('tanggal', $tahun);
                 $pengeluaranQuery->whereYear('tanggal', $tahun);
             } elseif ($startDate && $endDate) {
                 // Filter berdasarkan rentang tanggal
@@ -76,13 +80,13 @@ class DashboardController extends Controller
                 
                 $pembayaranQuery->whereBetween('tanggal_bayar', [$start, $end]);
                 $pemasukanQuery->whereBetween('tanggal', [$start, $end]);
-                $koperasiQuery->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()]);
+                $koperasiQuery?->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()]);
                 $pengeluaranQuery->whereBetween('tanggal', [$start, $end]);
             }
 
             $totalPembayaranSiswa = $pembayaranQuery->sum('jumlah_bayar');
             $totalPemasukanManual = $pemasukanQuery->sum('jumlah');
-            $totalPenjualanKoperasi = $koperasiQuery->sum('total');
+            $totalPenjualanKoperasi = $koperasiQuery?->sum('total') ?? 0;
             $totalPengeluaran = $pengeluaranQuery->sum('jumlah');
 
             // ✅ Total pemasukan = dari pembayaran siswa + dari tabel pemasukan
@@ -92,6 +96,7 @@ class DashboardController extends Controller
             $saldoKas = $totalPemasukan - $totalPengeluaran;
 
             $data[] = [
+                'id'           => $sekolah->id,
                 'nama'         => $sekolah->nama_sekolah,
                 'jenjang'      => strtoupper($sekolah->jenjang),
                 'jumlah_siswa' => $jumlahSiswa,

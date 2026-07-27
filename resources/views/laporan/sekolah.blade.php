@@ -213,7 +213,7 @@
 
         <div class="page-header no-print">
             <h2 class="page-title">
-                <i class="fas fa-school"></i> Laporan Data Sekolah
+                <i class="fas fa-school"></i> Laporan sekolah
             </h2>
             <div>
                 <button onclick="window.print()" class="btn-primary">

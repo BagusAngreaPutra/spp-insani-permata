@@ -502,8 +502,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <div class="page-title">
-                <h2><i class="fas fa-plus-circle"></i> Tambah Sekolah Baru</h2>
-                <p>Tambahkan informasi sekolah baru ke dalam sistem</p>
+                <h2>Tambah sekolah</h2>
             </div>
             <div class="page-actions">
                 <a href="{{ route('sekolah.index') }}" class="btn btn-secondary">
@@ -515,8 +514,7 @@
         <!-- Form Card -->
         <div class="form-card">
             <div class="form-header">
-                <h3><i class="fas fa-school"></i> Informasi Sekolah</h3>
-                <p>Lengkapi semua field yang diperlukan dengan benar</p>
+                <h3>Informasi sekolah</h3>
             </div>
 
             <form action="{{ route('sekolah.store') }}" method="POST" class="school-form" id="schoolForm">
@@ -544,9 +542,6 @@
                                     <i class="fas fa-exclamation-triangle"></i> {{ $message }}
                                 </div>
                             @enderror
-                            <small class="form-text">
-                                <i class="fas fa-info-circle"></i> Contoh: SD Islam Terpadu Al-Hikmah
-                            </small>
                         </div>
 
                         <div class="form-group col-md-4">
@@ -567,10 +562,7 @@
                                     <i class="fas fa-exclamation-triangle"></i> {{ $message }}
                                 </div>
                             @enderror
-                            <small class="form-text">
-                                <i class="fas fa-info-circle"></i> 
-                                Format kwitansi: <code>000001/KODE_INI/2025</code>
-                            </small>
+                            <small class="form-text">Dipakai pada nomor kwitansi, maksimal 10 karakter.</small>
                         </div>
                     </div>
 
@@ -589,9 +581,6 @@
                                 <i class="fas fa-exclamation-triangle"></i> {{ $message }}
                             </div>
                         @enderror
-                        <small class="form-text">
-                            <i class="fas fa-info-circle"></i> Masukkan alamat selengkap mungkin
-                        </small>
                     </div>
                     <div class="form-group col-md-4">
                         <label for="durasi_pendidikan" class="form-label">
@@ -610,9 +599,6 @@
                                 <i class="fas fa-exclamation-triangle"></i> {{ $message }}
                             </div>
                         @enderror
-                        <small class="form-text">
-                            <i class="fas fa-info-circle"></i> Jumlah tahun untuk menyelesaikan pendidikan di sekolah ini
-                        </small>
                     </div>
                 </div>
 
@@ -637,9 +623,6 @@
                                     <i class="fas fa-exclamation-triangle"></i> {{ $message }}
                                 </div>
                             @enderror
-                            <small class="form-text">
-                                <i class="fas fa-info-circle"></i> Format: 021-12345678 atau 081234567890
-                            </small>
                         </div>
 
                         <div class="form-group col-md-6">
@@ -657,37 +640,6 @@
                                     <i class="fas fa-exclamation-triangle"></i> {{ $message }}
                                 </div>
                             @enderror
-                            <small class="form-text">
-                                <i class="fas fa-info-circle"></i> Email resmi sekolah
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Preview Card -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <h4><i class="fas fa-eye"></i> Preview</h4>
-                    </div>
-
-                    <div class="preview-card" id="previewCard">
-                        <div class="preview-header">
-                            <h5 id="preview-nama">-</h5>
-                            <span class="preview-kode badge badge-primary" id="preview-kode">-</span>
-                        </div>
-                        <div class="preview-content">
-                            <div class="preview-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span id="preview-alamat">-</span>
-                            </div>
-                            <div class="preview-item">
-                                <i class="fas fa-phone"></i>
-                                <span id="preview-telepon">-</span>
-                            </div>
-                            <div class="preview-item">
-                                <i class="fas fa-envelope"></i>
-                                <span id="preview-email">-</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -697,9 +649,6 @@
                     <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                         <i class="fas fa-save"></i> Simpan Sekolah
                     </button>
-                    <button type="reset" class="btn btn-secondary btn-lg" id="resetBtn">
-                        <i class="fas fa-undo"></i> Reset Form
-                    </button>
                     <a href="{{ route('sekolah.index') }}" class="btn btn-outline-secondary btn-lg">
                         <i class="fas fa-times"></i> Batal
                     </a>
@@ -707,28 +656,6 @@
             </form>
         </div>
 
-        <!-- Help Card -->
-        <div class="help-card">
-            <h4><i class="fas fa-question-circle"></i> Bantuan</h4>
-            <div class="help-content">
-                <div class="help-item">
-                    <strong>Kode Sekolah:</strong> Digunakan untuk format nomor kwitansi. 
-                    Maksimal 10 karakter, otomatis akan diubah menjadi uppercase (huruf kapital).
-                </div>
-                <div class="help-item">
-                    <strong>Format Kwitansi:</strong> <code>000001/KODE/2025</code> - 
-                    Nomor urut / Kode Sekolah / Tahun
-                </div>
-                <div class="help-item">
-                    <strong>Field Wajib:</strong> Nama sekolah, kode sekolah, dan alamat 
-                    wajib diisi untuk melanjutkan. Field lainnya bersifat opsional.
-                </div>
-                <div class="help-item">
-                    <strong>Preview:</strong> Lihat pratinjau data sekolah secara real-time 
-                    saat Anda mengetik di form di atas.
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -742,46 +669,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.getElementById('email');
     const form = document.getElementById('schoolForm');
     const submitBtn = document.getElementById('submitBtn');
-    const resetBtn = document.getElementById('resetBtn');
-
-    // Preview elements
-    const previewNama = document.getElementById('preview-nama');
-    const previewKode = document.getElementById('preview-kode');
-    const previewAlamat = document.getElementById('preview-alamat');
-    const previewTelepon = document.getElementById('preview-telepon');
-    const previewEmail = document.getElementById('preview-email');
-
-    // Real-time preview update
-    function updatePreview() {
-        previewNama.textContent = namaSekolahInput.value || '-';
-        previewKode.textContent = kodeSekolahInput.value || '-';
-        previewAlamat.textContent = alamatInput.value || '-';
-        previewTelepon.textContent = teleponInput.value || '-';
-        previewEmail.textContent = emailInput.value || '-';
-    }
-
     // Auto uppercase for kode sekolah
     kodeSekolahInput.addEventListener('input', function() {
         this.value = this.value.toUpperCase();
-        updatePreview();
     });
-
-    // Event listeners for preview
-    namaSekolahInput.addEventListener('input', updatePreview);
-    alamatInput.addEventListener('input', updatePreview);
-    teleponInput.addEventListener('input', updatePreview);
-    emailInput.addEventListener('input', updatePreview);
 
     // Form submission handling
     form.addEventListener('submit', function(e) {
         submitBtn.classList.add('loading');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-    });
-
-    // Reset form handling
-    resetBtn.addEventListener('click', function() {
-        setTimeout(updatePreview, 100); // Delay to ensure form is reset
     });
 
     // Form validation
@@ -837,9 +734,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-focus on first input
     namaSekolahInput.focus();
 
-    // Initialize preview
-    updatePreview();
-
     // Prevent form submission if validation fails
     form.addEventListener('submit', function(e) {
         if (!validateForm()) {
@@ -855,27 +749,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    });
-
-    // Success animation for preview
-    function animatePreview() {
-        const previewCard = document.getElementById('previewCard');
-        previewCard.style.transform = 'scale(1.02)';
-        previewCard.style.borderColor = 'var(--primary-color)';
-
-        setTimeout(() => {
-            previewCard.style.transform = 'scale(1)';
-            previewCard.style.borderColor = 'var(--border-color)';
-        }, 200);
-    }
-
-    // Animate preview on significant changes
-    [namaSekolahInput, kodeSekolahInput].forEach(field => {
-        field.addEventListener('input', function() {
-            if (this.value.length > 3) {
-                animatePreview();
-            }
-        });
     });
 
     // Loading state timeout protection

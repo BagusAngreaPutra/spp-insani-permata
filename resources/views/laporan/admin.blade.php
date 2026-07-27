@@ -270,3 +270,6 @@ ak @extends('layouts.app')
                 </div>
             </div>
         </div>
+    </div>
+</div>
+@endsection

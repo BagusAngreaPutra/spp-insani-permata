@@ -608,7 +608,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <h2 class="page-title">
-                <i class="fas fa-school"></i> Manajemen Sekolah
+                <i class="fas fa-school"></i> Sekolah
             </h2>
             <a href="{{ route('sekolah.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Tambah Sekolah
@@ -668,15 +668,6 @@
                 <div class="stat-content">
                     <div class="stat-number">{{ $sekolahDenganKode }}</div>
                     <div class="stat-label">Dengan Kode</div>
-                </div>
-            </div>
-            <div class="stat-card stat-success">
-                <div class="stat-icon">
-                    <i class="fas fa-receipt"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ $sekolahDenganKode }}</div>
-                    <div class="stat-label">Siap Kwitansi</div>
                 </div>
             </div>
         </div>

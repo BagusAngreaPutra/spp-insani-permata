@@ -195,11 +195,11 @@
 
         <div class="page-header">
             <h2 class="page-title">
-                <i class="fas fa-upload"></i> Import Data Siswa
+                Import siswa
             </h2>
             {{-- ✅ Sesuaikan ke route('import.template') --}}
             <a href="{{ route('import.template') }}" class="btn-secondary">
-                <i class="fas fa-download"></i> Download Template
+                <i class="fas fa-download"></i> Unduh template
             </a>
         </div>
 
@@ -208,22 +208,33 @@
             <form action="{{ route('import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group">
-                    <label for="file_excel">Pilih File Excel (.xlsx / .xls)</label>
-                    <input type="file" name="file_excel" id="file_excel" required>
+                    <label for="file_excel">File Excel</label>
+                    <input type="file" name="file_excel" id="file_excel" accept=".xlsx,.xls" required>
                     @error('file_excel')
                         <div class="text-red-600 mt-1 text-sm">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <button type="submit" class="btn-primary">
-                    <i class="fas fa-file-import"></i> Import Sekarang
+                    <i class="fas fa-file-import"></i> Import data
                 </button>
             </form>
         </div>
 
-        <div class="info-box">
+        <div class="import-guide">
+            <h3>Sebelum mengimpor</h3>
+            <ol>
+                <li>Unduh template dan pertahankan nama kolomnya.</li>
+                <li>Isi ID sekolah, tahun ajaran, dan kelas sesuai referensi.</li>
+                <li>Pilih file lalu klik <strong>Import data</strong>.</li>
+            </ol>
+        </div>
+
+        <details class="info-box import-reference">
+            <summary>Referensi ID untuk template</summary>
+            <div class="import-reference-content">
             <div class="info-title">
-                <i class="fas fa-info-circle"></i> Informasi Referensi untuk Import
+                Daftar ID
             </div>
             <ul class="info-list">
                 <li>
@@ -252,12 +263,12 @@
                 </li>
             </ul>
             
-            <div class="info-title" style="margin-top: 1.5rem;">
+            <div class="info-title import-example" style="margin-top: 1.5rem;">
                 <i class="fas fa-table"></i> Contoh Pengisian yang Benar
             </div>
-            <p>Berikut adalah contoh pengisian data di file Excel:</p>
+            <p class="import-example">Berikut adalah contoh pengisian data di file Excel:</p>
             
-            <div class="example-container">
+            <div class="example-container import-example">
                 <div class="example-item">
                     <div class="example-header">Contoh Data Siswa 1</div>
                     <div class="example-details">
@@ -327,8 +338,9 @@
                 </div>
             </div>
             
-            <p style="margin-top: 1rem;"><small><i>* Kolom lainnya dapat diisi sesuai dengan template yang telah disediakan</i></small></p>
-        </div>
+            <p class="import-example" style="margin-top: 1rem;"><small><i>* Kolom lainnya dapat diisi sesuai dengan template yang telah disediakan</i></small></p>
+            </div>
+        </details>
     </div>
 </div>
 @endsection
