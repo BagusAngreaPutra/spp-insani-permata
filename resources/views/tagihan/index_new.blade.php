@@ -1,353 +1,812 @@
 @extends('layouts.app')
 @include('layouts.sidebar')
 
+@section('title', 'Tagihan Siswa')
+
 @section('content')
-<style>
-    .main-content {
-        margin-left: 280px;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: calc(100% - 280px);
-    }
-
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0;
-            width: 100%;
-            position: relative;
-            top: 0;
-            right: auto;
+@php
+    $adminUser = Auth::guard('web')->user();
+    $canGenerate = $adminUser?->hasPermission('tagihan.manage') ?? false;
+    $canPay = $adminUser?->hasPermission('pembayaran.process') ?? false;
+    $canViewHistory = $adminUser?->hasPermission('riwayat.view') ?? false;
+    $formatRupiah = static fn ($amount) => 'Rp' . number_format((float) $amount, 0, ',', '.');
+    $classLabel = static function ($kelas) {
+        if (!$kelas) {
+            return 'Belum ada kelas dipilih';
         }
+
+        $name = trim((string) $kelas->nama_kelas);
+        $suffix = in_array($name, ['', '-', '–'], true) ? '' : ' ' . $name;
+
+        return 'Kelas ' . $kelas->tingkat . $suffix;
+    };
+    $selectedContext = $selectedSekolah && $selectedKelas
+        ? $selectedSekolah->nama_sekolah . ' · ' . $classLabel($selectedKelas)
+        : 'Pilih sekolah dan kelas';
+@endphp
+
+<style>
+    .billing-page {
+        display: grid;
+        gap: 18px;
     }
 
-    .content-area { 
-        padding: 2rem 1.5rem; 
-    }
-
-    .page-header {
+    .billing-heading,
+    .billing-heading-actions,
+    .billing-panel-heading,
+    .billing-table-tools,
+    .billing-search,
+    .billing-status-filters,
+    .billing-student,
+    .billing-row-actions,
+    .billing-panel-footer {
         display: flex;
+        align-items: center;
+    }
+
+    .billing-heading {
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        padding: 2.5rem;
-        border-radius: 24px;
-        box-shadow: 0 20px 40px rgba(34, 197, 94, 0.1);
-        border: 2px solid rgba(34, 197, 94, 0.1);
+        gap: 24px;
     }
 
-    .page-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #14532d, #166534, #22c55e);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #22c55e, #16a34a, #15803d);
-        color: #fff;
-        padding: 0.75rem 1.25rem;
-        border-radius: 16px;
+    .billing-eyebrow {
+        margin: 0 0 3px;
+        color: #98a2b3;
+        font-size: 10px;
         font-weight: 600;
-        text-decoration: none;
-        transition: all 0.4s ease;
-        display: inline-block;
-        box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+        letter-spacing: .03em;
     }
 
-    .btn-primary:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 12px 30px rgba(34, 197, 94, 0.4);
-    }
-
-    .school-section {
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        margin-bottom: 2rem;
-        box-shadow: 0 25px 50px rgba(22, 163, 74, 0.15);
-        border: 2px solid rgba(34, 197, 94, 0.2);
-        overflow: hidden;
-    }
-
-    .school-header {
-        background: linear-gradient(135deg, #f0fdf4, #ffffffff, #ffffffff);
-        padding: 1.5rem 2rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
-    }
-
-    .school-header:hover {
-        background: linear-gradient(135deg, #ffffffff, #ffffffff, #ffffffff);
-    }
-
-    .school-header h3 {
-        font-size: 1.5rem;
+    .billing-title {
+        margin: 0;
+        color: #101828;
+        font-size: clamp(25px, 2.6vw, 32px);
         font-weight: 700;
-        color: #14532d;
-        margin: 0;
-        display: flex;
+        letter-spacing: -.04em;
+        line-height: 1.16;
+    }
+
+    .billing-subtitle {
+        margin: 7px 0 0;
+        color: #667085;
+        font-size: 12px;
+    }
+
+    .billing-heading-actions {
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    .billing-button,
+    .billing-row-action,
+    .billing-status-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        margin: 0 !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+    }
+
+    .billing-button {
+        min-height: 38px !important;
+        padding: 0 13px !important;
+        font-size: 11px !important;
+    }
+
+    .billing-button.is-primary,
+    .billing-row-action.is-primary {
+        color: #fff !important;
+        background: #2878f0 !important;
+        border-color: #2878f0 !important;
+    }
+
+    .billing-button:hover,
+    .billing-row-action:hover {
+        color: #101828 !important;
+        background: #f9fafb !important;
+    }
+
+    .billing-button.is-primary:hover,
+    .billing-row-action.is-primary:hover {
+        color: #fff !important;
+        background: #1768dc !important;
+        border-color: #1768dc !important;
+    }
+
+    .billing-alert {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
-    }
-
-    .school-content {
-        display: none;
-        padding: 0;
-        color: #rgba(250, 255, 252, 1)
-    }
-
-    .school-content.active {
-        display: block;
-        color: #rgba(250, 255, 252, 1)
-    }
-
-    .class-item {
-        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .class-item:last-child {
-        border-bottom: none;
-    }
-
-    .class-header {
-        padding: 1rem 2rem;
-        cursor: pointer;
-        background: rgba(34, 197, 94, 0.05);
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .class-header:hover {
-        background: rgba(34, 197, 94, 0.1);
-    }
-
-    .class-header h4 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #166534;
-        margin: 0;
-    }
-
-    .class-stats {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.875rem;
-        color: #6b7280;
-    }
-
-    .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .students-table-container {
-        display: none;
-        padding: 0;
-        background: white;
-    }
-
-    .students-table-container.active {
-        display: block;
-    }
-
-    .students-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .students-table th,
-    .students-table td {
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
-    }
-
-    .students-table th {
-        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-        font-weight: 600;
-        color: #14532d;
-        font-size: 0.875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .students-table tbody tr:hover {
-        background: rgba(34, 197, 94, 0.05);
-    }
-
-    .student-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .student-name {
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .student-nis {
-        font-size: 0.875rem;
-        color: #6b7280;
-    }
-
-    /* Filter input styling */
-    .form-control {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 2px solid rgba(34, 197, 94, 0.2);
-        border-radius: 12px;
-        background: white;
-        transition: all 0.3s ease;
-        font-size: 0.95rem;
-    }
-
-    .form-control:focus {
-        outline: none;
-        border-color: #22c55e;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-    }
-
-    .tagihan-summary {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .summary-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.875rem;
-    }
-
-    .summary-label {
-        color: #6b7280;
-    }
-
-    .summary-value {
-        font-weight: 600;
-    }
-
-    .summary-value.total {
-        color: #dc2626;
-        font-size: 1rem;
-    }
-
-    .summary-value.paid {
-        color: #16a34a;
-    }
-
-    .summary-value.remaining {
-        color: #0cea0cff;
-    }
-
-    .btn-process {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
-        padding: 0.5rem 1rem;
+        gap: 10px;
+        padding: 11px 13px;
+        color: #087451;
+        background: #ecfdf3;
+        border: 1px solid #abefc6;
         border-radius: 8px;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
+        font-size: 11px;
+    }
+
+    .billing-alert.is-error {
+        color: #b42318;
+        background: #fef3f2;
+        border-color: #fecdca;
+    }
+
+    .billing-alert > i {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, .7);
+        border-radius: 7px;
+    }
+
+    .billing-alert strong,
+    .billing-alert span {
+        display: block;
+    }
+
+    .billing-alert strong {
+        color: inherit;
+        font-size: 11px;
+    }
+
+    .billing-alert span {
+        margin-top: 1px;
+        color: #667085;
+        font-size: 10px;
+    }
+
+    .billing-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .billing-stat {
+        min-width: 0;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
+    }
+
+    .billing-stat-main {
+        min-height: 106px;
+        padding: 17px 18px 13px;
+    }
+
+    .billing-stat-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        margin-bottom: 15px;
+        color: #2878f0;
+        background: #eef5ff;
+        border: 1px solid #dbe8fc;
+        border-radius: 8px;
+        font-size: 12px;
+    }
+
+    .billing-stat.is-green .billing-stat-icon {
+        color: #079455;
+        background: #ecfdf3;
+        border-color: #d1fadf;
+    }
+
+    .billing-stat.is-amber .billing-stat-icon {
+        color: #dc6803;
+        background: #fffaeb;
+        border-color: #fef0c7;
+    }
+
+    .billing-stat.is-red .billing-stat-icon {
+        color: #d92d20;
+        background: #fef3f2;
+        border-color: #fee4e2;
+    }
+
+    .billing-stat-label,
+    .billing-stat-value,
+    .billing-stat-note {
+        display: block;
+    }
+
+    .billing-stat-label {
+        color: #667085;
+        font-size: 10px;
+    }
+
+    .billing-stat-value {
+        margin-top: 3px;
+        overflow: hidden;
+        color: #101828;
+        font-size: clamp(20px, 2vw, 27px);
+        font-weight: 700;
+        letter-spacing: -.04em;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .billing-stat-note {
+        min-height: 36px;
+        padding: 10px 18px;
+        overflow: hidden;
+        color: #667085;
+        background: #fafbfc;
+        border-top: 1px solid #e4e7ec;
+        font-size: 9.5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .billing-panel {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
+    }
+
+    .billing-panel-heading {
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 58px;
+        padding: 13px 18px;
+        border-bottom: 1px solid #e4e7ec;
+    }
+
+    .billing-panel-title {
+        margin: 0;
+        color: #101828;
+        font-size: 13px;
+        font-weight: 650;
+    }
+
+    .billing-panel-context {
+        margin: 3px 0 0;
+        color: #667085;
+        font-size: 10px;
+    }
+
+    .billing-scope-form {
+        display: grid;
+        grid-template-columns: minmax(180px, 1fr) minmax(170px, 1fr) auto;
+        align-items: end;
+        gap: 10px;
+        padding: 15px 18px;
+        background: #fafbfc;
+        border-bottom: 1px solid #e4e7ec;
+    }
+
+    .billing-field label {
+        margin-bottom: 5px !important;
+        color: #475467 !important;
+        font-size: 9.5px !important;
+    }
+
+    .billing-field select,
+    .billing-search input {
+        width: 100% !important;
+        height: 36px !important;
+        margin: 0 !important;
+        color: #344054 !important;
+        background-color: #fff !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+        font-size: 11px !important;
+    }
+
+    .billing-field select {
+        padding: 0 32px 0 10px !important;
+    }
+
+    .billing-table-tools {
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 18px;
+        border-bottom: 1px solid #e4e7ec;
+    }
+
+    .billing-search {
+        position: relative;
+        flex: 1 1 280px;
+        max-width: 380px;
+    }
+
+    .billing-search > i {
+        position: absolute;
+        left: 11px;
+        z-index: 1;
+        color: #98a2b3;
+        font-size: 10px;
+        pointer-events: none;
+    }
+
+    .billing-search input {
+        padding: 0 34px 0 31px !important;
+    }
+
+    .billing-search-clear {
+        position: absolute !important;
+        right: 5px !important;
+        display: none !important;
+        place-items: center !important;
+        width: 26px !important;
+        height: 26px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        color: #667085 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 5px !important;
+        font-size: 10px !important;
+    }
+
+    .billing-search-clear.is-visible {
+        display: grid !important;
+    }
+
+    .billing-status-filters {
+        flex: 0 0 auto;
+        gap: 4px;
+        padding: 3px;
+        background: #f2f4f7;
+        border-radius: 7px;
+    }
+
+    .billing-status-button {
+        min-height: 28px !important;
+        padding: 0 9px !important;
+        color: #667085 !important;
+        background: transparent !important;
+        border: 0 !important;
+        font-size: 9.5px !important;
+    }
+
+    .billing-status-button.is-active {
+        color: #101828 !important;
+        background: #fff !important;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .08) !important;
+    }
+
+    .billing-table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .billing-table {
+        width: 100% !important;
+        min-width: 850px !important;
+        border-collapse: collapse !important;
+    }
+
+    .billing-table th {
+        height: 37px !important;
+        padding: 8px 12px !important;
+        color: #667085 !important;
+        background: #f9fafb !important;
+        border-bottom: 1px solid #e4e7ec !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+    }
+
+    .billing-table td {
+        height: 59px !important;
+        padding: 9px 12px !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border-bottom: 1px solid #eef0f3 !important;
+        font-size: 10.5px !important;
+    }
+
+    .billing-table tbody tr:hover td {
+        background: #fbfcfe !important;
+    }
+
+    .billing-student {
+        gap: 9px;
+        min-width: 190px;
+    }
+
+    .billing-student-avatar {
+        display: grid;
+        place-items: center;
+        flex: 0 0 31px;
+        width: 31px;
+        height: 31px;
+        color: #2878f0;
+        background: #eef5ff;
+        border-radius: 7px;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .billing-student-copy {
+        min-width: 0;
+    }
+
+    .billing-student-copy strong,
+    .billing-student-copy span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .billing-student-copy strong {
+        max-width: 230px;
+        color: #101828;
+        font-size: 10.5px;
+        font-weight: 650;
+    }
+
+    .billing-student-copy span {
+        margin-top: 2px;
+        color: #98a2b3;
+        font-size: 9px;
+    }
+
+    .billing-status {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 5px;
+        min-height: 23px;
+        padding: 0 8px;
+        color: #475467;
+        background: #f2f4f7;
+        border-radius: 999px;
+        font-size: 8.5px;
+        font-weight: 650;
+        white-space: nowrap;
     }
 
-    .btn-process:hover {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    .billing-status::before {
+        width: 5px;
+        height: 5px;
+        background: #98a2b3;
+        border-radius: 50%;
+        content: "";
     }
 
-    .btn-generate {
-        background: linear-gradient(135deg, #42b121ff, #099210ff);
-        color: #fff;
-        padding: 0.75rem 1.25rem;
-        border-radius: 16px;
+    .billing-status.is-paid {
+        color: #087451;
+        background: #ecfdf3;
+    }
+
+    .billing-status.is-paid::before {
+        background: #12b76a;
+    }
+
+    .billing-status.is-partial {
+        color: #b54708;
+        background: #fffaeb;
+    }
+
+    .billing-status.is-partial::before {
+        background: #f79009;
+    }
+
+    .billing-status.is-unpaid {
+        color: #b42318;
+        background: #fef3f2;
+    }
+
+    .billing-status.is-unpaid::before {
+        background: #f04438;
+    }
+
+    .billing-money {
+        color: #344054;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .billing-money.is-remaining {
+        color: #b42318;
+        font-weight: 650;
+    }
+
+    .billing-money.is-zero {
+        color: #087451;
+    }
+
+    .billing-row-actions {
+        justify-content: flex-end;
+        gap: 6px;
+    }
+
+    .billing-row-actions form {
+        margin: 0 !important;
+    }
+
+    .billing-row-action {
+        min-height: 31px !important;
+        padding: 0 10px !important;
+        font-size: 9.5px !important;
+        white-space: nowrap !important;
+    }
+
+    .billing-panel-footer {
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 43px;
+        padding: 10px 18px;
+        color: #667085;
+        background: #fafbfc;
+        font-size: 9.5px;
+    }
+
+    .billing-panel-footer strong {
+        color: #344054;
         font-weight: 600;
-        text-decoration: none;
-        transition: all 0.4s ease;
-        display: inline-block;
-        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
-        border: none;
-        cursor: pointer;
     }
 
-    .btn-generate:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 12px 30px rgba(245, 158, 11, 0.4);
-    }
-
-    .toggle-icon {
-        transition: transform 0.3s ease;
-    }
-
-    .toggle-icon.rotated {
-        transform: rotate(180deg);
-    }
-
-    .alert-success {
-        background: linear-gradient(135deg, #d1fae5, #bbf7d0, #a7f3d0);
-        border: 2px solid rgba(34, 197, 94, 0.3);
-        color: #14532d;
-        padding: 1.5rem 2rem;
-        border-radius: 20px;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 10px 25px rgba(34, 197, 94, 0.15);
-    }
-
-    .empty-state {
+    .billing-empty {
+        display: grid;
+        place-items: center;
+        min-height: 260px;
+        padding: 30px;
+        color: #667085;
         text-align: center;
-        padding: 3rem;
-        color: #6b7280;
     }
 
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        color: #d1d5db;
+    .billing-empty i {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        margin: 0 auto 11px;
+        color: #667085;
+        background: #f2f4f7;
+        border-radius: 9px;
+        font-size: 14px;
     }
 
-    @media (max-width: 768px) {
-        .page-header {
+    .billing-empty strong,
+    .billing-empty span {
+        display: block;
+    }
+
+    .billing-empty strong {
+        color: #344054;
+        font-size: 12px;
+    }
+
+    .billing-empty span {
+        max-width: 360px;
+        margin-top: 4px;
+        font-size: 10px;
+    }
+
+    .billing-modal-copy {
+        margin: 0 0 14px;
+        color: #667085;
+        font-size: 11px;
+    }
+
+    .billing-checklist {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .billing-checklist li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #344054;
+        font-size: 10.5px;
+    }
+
+    .billing-checklist i {
+        color: #12a06a;
+        font-size: 10px;
+    }
+
+    .billing-modal-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 15px;
+        padding: 10px;
+        color: #854a0e;
+        background: #fffaeb;
+        border: 1px solid #fef0c7;
+        border-radius: 7px;
+        font-size: 10px;
+    }
+
+    @media (max-width: 1050px) {
+        .billing-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .billing-heading {
+            align-items: flex-start;
             flex-direction: column;
-            gap: 1rem;
-            padding: 1.5rem;
         }
 
-        .page-title {
-            font-size: 1.5rem;
+        .billing-heading-actions {
+            width: 100%;
+            justify-content: flex-start;
         }
 
-        .class-stats {
+        .billing-table-tools {
+            align-items: stretch;
             flex-direction: column;
-            gap: 0.5rem;
         }
 
-        .students-table {
-            font-size: 0.875rem;
+        .billing-search {
+            flex: 0 0 auto;
+            width: 100%;
+            max-width: none;
         }
 
-        .students-table th,
-        .students-table td {
-            padding: 0.75rem 0.5rem;
+        .billing-status-filters {
+            align-self: flex-start;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .billing-page {
+            gap: 14px;
+        }
+
+        .billing-heading-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .billing-button {
+            width: 100% !important;
+        }
+
+        .billing-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .billing-stat-main {
+            min-height: 96px;
+            padding: 13px 14px 11px;
+        }
+
+        .billing-stat-icon {
+            width: 31px;
+            height: 31px;
+            margin-bottom: 10px;
+        }
+
+        .billing-stat-value {
+            font-size: 19px;
+        }
+
+        .billing-stat-note {
+            min-height: 38px;
+            padding: 9px 14px;
+            white-space: normal;
+        }
+
+        .billing-scope-form {
+            grid-template-columns: 1fr;
+        }
+
+        .billing-panel-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .billing-status-filters {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .billing-status-button {
+            flex: 1 0 auto;
+        }
+
+        .billing-table-wrap {
+            padding: 10px;
+            overflow: visible;
+            background: #f9fafb;
+        }
+
+        body:has(.app-sidebar) .billing-page .billing-table {
+            display: block !important;
+            min-width: 0 !important;
+            background: transparent !important;
+        }
+
+        .billing-table thead {
+            display: none !important;
+        }
+
+        .billing-table tbody,
+        .billing-table tr,
+        .billing-table td {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        .billing-table tr[data-student-row] {
+            margin-bottom: 9px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #e4e7ec;
+            border-radius: 9px;
+        }
+
+        .billing-table tr[data-student-row]:last-child {
+            margin-bottom: 0;
+        }
+
+        .billing-table td {
+            display: grid !important;
+            grid-template-columns: 104px minmax(0, 1fr) !important;
+            align-items: center !important;
+            min-height: 38px !important;
+            height: auto !important;
+            padding: 8px 11px !important;
+            text-align: right !important;
+            border-bottom: 1px solid #eef0f3 !important;
+        }
+
+        .billing-table td::before {
+            color: #98a2b3;
+            font-size: 8.5px;
+            font-weight: 600;
+            text-align: left;
+            text-transform: uppercase;
+            content: attr(data-label);
+        }
+
+        .billing-table td.billing-student-cell {
+            display: block !important;
+            padding: 12px !important;
+            text-align: left !important;
+        }
+
+        .billing-table td.billing-student-cell::before,
+        .billing-table td.billing-action-cell::before {
+            display: none;
+        }
+
+        .billing-table td.billing-action-cell {
+            display: block !important;
+            padding: 10px 11px !important;
+            border-bottom: 0 !important;
+        }
+
+        .billing-row-actions,
+        .billing-row-actions form,
+        .billing-row-action {
+            width: 100% !important;
+        }
+
+        .billing-panel-footer {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 350px) {
+        .billing-stats {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -356,346 +815,377 @@
     @include('layouts.header')
 
     <div class="content-area">
-        @if(session('success'))
-            <div class="alert-success">{{ session('success') }}</div>
-        @endif
-
-        @include('partials.admin-page-context', [
-            'section' => 'Pembayaran',
-            'current' => 'Tagihan Siswa',
-            'title' => 'Generate tagihan setelah data siswa dan jenis pembayaran siap.',
-            'description' => 'Halaman ini mengelompokkan tagihan per sekolah dan kelas. Buka kelas untuk memproses pembayaran siswa satu per satu.',
-            'steps' => ['Siswa', 'Jenis Pembayaran', 'Generate Tagihan', 'Bayar', 'Riwayat']
-        ])
-
-        <div class="page-header">
-            <h2 class="page-title">
-                <i class="fas fa-file-invoice-dollar"></i> 
-                Tagihan siswa
-            </h2>
-            <div>
-                <button type="button" class="btn-generate" data-bs-toggle="modal" data-bs-target="#generateModal">
-                    <i class="fas fa-cogs"></i> Generate Otomatis
-                </button>
-            </div>
-        </div>
-
-
-        <!-- Generate Tagihan Modal -->
-        <div class="modal fade" id="generateModal" tabindex="-1" aria-labelledby="generateModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="generateModalLabel">Generate Tagihan Otomatis</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="billing-page">
+            @if(session('success'))
+                <div class="billing-alert" role="status">
+                    <i class="fas fa-circle-check" aria-hidden="true"></i>
+                    <div>
+                        <strong>Proses selesai</strong>
+                        <span>{{ session('success') }}</span>
                     </div>
-                    <div class="modal-body">
-                        <p>Generate otomatis akan membuat tagihan untuk siswa yang sudah memiliki data sekolah, kelas, tahun ajaran, dan jenis pembayaran yang sesuai.</p>
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i> 
-                            Periksa kembali data siswa dan jenis pembayaran sebelum menjalankan proses ini. Proses bisa memakan waktu beberapa menit.
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="billing-alert is-error" role="alert">
+                    <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                    <div>
+                        <strong>Proses belum berhasil</strong>
+                        <span>{{ $errors->first() }}</span>
+                    </div>
+                </div>
+            @endif
+
+            <header class="billing-heading">
+                <div>
+                    <p class="billing-eyebrow">Pembayaran</p>
+                    <h1 class="billing-title" data-page-title>Tagihan siswa</h1>
+                    <p class="billing-subtitle">Cari siswa, lihat sisa tagihan, lalu proses pembayaran dari satu tampilan.</p>
+                </div>
+
+                <div class="billing-heading-actions">
+                    @if($canViewHistory)
+                        <a class="billing-button" href="{{ route('riwayat.index') }}">
+                            <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+                            <span>Riwayat pembayaran</span>
+                        </a>
+                    @endif
+                    @if($canGenerate)
+                        <button class="billing-button is-primary" type="button" data-bs-toggle="modal" data-bs-target="#generateModal">
+                            <i class="fas fa-file-circle-plus" aria-hidden="true"></i>
+                            <span>Buat tagihan</span>
+                        </button>
+                    @endif
+                </div>
+            </header>
+
+            <section class="billing-stats" aria-label="Ringkasan tagihan kelas">
+                <article class="billing-stat">
+                    <div class="billing-stat-main">
+                        <span class="billing-stat-icon"><i class="fas fa-user-graduate"></i></span>
+                        <span class="billing-stat-label">Siswa di kelas</span>
+                        <strong class="billing-stat-value">{{ number_format($workspaceSummary['total_siswa'], 0, ',', '.') }}</strong>
+                    </div>
+                    <span class="billing-stat-note">{{ $classLabel($selectedKelas) }}</span>
+                </article>
+
+                <article class="billing-stat is-amber">
+                    <div class="billing-stat-main">
+                        <span class="billing-stat-icon"><i class="fas fa-file-invoice"></i></span>
+                        <span class="billing-stat-label">Total tagihan</span>
+                        <strong class="billing-stat-value">{{ number_format($workspaceSummary['total_tagihan'], 0, ',', '.') }}</strong>
+                    </div>
+                    <span class="billing-stat-note">{{ $formatRupiah($workspaceSummary['total_nominal']) }} nilai tagihan</span>
+                </article>
+
+                <article class="billing-stat is-green">
+                    <div class="billing-stat-main">
+                        <span class="billing-stat-icon"><i class="fas fa-circle-check"></i></span>
+                        <span class="billing-stat-label">Sudah dibayar</span>
+                        <strong class="billing-stat-value">{{ $formatRupiah($workspaceSummary['total_dibayar']) }}</strong>
+                    </div>
+                    <span class="billing-stat-note">{{ number_format($workspaceSummary['siswa_lunas'], 0, ',', '.') }} siswa lunas</span>
+                </article>
+
+                <article class="billing-stat is-red">
+                    <div class="billing-stat-main">
+                        <span class="billing-stat-icon"><i class="fas fa-hourglass-half"></i></span>
+                        <span class="billing-stat-label">Sisa tagihan</span>
+                        <strong class="billing-stat-value">{{ $formatRupiah($workspaceSummary['sisa_bayar']) }}</strong>
+                    </div>
+                    <span class="billing-stat-note">Perlu ditindaklanjuti</span>
+                </article>
+            </section>
+
+            <section class="billing-panel">
+                <div class="billing-panel-heading">
+                    <div>
+                        <h2 class="billing-panel-title">Daftar siswa</h2>
+                        <p class="billing-panel-context">{{ $selectedContext }}</p>
+                    </div>
+                </div>
+
+                @if($sekolahData->isNotEmpty())
+                    <form class="billing-scope-form" id="billingScopeForm" method="GET" action="{{ route('tagihan.index.grouped') }}">
+                        <div class="billing-field">
+                            <label for="billingSchool">Sekolah</label>
+                            <select id="billingSchool" name="sekolah">
+                                @foreach($sekolahData as $sekolah)
+                                    <option value="{{ $sekolah->id }}" {{ $selectedSekolah?->id === $sekolah->id ? 'selected' : '' }}>
+                                        {{ $sekolah->nama_sekolah }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <form action="{{ route('tagihan.generate.manual') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-cogs"></i> Generate Tagihan Sekarang
+
+                        <div class="billing-field">
+                            <label for="billingClass">Kelas</label>
+                            <select id="billingClass" name="kelas" {{ $availableClasses->isEmpty() ? 'disabled' : '' }}>
+                                @forelse($availableClasses as $kelas)
+                                    <option value="{{ $kelas->id }}" {{ $selectedKelas?->id === $kelas->id ? 'selected' : '' }}>
+                                        {{ $classLabel($kelas) }} · {{ $kelas->siswa_count }} siswa
+                                    </option>
+                                @empty
+                                    <option value="">Belum ada kelas</option>
+                                @endforelse
+                            </select>
+                        </div>
+
+                        <button class="billing-button is-primary" type="submit">
+                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            <span>Tampilkan</span>
+                        </button>
+                    </form>
+                @endif
+
+                @if($selectedKelas && $studentRows->isNotEmpty())
+                    <div class="billing-table-tools">
+                        <label class="billing-search" for="billingStudentSearch">
+                            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                            <input id="billingStudentSearch" type="search" placeholder="Cari nama atau NIS siswa..." autocomplete="off">
+                            <button class="billing-search-clear" id="billingSearchClear" type="button" aria-label="Hapus pencarian">
+                                <i class="fas fa-xmark"></i>
                             </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        </label>
 
-        @forelse($sekolahData as $sekolah)
-            <div class="school-section">
-                <div class="school-header" onclick="toggleSchool({{ $sekolah->id }})">
-                    <h3>
-                        <span>
-                            <i class="fas fa-school"></i>
-                            {{ $sekolah->nama_sekolah }}
-                        </span>
-                        <i class="fas fa-chevron-down toggle-icon" id="school-icon-{{ $sekolah->id }}"></i>
-                    </h3>
-                </div>
-                
-                <div class="school-content" id="school-content-{{ $sekolah->id }}">
-                    @forelse($sekolah->kelas as $kelas)
-                        <div class="class-item">
-                            <div class="class-header" onclick="toggleClass({{ $sekolah->id }}, {{ $kelas->id }})">
-                                <h4>
-                                    <i class="fas fa-users"></i>
-                                    Kelas {{ $kelas->tingkat }} - {{ $kelas->nama_kelas }}
-                                </h4>
-                                <div class="class-stats">
-                                    <div class="stat-item">
-                                        <i class="fas fa-user-graduate"></i>
-                                        <span>{{ $kelas->siswa_count }} siswa</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <i class="fas fa-file-invoice"></i>
-                                        <span>{{ $kelas->total_tagihan }} tagihan</span>
-                                    </div>
-                                    <i class="fas fa-chevron-down toggle-icon" id="class-icon-{{ $sekolah->id }}-{{ $kelas->id }}"></i>
-                                </div>
-                            </div>
-                            
-                            <div class="students-table-container" id="class-content-{{ $sekolah->id }}-{{ $kelas->id }}">
-                                <table class="students-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Informasi Siswa</th>
-                                            <th>Ringkasan Tagihan</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="students-tbody-{{ $sekolah->id }}-{{ $kelas->id }}">
-                                        <tr>
-                                            <td colspan="3" class="text-center">
-                                                <i class="fas fa-spinner fa-spin"></i> Memuat data siswa...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="billing-status-filters" aria-label="Filter status tagihan">
+                            <button class="billing-status-button is-active" type="button" data-billing-filter="all">Semua</button>
+                            <button class="billing-status-button" type="button" data-billing-filter="open">Belum lunas</button>
+                            <button class="billing-status-button" type="button" data-billing-filter="sebagian">Sebagian</button>
+                            <button class="billing-status-button" type="button" data-billing-filter="lunas">Lunas</button>
                         </div>
-                    @empty
-                        @include('partials.admin-empty-state', [
-                            'icon' => 'fas fa-users-slash',
-                            'title' => 'Belum Ada Kelas di Sekolah Ini',
-                            'message' => 'Tambahkan kelas terlebih dahulu, lalu masukkan siswa agar tagihan bisa dibuat.',
-                            'actionRoute' => route('kelas.create'),
-                            'actionText' => 'Tambah Kelas'
-                        ])
-                    @endforelse
-                </div>
-            </div>
-        @empty
-            @include('partials.admin-empty-state', [
-                'icon' => 'fas fa-school',
-                'title' => 'Belum Ada Data Sekolah',
-                'message' => 'Tambahkan sekolah sebelum membuat kelas, siswa, dan tagihan pembayaran.',
-                'actionRoute' => route('sekolah.create'),
-                'actionText' => 'Tambah Sekolah'
-            ])
-        @endforelse
+                    </div>
+
+                    <div class="billing-table-wrap">
+                        <table class="billing-table">
+                            <thead>
+                                <tr>
+                                    <th>Siswa</th>
+                                    <th>Status</th>
+                                    <th>Tagihan</th>
+                                    <th>Total nominal</th>
+                                    <th>Dibayar</th>
+                                    <th>Sisa</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($studentRows as $student)
+                                    @php
+                                        $statusLabel = match($student['status']) {
+                                            'lunas' => 'Lunas',
+                                            'sebagian' => 'Sebagian',
+                                            'belum' => 'Belum bayar',
+                                            default => 'Belum ada tagihan',
+                                        };
+                                        $statusClass = match($student['status']) {
+                                            'lunas' => 'is-paid',
+                                            'sebagian' => 'is-partial',
+                                            'belum' => 'is-unpaid',
+                                            default => '',
+                                        };
+                                    @endphp
+                                    <tr
+                                        data-student-row
+                                        data-search="{{ strtolower($student['nama'] . ' ' . $student['nis']) }}"
+                                        data-status="{{ $student['status'] }}"
+                                    >
+                                        <td class="billing-student-cell" data-label="Siswa">
+                                            <div class="billing-student">
+                                                <span class="billing-student-avatar">{{ $student['initial'] }}</span>
+                                                <span class="billing-student-copy">
+                                                    <strong>{{ $student['nama'] }}</strong>
+                                                    <span>NIS {{ $student['nis'] }}</span>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td data-label="Status">
+                                            <span class="billing-status {{ $statusClass }}">{{ $statusLabel }}</span>
+                                        </td>
+                                        <td data-label="Tagihan">{{ number_format($student['total_tagihan'], 0, ',', '.') }}</td>
+                                        <td data-label="Total nominal"><span class="billing-money">{{ $formatRupiah($student['total_nominal']) }}</span></td>
+                                        <td data-label="Dibayar"><span class="billing-money">{{ $formatRupiah($student['total_dibayar']) }}</span></td>
+                                        <td data-label="Sisa">
+                                            <span class="billing-money {{ $student['sisa_bayar'] > 0 ? 'is-remaining' : 'is-zero' }}">
+                                                {{ $formatRupiah($student['sisa_bayar']) }}
+                                            </span>
+                                        </td>
+                                        <td class="billing-action-cell" data-label="Aksi">
+                                            <div class="billing-row-actions">
+                                                @if($student['total_tagihan'] === 0 && $canGenerate)
+                                                    <form method="POST" action="{{ route('tagihan.generate.manual.siswa', $student['id']) }}" data-single-generate-form>
+                                                        @csrf
+                                                        <button class="billing-row-action" type="submit">
+                                                            <i class="fas fa-file-circle-plus"></i>
+                                                            <span>Buat tagihan</span>
+                                                        </button>
+                                                    </form>
+                                                @elseif($canPay)
+                                                    <a class="billing-row-action {{ $student['sisa_bayar'] > 0 ? 'is-primary' : '' }}" href="{{ route('tagihan.proses.siswa', $student['id']) }}">
+                                                        <i class="fas {{ $student['sisa_bayar'] > 0 ? 'fa-credit-card' : 'fa-eye' }}"></i>
+                                                        <span>{{ $student['sisa_bayar'] > 0 ? 'Bayar' : 'Lihat detail' }}</span>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="billing-empty" id="billingNoResults" hidden>
+                        <div>
+                            <i class="fas fa-magnifying-glass"></i>
+                            <strong>Siswa tidak ditemukan</strong>
+                            <span>Ubah kata pencarian atau pilih status tagihan lain.</span>
+                        </div>
+                    </div>
+
+                    <footer class="billing-panel-footer">
+                        <span><strong id="billingResultCount">{{ $studentRows->count() }}</strong> dari {{ $studentRows->count() }} siswa ditampilkan</span>
+                        <span>Gunakan tombol Bayar untuk membuka rincian tagihan siswa.</span>
+                    </footer>
+                @elseif(!$selectedSekolah)
+                    <div class="billing-empty">
+                        <div>
+                            <i class="fas fa-school"></i>
+                            <strong>Belum ada sekolah</strong>
+                            <span>Tambahkan sekolah agar kelas, siswa, dan tagihan dapat dikelola.</span>
+                        </div>
+                    </div>
+                @elseif(!$selectedKelas)
+                    <div class="billing-empty">
+                        <div>
+                            <i class="fas fa-chalkboard"></i>
+                            <strong>Belum ada kelas di sekolah ini</strong>
+                            <span>Tambahkan kelas dan siswa sebelum membuat tagihan.</span>
+                        </div>
+                    </div>
+                @else
+                    <div class="billing-empty">
+                        <div>
+                            <i class="fas fa-user-graduate"></i>
+                            <strong>Belum ada siswa di kelas ini</strong>
+                            <span>Pilih kelas lain atau tambahkan siswa terlebih dahulu.</span>
+                        </div>
+                    </div>
+                @endif
+            </section>
+        </div>
     </div>
 </div>
 
+@if($canGenerate)
+    <div class="modal fade" id="generateModal" tabindex="-1" aria-labelledby="generateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title" id="generateModalLabel">Buat tagihan semua siswa</h2>
+                        <p class="billing-panel-context">Sistem akan membuat tagihan berdasarkan data yang sudah tersedia.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="billing-modal-copy">Pastikan tiga data berikut sudah benar sebelum melanjutkan:</p>
+                    <ul class="billing-checklist">
+                        <li><i class="fas fa-circle-check"></i><span>Siswa sudah memiliki sekolah dan kelas.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>Nominal SPP siswa sudah sesuai.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>Jenis pembayaran dan target kelas sudah diatur.</span></li>
+                    </ul>
+                    <div class="billing-modal-note">
+                        <i class="fas fa-circle-info"></i>
+                        <span>Proses dapat membutuhkan beberapa saat. Jangan menutup halaman sampai proses selesai.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="billing-button" data-bs-dismiss="modal">Batal</button>
+                    <form id="generateAllBillsForm" action="{{ route('tagihan.generate.manual') }}" method="POST">
+                        @csrf
+                        <button class="billing-button is-primary" id="generateAllBillsButton" type="submit">
+                            <i class="fas fa-file-circle-plus"></i>
+                            <span>Buat tagihan sekarang</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 <script>
-// Tambahkan event listener untuk filter dengan Enter key
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('search');
-    const filterForm = document.getElementById('filterForm');
-    
-    if (searchInput && filterForm) {
-        searchInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                filterForm.submit();
-            }
-        });
-    }
-});
+document.addEventListener('DOMContentLoaded', () => {
+    const scopeForm = document.getElementById('billingScopeForm');
+    const schoolSelect = document.getElementById('billingSchool');
+    const classSelect = document.getElementById('billingClass');
+    const searchInput = document.getElementById('billingStudentSearch');
+    const clearSearch = document.getElementById('billingSearchClear');
+    const rows = [...document.querySelectorAll('[data-student-row]')];
+    const filterButtons = [...document.querySelectorAll('[data-billing-filter]')];
+    const noResults = document.getElementById('billingNoResults');
+    const resultCount = document.getElementById('billingResultCount');
+    let activeStatus = 'all';
 
-function toggleSchool(sekolahId) {
-    const content = document.getElementById(`school-content-${sekolahId}`);
-    const icon = document.getElementById(`school-icon-${sekolahId}`);
-    
-    if (content.classList.contains('active')) {
-        content.classList.remove('active');
-        icon.classList.remove('rotated');
-    } else {
-        // Close all other schools
-        document.querySelectorAll('.school-content').forEach(el => {
-            el.classList.remove('active');
-        });
-        document.querySelectorAll('.school-header .toggle-icon').forEach(el => {
-            el.classList.remove('rotated');
-        });
-        
-        content.classList.add('active');
-        icon.classList.add('rotated');
-    }
-}
-
-function toggleClass(sekolahId, kelasId) {
-    const content = document.getElementById(`class-content-${sekolahId}-${kelasId}`);
-    const icon = document.getElementById(`class-icon-${sekolahId}-${kelasId}`);
-    const tbody = document.getElementById(`students-tbody-${sekolahId}-${kelasId}`);
-    
-    if (content.classList.contains('active')) {
-        content.classList.remove('active');
-        icon.classList.remove('rotated');
-    } else {
-        // Close all other classes in this school
-        document.querySelectorAll(`[id^="class-content-${sekolahId}-"]`).forEach(el => {
-            el.classList.remove('active');
-        });
-        document.querySelectorAll(`[id^="class-icon-${sekolahId}-"]`).forEach(el => {
-            el.classList.remove('rotated');
-        });
-        
-        content.classList.add('active');
-        icon.classList.add('rotated');
-        
-        // Load students data if not already loaded
-        if (tbody.innerHTML.includes('Memuat data siswa')) {
-            loadStudentsData(sekolahId, kelasId);
-        }
-    }
-}
-
-// Fungsi untuk memfilter siswa dalam kelas
-function filterStudents(sekolahId, kelasId) {
-    const searchInput = document.getElementById(`search-${sekolahId}-${kelasId}`);
-    const searchTerm = searchInput.value.toLowerCase();
-    
-    const studentRows = document.querySelectorAll(`#students-tbody-${sekolahId}-${kelasId} tr`);
-    let hasVisibleRow = false;
-    
-    studentRows.forEach(row => {
-        const nameElement = row.querySelector('.student-name');
-        const nisElement = row.querySelector('.student-nis');
-        
-        if (nameElement && nisElement) {
-            const name = nameElement.textContent.toLowerCase();
-            const nis = nisElement.textContent.toLowerCase();
-            
-            if (searchTerm === '' || name.includes(searchTerm) || nis.includes(searchTerm)) {
-                row.style.display = '';
-                hasVisibleRow = true;
-            } else {
-                row.style.display = 'none';
-            }
-        }
+    schoolSelect?.addEventListener('change', () => {
+        if (classSelect) classSelect.disabled = true;
+        scopeForm?.submit();
     });
-    
-    // Tampilkan pesan jika tidak ada hasil
-    const noResultRow = document.getElementById(`no-result-${sekolahId}-${kelasId}`);
-    if (noResultRow) {
-        if (hasVisibleRow || searchTerm === '') {
-            noResultRow.style.display = 'none';
-        } else {
-            noResultRow.style.display = '';
-        }
-    }
-}
 
-function loadStudentsData(sekolahId, kelasId) {
-    const tbody = document.getElementById(`students-tbody-${sekolahId}-${kelasId}`);
-    
-    fetch(`/tagihan/get-students-summary/${sekolahId}/${kelasId}`, {
-        method: 'GET',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.students && data.students.length > 0) {
-                // Bangun HTML untuk filter dan tabel
-                let html = `
-                    <tr>
-                        <td colspan="3">
-                            <div class="p-3">
-                                <input type="text" 
-                                       id="search-${sekolahId}-${kelasId}" 
-                                       class="form-control" 
-                                       placeholder="Cari nama atau NIS siswa..." 
-                                       oninput="filterStudents(${sekolahId}, ${kelasId})"
-                                       onkeydown="if(event.key === 'Enter'){ event.preventDefault(); }">
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                
-                // Tambahkan baris untuk setiap siswa
-                data.students.forEach(student => {
-                    html += `
-                        <tr>
-                            <td>
-                                <div class="student-info">
-                                    <div class="student-name">${student.nama}</div>
-                                    <div class="student-nis">NIS: ${student.nis}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="tagihan-summary">
-                                    <div class="summary-item">
-                                        <span class="summary-label">Total Tagihan:</span>
-                                        <span class="summary-value">${student.total_tagihan}</span>
-                                    </div>
-                                    <div class="summary-item">
-                                        <span class="summary-label">Total Nominal:</span>
-                                        <span class="summary-value total">Rp ${student.total_nominal}</span>
-                                    </div>
-                                    <div class="summary-item">
-                                        <span class="summary-label">Sudah Dibayar:</span>
-                                        <span class="summary-value paid">Rp ${student.total_dibayar}</span>
-                                    </div>
-                                    <div class="summary-item">
-                                        <span class="summary-label">Sisa:</span>
-                                        <span class="summary-value remaining">Rp ${student.sisa_bayar}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <a href="/tagihan/proses-siswa/${student.id}" class="btn-process">
-                                    <i class="fas fa-credit-card"></i>
-                                    Proses Tagihan
-                                </a>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                // Tambahkan baris "tidak ada hasil" yang tersembunyi secara default
-                html += `
-                    <tr id="no-result-${sekolahId}-${kelasId}" style="display: none;">
-                        <td colspan="3" class="text-center">
-                            <div class="empty-state">
-                                <i class="fas fa-search"></i>
-                                <p>Tidak ada siswa yang sesuai dengan filter pencarian</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                
-                tbody.innerHTML = html;
-            } else {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="3" class="text-center">
-                            <div class="empty-state">
-                                <i class="fas fa-user-slash"></i>
-                                <p>Tidak ada siswa di kelas ini</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error loading students:', error);
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="3" class="text-center text-red-500">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Gagal memuat data siswa
-                    </td>
-                </tr>
-            `;
+    classSelect?.addEventListener('change', () => scopeForm?.submit());
+
+    const filterRows = () => {
+        const query = searchInput?.value.trim().toLocaleLowerCase('id-ID') ?? '';
+        let visibleCount = 0;
+
+        rows.forEach((row) => {
+            const matchesSearch = !query || row.dataset.search.includes(query);
+            const status = row.dataset.status;
+            const matchesStatus = activeStatus === 'all'
+                || status === activeStatus
+                || (activeStatus === 'open' && ['belum', 'sebagian'].includes(status));
+            const visible = matchesSearch && matchesStatus;
+
+            row.hidden = !visible;
+            if (visible) visibleCount++;
         });
-}
+
+        clearSearch?.classList.toggle('is-visible', query.length > 0);
+        if (resultCount) resultCount.textContent = visibleCount.toLocaleString('id-ID');
+        if (noResults) noResults.hidden = visibleCount !== 0;
+    };
+
+    searchInput?.addEventListener('input', filterRows);
+
+    clearSearch?.addEventListener('click', () => {
+        searchInput.value = '';
+        searchInput.focus();
+        filterRows();
+    });
+
+    filterButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            activeStatus = button.dataset.billingFilter;
+            filterButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+            filterRows();
+        });
+    });
+
+    document.querySelectorAll('[data-single-generate-form]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (!window.confirm('Buat tagihan untuk siswa ini sekarang?')) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    const generateForm = document.getElementById('generateAllBillsForm');
+    const generateButton = document.getElementById('generateAllBillsButton');
+
+    generateForm?.addEventListener('submit', () => {
+        generateButton.disabled = true;
+        generateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Sedang membuat...</span>';
+    });
+});
 </script>
 @endsection

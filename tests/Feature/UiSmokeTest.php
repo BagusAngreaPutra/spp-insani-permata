@@ -109,6 +109,20 @@ class UiSmokeTest extends TestCase
         }
     }
 
+    public function test_tagihan_workspace_exposes_the_primary_admin_actions(): void
+    {
+        $admin = Admin::query()->firstOrFail();
+
+        $this->actingAs($admin, 'web')
+            ->get(route('tagihan.index.grouped'))
+            ->assertOk()
+            ->assertSee('Tagihan siswa')
+            ->assertSee('Daftar siswa')
+            ->assertSee('Sisa tagihan')
+            ->assertSee('billing-scope-form', false)
+            ->assertSee('Buat tagihan');
+    }
+
     public function test_primary_student_pages_render(): void
     {
         $siswa = Siswa::query()->firstOrFail();

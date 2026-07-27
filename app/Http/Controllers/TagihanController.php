@@ -562,31 +562,91 @@ class TagihanController extends Controller
      */
     public function indexGrouped(Request $request)
     {
-        // Load sekolah with kelas and count siswa
-        $sekolahData = \App\Models\Sekolah::with(['kelas' => function($q) {
-            $q->withCount('siswa');
-        }])->get();
+        $sekolahData = Sekolah::query()
+            ->with(['kelas' => function ($query) {
+                $query
+                    ->withCount('siswa')
+                    ->orderBy('tingkat')
+                    ->orderBy('nama_kelas');
+            }])
+            ->orderBy('nama_sekolah')
+            ->get();
 
-        // For each kelas, calculate total tagihan
-        foreach ($sekolahData as $sekolah) {
-            foreach ($sekolah->kelas as $kelas) {
-                // Count total tagihan for this class
-                $kelas->total_tagihan = \App\Models\Tagihan::whereHas('siswa', function($q) use ($kelas) {
-                    $q->where('kelas_id', $kelas->id);
-                })->count();
-            }
+        $selectedSekolah = $sekolahData->firstWhere('id', $request->integer('sekolah'))
+            ?? $sekolahData->first();
+        $availableClasses = $selectedSekolah?->kelas ?? collect();
+        $selectedKelas = $availableClasses->firstWhere('id', $request->integer('kelas'))
+            ?? $availableClasses->first();
+
+        $studentRows = collect();
+
+        if ($selectedSekolah && $selectedKelas) {
+            $studentRows = Siswa::query()
+                ->where('id_sekolah', $selectedSekolah->id)
+                ->where('kelas_id', $selectedKelas->id)
+                ->with(['tagihan.pembayaran'])
+                ->orderBy('nama')
+                ->get()
+                ->map(function (Siswa $siswa) {
+                    $totalTagihan = $siswa->tagihan->count();
+                    $totalNominal = 0;
+                    $totalDibayar = 0;
+                    $totalDiskon = 0;
+                    $sisaBayar = 0;
+
+                    foreach ($siswa->tagihan as $tagihan) {
+                        $nominal = (float) $tagihan->nominal;
+                        $dibayar = (float) $tagihan->pembayaran->sum('jumlah_bayar');
+                        $diskon = (float) $tagihan->pembayaran->sum('diskon');
+
+                        $totalNominal += $nominal;
+                        $totalDibayar += $dibayar;
+                        $totalDiskon += $diskon;
+                        $sisaBayar += max(0, $nominal - ($dibayar + $diskon));
+                    }
+
+                    if ($totalTagihan === 0) {
+                        $status = 'kosong';
+                    } elseif ($sisaBayar <= 0) {
+                        $status = 'lunas';
+                    } elseif (($totalDibayar + $totalDiskon) > 0) {
+                        $status = 'sebagian';
+                    } else {
+                        $status = 'belum';
+                    }
+
+                    return [
+                        'id' => $siswa->id,
+                        'nama' => $siswa->nama,
+                        'nis' => $siswa->nis,
+                        'initial' => strtoupper(substr($siswa->nama, 0, 1)),
+                        'total_tagihan' => $totalTagihan,
+                        'total_nominal' => $totalNominal,
+                        'total_dibayar' => $totalDibayar,
+                        'total_diskon' => $totalDiskon,
+                        'sisa_bayar' => $sisaBayar,
+                        'status' => $status,
+                    ];
+                });
         }
 
-        // Log aktivitas
-        LogAktivitas::create([
-            'aktor_type' => 'admin',
-            'aktor_id'   => Auth::guard('web')->id(),
-            'aktivitas'  => 'Melihat daftar tagihan (grouped view)',
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $workspaceSummary = [
+            'total_siswa' => $studentRows->count(),
+            'total_tagihan' => $studentRows->sum('total_tagihan'),
+            'total_nominal' => $studentRows->sum('total_nominal'),
+            'total_dibayar' => $studentRows->sum('total_dibayar'),
+            'sisa_bayar' => $studentRows->sum('sisa_bayar'),
+            'siswa_lunas' => $studentRows->where('status', 'lunas')->count(),
+        ];
 
-        return view('tagihan.index_new', compact('sekolahData'));
+        return view('tagihan.index_new', compact(
+            'sekolahData',
+            'availableClasses',
+            'selectedSekolah',
+            'selectedKelas',
+            'studentRows',
+            'workspaceSummary'
+        ));
     }
 
     /**
