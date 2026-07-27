@@ -1,1245 +1,1796 @@
 @extends('layouts.app')
 @include('layouts.sidebar')
 
+@section('title', 'Proses Tagihan Siswa')
+
 @section('content')
+@php
+    $adminUser = Auth::guard('web')->user();
+    $canGenerate = $adminUser?->hasPermission('tagihan.manage') ?? false;
+    $canPay = $adminUser?->hasPermission('pembayaran.process') ?? false;
+    $formatRupiah = static fn ($amount) => 'Rp' . number_format((float) $amount, 0, ',', '.');
+    $className = trim((string) ($siswa->kelas?->nama_kelas ?? ''));
+    $classLabel = !$siswa->kelas
+        ? 'Kelas belum diatur'
+        : (in_array($className, ['', '-', '–'], true)
+            ? 'Tingkat ' . $siswa->kelas->tingkat
+            : 'Tingkat ' . $siswa->kelas->tingkat . ' · ' . $className);
+    $studentInitial = strtoupper(substr($siswa->nama, 0, 1));
+    $defaultOpenGroup = collect($tagihanList)->search(
+        fn ($item) => $item['is_grouped'] && (float) $item['sisa_bayar'] > 0
+    );
+    if ($defaultOpenGroup === false) {
+        $defaultOpenGroup = collect($tagihanList)->search(fn ($item) => $item['is_grouped']);
+    }
+@endphp
+
 <style>
-    /* Modern CSS Variables for consistent theming */
-    :root {
-        --primary-color: #10b981;
-        --primary-light: #34d399;
-        --primary-dark: #059669;
-        --secondary-color: #6b7280;
-        --surface-color: #ffffff;
-        --surface-alt: #f8fafc;
-        --border-color: #e5e7eb;
-        --text-primary: #111827;
-        --text-secondary: #6b7280;
-        --success-bg: #d1fae5;
-        --success-text: #065f46;
-        --error-bg: #fee2e2;
-        --error-text: #991b1b;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-        --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-        --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
-        --radius-sm: 8px;
-        --radius-md: 12px;
-        --radius-lg: 16px;
+    .payment-page {
+        display: grid;
+        gap: 18px;
     }
 
-    /* Main Content Layout - TIDAK DIUBAH, menggunakan struktur dari layout.php */
-    .main-content {
-        margin-left: 280px;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: calc(100% - 280px);
-    }
-
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0;
-            width: 100%;
-            position: relative;
-        }
-    }
-
-    /* Content Area */
-    .content-area { 
-        padding: 2rem 1.5rem; 
-    }
-
-    /* Page Header */
-    .page-header { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center;
-        padding: 2.5rem;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        box-shadow: 0 20px 40px rgba(34, 197, 94, 0.1);
-        margin-bottom: 2rem;
-    }
-
-    .page-title { 
-        font-size: 2rem; 
-        font-weight: 800; 
-        background: linear-gradient(135deg, #14532d, #166534, #2e7247ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        display: flex; 
-        align-items: center; 
-        gap: 0.75rem;
-    }
-
-    .btn-generate {
-        background: linear-gradient(135deg, #719e73ff, #119131ff);
-        color: #fff;
-        padding: 0.75rem 1.25rem;
-        border-radius: 16px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.4s ease;
-        display: inline-block;
-        box-shadow: 0 8px 20px rgba(52, 102, 39, 0.3);
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-generate:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 12px 30px rgba(18, 150, 40, 0.4);
-    }
-
-    /* Student Info Card */
-    .student-info-card { 
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 15px 35px rgba(34, 197, 94, 0.1);
-        border: 2px solid rgba(34, 197, 94, 0.1);
-    }
-
-    .info-grid { 
-        display: grid; 
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-        gap: 1.5rem;
-    }
-
-    .info-item { display: flex; flex-direction: column; gap: 0.25rem; }
-    .info-label { font-size: 0.875rem; color: #6b7280; font-weight: 500; }
-    .info-value { font-size: 1.1rem; font-weight: 600; color: #1f2937; }
-
-    /* Tagihan Container */
-    .tagihan-container { 
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 25px 50px rgba(22, 163, 74, 0.15);
-        border: 2px solid rgba(34, 197, 94, 0.2);
-    }
-
-    .tagihan-header { 
-        background: linear-gradient(135deg, #f0fdf4, #dcfce7, #bbf7d0);
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
-        font-weight: 600;
-        color: #14532d;
-    }
-
-    .tagihan-header h3 {
+    .payment-heading,
+    .payment-heading-actions,
+    .payment-student-card,
+    .payment-student-profile,
+    .payment-student-details,
+    .payment-panel-heading,
+    .payment-step-title,
+    .payment-selection-toolbar,
+    .payment-group-header,
+    .payment-group-title,
+    .payment-group-meta,
+    .payment-group-select,
+    .payment-summary-bar,
+    .payment-summary-copy,
+    .payment-selected-item,
+    .payment-selected-main,
+    .payment-selected-actions,
+    .payment-form-actions,
+    .payment-discount-info,
+    .payment-alert {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+    }
+
+    .payment-heading {
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+    }
+
+    .payment-eyebrow {
+        margin: 0 0 3px;
+        color: #98a2b3;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .03em;
+    }
+
+    .payment-title {
         margin: 0;
+        color: #101828;
+        font-size: clamp(25px, 2.6vw, 32px);
+        font-weight: 700;
+        letter-spacing: -.04em;
+        line-height: 1.16;
     }
 
-    /* Table Styles */
-    .tagihan-table { 
-        width: 100%; 
-        border-collapse: collapse;
+    .payment-subtitle {
+        margin: 7px 0 0;
+        color: #667085;
+        font-size: 12px;
     }
 
-    .tagihan-table th, 
-    .tagihan-table td { 
-        padding: 1rem; 
-        text-align: left; 
-        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    .payment-heading-actions {
+        justify-content: flex-end;
+        gap: 8px;
     }
 
-    .tagihan-table th { 
-        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-        font-weight: 600; 
-        color: #14532d;
-        font-size: 0.875rem; 
+    .payment-button,
+    .payment-group-toggle,
+    .payment-quick-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        margin: 0 !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+    }
+
+    .payment-button {
+        min-height: 38px !important;
+        padding: 0 13px !important;
+        font-size: 11px !important;
+    }
+
+    .payment-button.is-primary {
+        color: #fff !important;
+        background: #2878f0 !important;
+        border-color: #2878f0 !important;
+    }
+
+    .payment-button:hover,
+    .payment-quick-button:hover {
+        color: #101828 !important;
+        background: #f9fafb !important;
+    }
+
+    .payment-button.is-primary:hover {
+        color: #fff !important;
+        background: #1768dc !important;
+        border-color: #1768dc !important;
+    }
+
+    .payment-button:disabled {
+        color: #98a2b3 !important;
+        background: #f2f4f7 !important;
+        border-color: #e4e7ec !important;
+        cursor: not-allowed !important;
+    }
+
+    .payment-alert {
+        gap: 10px;
+        padding: 11px 13px;
+        color: #b42318;
+        background: #fef3f2;
+        border: 1px solid #fecdca;
+        border-radius: 8px;
+        font-size: 10.5px;
+    }
+
+    .payment-alert i {
+        display: grid;
+        place-items: center;
+        flex: 0 0 30px;
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, .7);
+        border-radius: 7px;
+    }
+
+    .payment-student-card {
+        justify-content: space-between;
+        gap: 20px;
+        padding: 15px 18px;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
+    }
+
+    .payment-student-profile {
+        min-width: 0;
+        gap: 11px;
+    }
+
+    .payment-student-avatar {
+        display: grid;
+        place-items: center;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        color: #2878f0;
+        background: #eef5ff;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .payment-student-copy {
+        min-width: 0;
+    }
+
+    .payment-student-copy strong,
+    .payment-student-copy span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .payment-student-copy strong {
+        color: #101828;
+        font-size: 12px;
+        font-weight: 650;
+    }
+
+    .payment-student-copy span {
+        margin-top: 3px;
+        color: #667085;
+        font-size: 9.5px;
+    }
+
+    .payment-student-details {
+        justify-content: flex-end;
+        gap: 26px;
+    }
+
+    .payment-student-detail {
+        min-width: 90px;
+    }
+
+    .payment-student-detail span,
+    .payment-student-detail strong {
+        display: block;
+    }
+
+    .payment-student-detail span {
+        color: #98a2b3;
+        font-size: 8.5px;
+        font-weight: 600;
         text-transform: uppercase;
     }
 
-    .tagihan-table tbody tr { 
-        transition: background-color 0.2s ease;
-    }
-
-    .tagihan-table tbody tr:hover { 
-        background: rgba(34, 197, 94, 0.05);
-    }
-
-    .checkbox-cell { width: 50px; text-align: center; }
-
-    .checkbox-custom { 
-        width: 20px; 
-        height: 20px; 
-        cursor: pointer; 
-        accent-color: #22c55e;
-    }
-
-    /* Status Badges */
-    .status-badge { 
-        display: inline-block;
-        padding: 0.25rem 0.75rem; 
-        border-radius: 12px;
-        font-size: 0.75rem; 
+    .payment-student-detail strong {
+        margin-top: 3px;
+        max-width: 210px;
+        overflow: hidden;
+        color: #344054;
+        font-size: 10.5px;
         font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .status-lunas { 
-        background: #d1fae5; 
-        color: #14532d; 
-        border: 1px solid #86efac;
+    .payment-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
     }
 
-    .status-belum { 
-        background: #fee2e2; 
-        color: #7f1d1d; 
-        border: 1px solid #fecaca;
+    .payment-stat {
+        padding: 15px 16px;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 9px;
     }
 
-    .badge { 
-        display: inline-block; 
-        padding: 0.25rem 0.75rem; 
-        border-radius: 12px;
-        font-size: 0.75rem; 
-        font-weight: 600; 
-        background: #e5e7eb;
-        color: #374151;
+    .payment-stat span,
+    .payment-stat strong {
+        display: block;
     }
 
-    /* Grouped Rows */
-    .grouped-row td { 
-        font-weight: 600; 
-        background-color: #f8fafc;
+    .payment-stat span {
+        color: #667085;
+        font-size: 9.5px;
     }
 
-    .details-row { display: none; }
-    .details-row.show { display: table-row; }
-
-    .details-table { 
-        width: 100%; 
-        background: #ffffff;
-        border-spacing: 0;
+    .payment-stat strong {
+        margin-top: 5px;
+        overflow: hidden;
+        color: #101828;
+        font-size: clamp(18px, 1.8vw, 23px);
+        font-weight: 700;
+        letter-spacing: -.035em;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .details-table th, 
-    .details-table td { 
-        padding: 0.75rem 1.5rem; 
-        border-bottom: 1px solid #e5e7eb;
+    .payment-stat.is-success strong {
+        color: #087451;
     }
 
-    .details-table th { 
-        background: #f9fafb;
-        font-weight: 500;
-        text-align: left;
+    .payment-stat.is-danger strong {
+        color: #b42318;
     }
 
-    .toggle-details-btn { 
-        cursor: pointer; 
-        color: #22c55e;
-        font-size: 1.2rem;
-        transition: all 0.2s ease;
-        padding: 0.25rem;
+    .payment-panel {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
     }
 
-    .toggle-details-btn:hover {
-        background: rgba(34, 197, 94, 0.1);
-        border-radius: 4px;
+    .payment-panel[hidden] {
+        display: none !important;
     }
 
-    /* Action Buttons Area */
-    #action-buttons {
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 1rem 1.5rem; 
-        border-top: 1px solid var(--border-color);
-        background: var(--surface-alt);
+    .payment-panel-heading {
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 60px;
+        padding: 13px 18px;
+        border-bottom: 1px solid #e4e7ec;
     }
 
-    #action-buttons span {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
+    .payment-step-title {
+        gap: 9px;
     }
 
-    #action-buttons strong {
-        color: var(--text-primary);
-        font-weight: 600;
+    .payment-step-number {
+        display: grid;
+        place-items: center;
+        width: 25px;
+        height: 25px;
+        color: #2878f0;
+        background: #eef5ff;
+        border-radius: 7px;
+        font-size: 10px;
+        font-weight: 700;
     }
 
-    /* Payment Form */
-    .payment-form { 
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        padding: 2rem;
-        margin-top: 2rem;
-        box-shadow: 0 15px 35px rgba(34, 197, 94, 0.1);
-        border: 2px solid rgba(34, 197, 94, 0.1);
-        display: none;
+    .payment-panel-title,
+    .payment-panel-context {
+        margin: 0;
     }
 
-    .payment-form.active { display: block; }
-
-    .payment-form h3 {
-        margin-bottom: 1.5rem;
-        color: #14532d;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .payment-panel-title {
+        color: #101828;
+        font-size: 13px;
+        font-weight: 650;
     }
 
-    /* Form Elements */
-    .form-group { margin-bottom: 1.5rem; }
-
-    .form-label { 
-        display: block; 
-        font-weight: 600; 
-        color: #374151;
-        margin-bottom: 0.5rem;
+    .payment-panel-context {
+        margin-top: 3px;
+        color: #667085;
+        font-size: 9.5px;
     }
 
-    .form-control { 
-        width: 100%; 
-        padding: 0.75rem 1rem; 
-        border-radius: 12px;
-        border: 2px solid #e5e7eb;
-        transition: all 0.3s ease;
-        font-size: 0.95rem;
+    .payment-selection-toolbar {
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 48px;
+        padding: 10px 18px;
+        background: #fafbfc;
+        border-bottom: 1px solid #e4e7ec;
     }
 
-    .form-control:focus { 
-        outline: none; 
-        border-color: #22c55e;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-    }
-
-    /* Payment Details Table */
-    #payment-details-table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        margin-bottom: 1.5rem;
-    }
-
-    #payment-details-table th, 
-    #payment-details-table td { 
-        padding: 0.75rem; 
-        text-align: left; 
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    #payment-details-table th { 
-        background-color: #f9fafb;
-        font-weight: 600;
-    }
-
-    .payment-amount-input { 
-        width: 150px; 
-        text-align: right;
-    }
-
-    /* Error States */
-    .input-error { 
-        border-color: #ef4444 !important;
-    }
-
-    .error-message { 
-        color: #ef4444;
-        font-size: 0.875rem; 
-        margin-top: 0.25rem;
-    }
-
-    .discount-info { 
-        color: #16a34a;
-        font-size: 0.875rem; 
-        font-weight: 600;
-    }
-
-    /* Buttons */
-    .btn { 
-        display: inline-flex; 
-        align-items: center; 
-        gap: 0.5rem; 
-        padding: 0.75rem 1.5rem; 
-        border-radius: 12px;
-        font-weight: 600; 
-        text-decoration: none; 
-        transition: all 0.3s ease;
-        border: none; 
+    .payment-check-label,
+    .payment-group-select {
+        margin: 0 !important;
+        color: #475467 !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
         cursor: pointer;
     }
 
-    .btn-primary { 
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: white;
+    .payment-check-label {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 7px;
     }
 
-    .btn-success { 
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: white;
+    .payment-check,
+    .payment-group-check {
+        width: 15px !important;
+        height: 15px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        accent-color: #2878f0;
+        cursor: pointer;
     }
 
-    .btn-secondary { 
-        background: linear-gradient(135deg, #6b7280, #4b5563);
-        color: white;
+    .payment-selection-hint {
+        color: #98a2b3;
+        font-size: 9px;
     }
 
-    .btn:hover { 
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    .payment-bill-list {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+        background: #f9fafb;
     }
 
-    .button-group { 
-        display: flex; 
-        gap: 1rem; 
-        justify-content: flex-start;
+    .payment-group,
+    .payment-single {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 8px;
     }
 
-    /* Empty State */
-    .empty-state { 
-        text-align: center; 
-        padding: 3rem;
-        color: #6b7280;
+    .payment-group-header {
+        justify-content: space-between;
+        gap: 14px;
+        min-height: 58px;
+        padding: 10px 12px;
     }
 
-    .empty-state i { 
-        font-size: 3rem; 
-        margin-bottom: 1rem;
+    .payment-group-title {
+        min-width: 0;
+        gap: 9px;
     }
 
-    /* Responsive Design - hanya untuk konten internal */
-    @media (max-width: 768px) {
-        .page-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
-            padding: 1.5rem;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .student-info-card {
-            padding: 1.5rem;
-        }
-
-        .info-grid { 
-            grid-template-columns: 1fr; 
-            gap: 1rem;
-        }
-        
-        .tagihan-table {
-            font-size: 0.875rem;
-        }
-
-        .tagihan-table th,
-        .tagihan-table td {
-            padding: 0.75rem;
-        }
-
-        #action-buttons {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
-        }
-
-        .button-group {
-            justify-content: center;
-        }
-
-        .btn {
-            justify-content: center;
-        }
-
-        .payment-form {
-            padding: 1.5rem;
-        }
+    .payment-group-toggle {
+        flex: 0 0 28px;
+        width: 28px !important;
+        height: 28px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        color: #667085 !important;
+        border: 0 !important;
+        background: #f2f4f7 !important;
+        font-size: 9px !important;
     }
 
-    /* Smooth animations untuk user experience yang lebih baik */
-    .payment-form {
-        animation: slideDown 0.3s ease-out;
-    }
-
-    .details-row.show {
-        animation: fadeIn 0.3s ease-out;
-    }
-
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Hover effects yang subtle untuk pengalaman yang lebih interaktif */
-    .student-info-card,
-    .tagihan-container {
-        transition: box-shadow 0.3s ease;
-    }
-
-    .student-info-card:hover {
-        box-shadow: 0 20px 40px rgba(34, 197, 94, 0.15);
-    }
-
-    .tagihan-container:hover {
-        box-shadow: 0 30px 60px rgba(22, 163, 74, 0.2);
-    }
-
-    /* Improved accessibility dan focus states */
-    .checkbox-custom:focus,
-    .btn:focus,
-    .form-control:focus {
-        outline: 2px solid #22c55e;
-        outline-offset: 2px;
-    }
-
-    /* Loading state untuk feedback visual saat submit */
-    .btn.loading {
-        opacity: 0.8;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    /* Micro interactions untuk UX yang lebih smooth */
-    .toggle-details-btn {
-        transform-origin: center;
-    }
-
-    .fa-chevron-up {
+    .payment-group.is-open .payment-group-toggle i {
         transform: rotate(180deg);
     }
 
-    /* Better visual feedback untuk selected items */
-    .tagihan-checkbox:checked + td {
-        background: rgba(34, 197, 94, 0.05);
-    }
-    .focus,
-    .btn:focus,
-    .form-control:focus {
-        outline: 2px solid var(--primary-color);
-        outline-offset: 2px;
+    .payment-group-toggle i {
+        transition: transform .15s ease;
     }
 
-    /* Subtle hover effects */
-    .student-info-card:hover,
-    .tagihan-container:hover {
-        box-shadow: var(--shadow-md);
+    .payment-group-copy {
+        min-width: 0;
+    }
+
+    .payment-group-copy strong,
+    .payment-group-copy span {
+        display: block;
+    }
+
+    .payment-group-copy strong {
+        overflow: hidden;
+        color: #101828;
+        font-size: 10.5px;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .payment-group-copy span {
+        margin-top: 2px;
+        color: #98a2b3;
+        font-size: 8.5px;
+    }
+
+    .payment-group-meta {
+        justify-content: flex-end;
+        gap: 18px;
+    }
+
+    .payment-group-amount {
+        min-width: 110px;
+        text-align: right;
+    }
+
+    .payment-group-amount span,
+    .payment-group-amount strong {
+        display: block;
+    }
+
+    .payment-group-amount span {
+        color: #98a2b3;
+        font-size: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .payment-group-amount strong {
+        margin-top: 2px;
+        color: #b42318;
+        font-size: 10.5px;
+        font-weight: 650;
+    }
+
+    .payment-group-select {
+        gap: 7px;
+        min-height: 30px;
+        padding: 0 9px;
+        background: #f9fafb;
+        border: 1px solid #e4e7ec;
+        border-radius: 6px;
+        white-space: nowrap;
+    }
+
+    .payment-group-body[hidden] {
+        display: none !important;
+    }
+
+    .payment-bill-table {
+        width: 100% !important;
+        min-width: 760px !important;
+        border-collapse: collapse !important;
+    }
+
+    .payment-bill-table th {
+        height: 34px !important;
+        padding: 7px 10px !important;
+        color: #667085 !important;
+        background: #f9fafb !important;
+        border-top: 1px solid #e4e7ec !important;
+        border-bottom: 1px solid #e4e7ec !important;
+        font-size: 8.5px !important;
+        font-weight: 600 !important;
+    }
+
+    .payment-bill-table td {
+        height: 47px !important;
+        padding: 8px 10px !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border-bottom: 1px solid #eef0f3 !important;
+        font-size: 9.5px !important;
+    }
+
+    .payment-bill-table tbody tr:last-child td {
+        border-bottom: 0 !important;
+    }
+
+    .payment-bill-table tbody tr:hover td {
+        background: #fbfcfe !important;
+    }
+
+    .payment-bill-check-cell {
+        width: 37px;
+        text-align: center !important;
+    }
+
+    .payment-money {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .payment-money.is-remaining {
+        color: #b42318;
+        font-weight: 650;
+    }
+
+    .payment-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 22px;
+        padding: 0 7px;
+        color: #b42318;
+        background: #fef3f2;
+        border-radius: 999px;
+        font-size: 8px;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .payment-status::before {
+        width: 5px;
+        height: 5px;
+        background: #f04438;
+        border-radius: 50%;
+        content: "";
+    }
+
+    .payment-status.is-paid {
+        color: #087451;
+        background: #ecfdf3;
+    }
+
+    .payment-status.is-paid::before {
+        background: #12b76a;
+    }
+
+    .payment-single {
+        display: grid;
+        grid-template-columns: 36px minmax(180px, 1.4fr) 100px 120px 120px 105px;
+        align-items: center;
+        min-height: 58px;
+        padding: 8px 12px;
+        gap: 10px;
+    }
+
+    .payment-single > div {
+        min-width: 0;
+    }
+
+    .payment-single-label {
+        display: none;
+        color: #98a2b3;
+        font-size: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .payment-single-name strong,
+    .payment-single-name span,
+    .payment-single-value strong,
+    .payment-single-value span {
+        display: block;
+    }
+
+    .payment-single-name strong {
+        overflow: hidden;
+        color: #101828;
+        font-size: 10.5px;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .payment-single-name span,
+    .payment-single-value span {
+        margin-top: 2px;
+        color: #98a2b3;
+        font-size: 8.5px;
+    }
+
+    .payment-single-value strong {
+        color: #344054;
+        font-size: 9.5px;
+        font-weight: 600;
+    }
+
+    .payment-summary-bar {
+        position: sticky;
+        top: 68px;
+        z-index: 20;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 64px;
+        padding: 11px 18px;
+        background: rgba(255, 255, 255, .97);
+        border-top: 1px solid #e4e7ec;
+        backdrop-filter: blur(10px);
+    }
+
+    .payment-summary-copy {
+        gap: 22px;
+    }
+
+    .payment-summary-item span,
+    .payment-summary-item strong {
+        display: block;
+    }
+
+    .payment-summary-item span {
+        color: #98a2b3;
+        font-size: 8.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .payment-summary-item strong {
+        margin-top: 3px;
+        color: #101828;
+        font-size: 11px;
+        font-weight: 650;
+    }
+
+    .payment-form-body {
+        display: grid;
+        gap: 16px;
+        padding: 16px 18px 18px;
+    }
+
+    .payment-selected-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .payment-selected-item {
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 11px 12px;
+        background: #f9fafb;
+        border: 1px solid #e4e7ec;
+        border-radius: 8px;
+    }
+
+    .payment-selected-main {
+        align-items: flex-start;
+        min-width: 0;
+        gap: 9px;
+    }
+
+    .payment-selected-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 30px;
+        width: 30px;
+        height: 30px;
+        color: #2878f0;
+        background: #eef5ff;
+        border-radius: 7px;
+        font-size: 10px;
+    }
+
+    .payment-selected-copy {
+        min-width: 0;
+    }
+
+    .payment-selected-copy strong,
+    .payment-selected-copy span {
+        display: block;
+    }
+
+    .payment-selected-copy strong {
+        overflow: hidden;
+        color: #101828;
+        font-size: 10.5px;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .payment-selected-copy span {
+        margin-top: 3px;
+        color: #667085;
+        font-size: 9px;
+    }
+
+    .payment-selected-actions {
+        align-items: flex-end;
+        gap: 7px;
+    }
+
+    .payment-amount-field {
+        min-width: 180px;
+    }
+
+    .payment-amount-field label {
+        margin-bottom: 4px !important;
+        color: #667085 !important;
+        font-size: 8.5px !important;
+    }
+
+    .payment-amount-field input {
+        width: 180px !important;
+        height: 34px !important;
+        margin: 0 !important;
+        padding: 0 10px !important;
+        color: #101828 !important;
+        background: #fff !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+    }
+
+    .payment-amount-field input.is-invalid {
+        border-color: #f04438 !important;
+    }
+
+    .payment-input-error {
+        display: none !important;
+        margin-top: 4px;
+        color: #b42318;
+        font-size: 8.5px;
+    }
+
+    .payment-input-error.is-visible {
+        display: block !important;
+    }
+
+    .payment-quick-button {
+        min-height: 34px !important;
+        padding: 0 9px !important;
+        font-size: 9px !important;
+        white-space: nowrap;
+    }
+
+    .payment-discount-info {
+        display: none;
+        grid-column: 1 / -1;
+        gap: 7px;
+        width: 100%;
+        margin-top: 7px;
+        padding: 8px 9px;
+        color: #087451;
+        background: #ecfdf3;
+        border-radius: 6px;
+        font-size: 8.5px;
+    }
+
+    .payment-discount-info.is-visible {
+        display: flex;
+    }
+
+    .payment-discount-info.is-warning {
+        color: #b54708;
+        background: #fffaeb;
+    }
+
+    .payment-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 11px;
+        padding-top: 2px;
+    }
+
+    .payment-field.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .payment-field label {
+        margin-bottom: 5px !important;
+        color: #475467 !important;
+        font-size: 9.5px !important;
+    }
+
+    .payment-field input,
+    .payment-field select,
+    .payment-field textarea {
+        width: 100% !important;
+        margin: 0 !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-size: 10.5px !important;
+    }
+
+    .payment-field input,
+    .payment-field select {
+        height: 37px !important;
+    }
+
+    .payment-field textarea {
+        min-height: 72px !important;
+        padding: 9px 10px !important;
+        resize: vertical;
+    }
+
+    .payment-form-footer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 16px;
+        padding-top: 4px;
+    }
+
+    .payment-form-total span,
+    .payment-form-total strong {
+        display: block;
+    }
+
+    .payment-form-total span {
+        color: #667085;
+        font-size: 9px;
+    }
+
+    .payment-form-total strong {
+        margin-top: 3px;
+        color: #101828;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -.035em;
+    }
+
+    .payment-form-actions {
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    .payment-empty {
+        display: grid;
+        place-items: center;
+        min-height: 250px;
+        padding: 30px;
+        color: #667085;
+        text-align: center;
+    }
+
+    .payment-empty i {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        margin: 0 auto 10px;
+        color: #667085;
+        background: #f2f4f7;
+        border-radius: 9px;
+        font-size: 14px;
+    }
+
+    .payment-empty strong,
+    .payment-empty span {
+        display: block;
+    }
+
+    .payment-empty strong {
+        color: #344054;
+        font-size: 12px;
+    }
+
+    .payment-empty span {
+        max-width: 350px;
+        margin-top: 4px;
+        font-size: 9.5px;
+    }
+
+    .payment-modal-list {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .payment-modal-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #344054;
+        font-size: 10.5px;
+    }
+
+    .payment-modal-list i {
+        color: #12a06a;
+        font-size: 9px;
+    }
+
+    .payment-modal-note {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        padding: 9px 10px;
+        color: #854a0e;
+        background: #fffaeb;
+        border: 1px solid #fef0c7;
+        border-radius: 7px;
+        font-size: 9.5px;
+    }
+
+    @media (max-width: 1050px) {
+        .payment-heading {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .payment-heading-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .payment-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .payment-group-meta {
+            gap: 10px;
+        }
+
+        .payment-single {
+            grid-template-columns: 34px minmax(170px, 1fr) 90px 110px 110px;
+        }
+
+        .payment-single .payment-single-period {
+            display: none;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .payment-page {
+            gap: 14px;
+        }
+
+        .payment-heading-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .payment-button {
+            width: 100% !important;
+        }
+
+        .payment-student-card,
+        .payment-panel-heading,
+        .payment-selection-toolbar,
+        .payment-summary-bar,
+        .payment-selected-item,
+        .payment-form-footer {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .payment-summary-bar {
+            top: 62px;
+        }
+
+        .payment-student-details {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+            gap: 10px;
+            padding-top: 12px;
+            border-top: 1px solid #eef0f3;
+        }
+
+        .payment-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .payment-stat {
+            padding: 12px;
+        }
+
+        .payment-stat strong {
+            font-size: 17px;
+        }
+
+        .payment-selection-hint {
+            display: none;
+        }
+
+        .payment-group-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .payment-group-title {
+            width: 100%;
+        }
+
+        .payment-group-meta {
+            justify-content: space-between;
+            width: 100%;
+            padding-left: 37px;
+        }
+
+        .payment-group-amount {
+            min-width: 0;
+            text-align: left;
+        }
+
+        .payment-group-select {
+            margin-left: auto !important;
+        }
+
+        .payment-group-body {
+            padding: 8px;
+            background: #f9fafb;
+            border-top: 1px solid #e4e7ec;
+        }
+
+        body:has(.app-sidebar) .payment-page .payment-bill-table {
+            display: block !important;
+            min-width: 0 !important;
+            background: transparent !important;
+        }
+
+        .payment-bill-table thead {
+            display: none !important;
+        }
+
+        .payment-bill-table tbody,
+        .payment-bill-table tr,
+        .payment-bill-table td {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        .payment-bill-table tr {
+            display: grid !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            margin-bottom: 7px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #e4e7ec;
+            border-radius: 7px;
+        }
+
+        .payment-bill-table tr:last-child {
+            margin-bottom: 0;
+        }
+
+        .payment-bill-table td {
+            display: grid !important;
+            grid-template-columns: 92px minmax(0, 1fr) !important;
+            align-items: center !important;
+            min-height: 34px !important;
+            height: auto !important;
+            padding: 7px 9px !important;
+            text-align: right !important;
+            border-bottom: 1px solid #eef0f3 !important;
+        }
+
+        .payment-bill-table td::before {
+            color: #98a2b3;
+            font-size: 8px;
+            font-weight: 600;
+            text-align: left;
+            text-transform: uppercase;
+            content: attr(data-label);
+        }
+
+        .payment-bill-table td.payment-bill-check-cell {
+            display: grid !important;
+            grid-column: 1;
+            grid-row: 1 / span 6;
+            place-items: center !important;
+            padding: 0 !important;
+            border-right: 1px solid #eef0f3 !important;
+            border-bottom: 0 !important;
+        }
+
+        .payment-bill-table td.payment-bill-check-cell::before {
+            display: none;
+        }
+
+        .payment-bill-table td:not(.payment-bill-check-cell) {
+            grid-column: 2;
+        }
+
+        .payment-single {
+            grid-template-columns: 30px minmax(0, 1fr);
+            padding: 10px;
+        }
+
+        .payment-single > div:not(.payment-single-check):not(.payment-single-name) {
+            display: grid;
+            grid-column: 2;
+            grid-template-columns: 92px minmax(0, 1fr);
+            align-items: center;
+            min-height: 28px;
+            text-align: right;
+        }
+
+        .payment-single-label {
+            display: block;
+            text-align: left;
+        }
+
+        .payment-single-name {
+            grid-column: 2;
+        }
+
+        .payment-single-check {
+            grid-row: 1 / span 5;
+            align-self: stretch;
+            display: grid;
+            place-items: center;
+            border-right: 1px solid #eef0f3;
+        }
+
+        .payment-summary-copy {
+            justify-content: space-between;
+        }
+
+        .payment-summary-bar .payment-button {
+            width: 100% !important;
+        }
+
+        .payment-selected-item {
+            display: grid;
+        }
+
+        .payment-selected-actions {
+            align-items: flex-end;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            width: 100%;
+        }
+
+        .payment-amount-field,
+        .payment-amount-field input {
+            width: 100% !important;
+            min-width: 0;
+        }
+
+        .payment-details-grid,
+        .payment-form-footer {
+            grid-template-columns: 1fr;
+        }
+
+        .payment-field.is-full {
+            grid-column: auto;
+        }
+
+        .payment-form-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .payment-stats,
+        .payment-student-details {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
 <div class="main-content">
     @include('layouts.header')
-    <div class="content-area">
-        <div class="page-header">
-            <h2 class="page-title"><i class="fas fa-user-graduate"></i> Proses Tagihan Siswa</h2>
-            <div>
-                <button type="button" class="btn-generate" data-bs-toggle="modal" data-bs-target="#generateModal">
-                    <i class="fas fa-cogs"></i> Generate Tagihan Siswa
-                </button>
-                <a href="{{ route('tagihan.index.grouped') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
-            </div>
-        </div>
 
-        <!-- Generate Tagihan Modal -->
-        <div class="modal fade" id="generateModal" tabindex="-1" aria-labelledby="generateModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="generateModalLabel">Generate Tagihan untuk {{ $siswa->nama }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="content-area">
+        <div class="payment-page">
+            @if($errors->any())
+                <div class="payment-alert" role="alert">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <span>{{ $errors->first() }}</span>
+                </div>
+            @endif
+
+            <header class="payment-heading">
+                <div>
+                    <p class="payment-eyebrow">Tagihan · Proses pembayaran</p>
+                    <h1 class="payment-title" data-page-title>{{ $siswa->nama }}</h1>
+                    <p class="payment-subtitle">Pilih satu atau beberapa tagihan, lalu atur jumlah pembayarannya.</p>
+                </div>
+
+                <div class="payment-heading-actions">
+                    <a class="payment-button" href="{{ route('tagihan.index.grouped', ['sekolah' => $siswa->id_sekolah, 'kelas' => $siswa->kelas_id]) }}">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Kembali ke tagihan</span>
+                    </a>
+                    @if($canGenerate)
+                        <button class="payment-button is-primary" type="button" data-bs-toggle="modal" data-bs-target="#generateStudentModal">
+                            <i class="fas fa-file-circle-plus"></i>
+                            <span>Buat tagihan siswa</span>
+                        </button>
+                    @endif
+                </div>
+            </header>
+
+            <section class="payment-student-card" aria-label="Informasi siswa">
+                <div class="payment-student-profile">
+                    <span class="payment-student-avatar">{{ $studentInitial }}</span>
+                    <span class="payment-student-copy">
+                        <strong>{{ $siswa->nama }}</strong>
+                        <span>NIS {{ $siswa->nis }}</span>
+                    </span>
+                </div>
+                <div class="payment-student-details">
+                    <div class="payment-student-detail">
+                        <span>Kelas</span>
+                        <strong>{{ $classLabel }}</strong>
                     </div>
-                    <div class="modal-body">
-                        <p>Apakah Anda yakin ingin mengenerate tagihan khusus untuk siswa ini?</p>
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i> 
-                            Proses ini hanya akan membuat tagihan baru untuk siswa ini jika memenuhi syarat.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <form action="{{ route('tagihan.generate.manual.siswa', $siswa->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-cogs"></i> Generate Sekarang
-                            </button>
-                        </form>
+                    <div class="payment-student-detail">
+                        <span>Sekolah</span>
+                        <strong>{{ $siswa->sekolah?->nama_sekolah ?? '-' }}</strong>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <div class="student-info-card">
-            <div class="info-grid">
-                <div class="info-item"><span class="info-label">Nama Siswa</span><span class="info-value">{{ $siswa->nama }}</span></div>
-                <div class="info-item"><span class="info-label">NIS</span><span class="info-value">{{ $siswa->nis }}</span></div>
-                <div class="info-item"><span class="info-label">Kelas</span><span class="info-value">{{ $siswa->kelas->tingkat }} - {{ $siswa->kelas->nama_kelas }}</span></div>
-                <div class="info-item"><span class="info-label">Sekolah</span><span class="info-value">{{ $siswa->sekolah->nama_sekolah }}</span></div>
-            </div>
-        </div>
+            <section class="payment-stats" aria-label="Ringkasan tagihan siswa">
+                <article class="payment-stat">
+                    <span>Total tagihan</span>
+                    <strong>{{ number_format($studentSummary['total_tagihan'], 0, ',', '.') }}</strong>
+                </article>
+                <article class="payment-stat">
+                    <span>Total nominal</span>
+                    <strong>{{ $formatRupiah($studentSummary['total_nominal']) }}</strong>
+                </article>
+                <article class="payment-stat is-success">
+                    <span>Sudah dibayar</span>
+                    <strong>{{ $formatRupiah($studentSummary['total_dibayar']) }}</strong>
+                </article>
+                <article class="payment-stat is-danger">
+                    <span>Sisa tagihan</span>
+                    <strong>{{ $formatRupiah($studentSummary['sisa_bayar']) }}</strong>
+                </article>
+            </section>
 
-        <div class="tagihan-container">
-            <div class="tagihan-header">
-                <i class="fas fa-file-invoice"></i> <h3>Daftar Tagihan</h3>
-            </div>
+            <section class="payment-panel" id="billSelectionPanel">
+                <div class="payment-panel-heading">
+                    <div class="payment-step-title">
+                        <span class="payment-step-number">1</span>
+                        <div>
+                            <h2 class="payment-panel-title">Pilih tagihan</h2>
+                            <p class="payment-panel-context">{{ $studentSummary['belum_lunas'] }} tagihan masih perlu dibayar</p>
+                        </div>
+                    </div>
+                </div>
 
-            @if(count($tagihanList) > 0)
-                <table class="tagihan-table">
-                    <thead>
-                        <tr>
-                            <th class="checkbox-cell"><input type="checkbox" id="select-all-parent" class="checkbox-custom"></th>
-                            <th>Nama Tagihan</th>
-                            <th>Tipe</th>
-                            <th>Periode</th>
-                            <th>Nominal</th>
-                            <th>Sudah Dibayar</th>
-                            <th>Sisa</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                @if(count($tagihanList) > 0)
+                    <div class="payment-selection-toolbar">
+                        <label class="payment-check-label" for="selectAllBills">
+                            <input class="payment-check" id="selectAllBills" type="checkbox">
+                            <span>Pilih semua tagihan belum lunas</span>
+                        </label>
+                        <span class="payment-selection-hint">Tagihan lunas tidak dapat dipilih kembali.</span>
+                    </div>
+
+                    <div class="payment-summary-bar">
+                        <div class="payment-summary-copy">
+                            <div class="payment-summary-item">
+                                <span>Dipilih</span>
+                                <strong><span id="selectedBillCount">0</span> tagihan</strong>
+                            </div>
+                            <div class="payment-summary-item">
+                                <span>Total sisa</span>
+                                <strong id="selectedBillTotal">Rp0</strong>
+                            </div>
+                        </div>
+                        @if($canPay)
+                            <button class="payment-button is-primary" id="continuePaymentButton" type="button" disabled>
+                                <i class="fas fa-arrow-right"></i>
+                                <span>Lanjut pembayaran</span>
+                            </button>
+                        @endif
+                    </div>
+
+                    <div class="payment-bill-list">
                         @foreach($tagihanList as $tagihan)
-                            @if(isset($tagihan['is_grouped']) && $tagihan['is_grouped'])
-                                {{-- Baris untuk tagihan bulanan yang digrupkan --}}
-                                <tr class="grouped-row">
-                                    <td><i class="fas fa-chevron-down toggle-details-btn" data-target="details-{{ $tagihan['id'] }}"></i></td>
-                                    <td>{{ $tagihan['nama_tagihan'] }}</td>
-                                    <td><span class="badge">{{ ucfirst($tagihan['tipe']) }}</span></td>
-                                    <td>{{ $tagihan['periode'] }}</td>
-                                    <td>Rp {{ number_format($tagihan['nominal'], 0, ',', '.') }}</td>
-                                    <td>Rp {{ number_format($tagihan['total_bayar'], 0, ',', '.') }}</td>
-                                    <td><strong>Rp {{ number_format($tagihan['sisa_bayar'], 0, ',', '.') }}</strong></td>
-                                    <td>
-                                        <span class="status-badge {{ $tagihan['status'] === 'lunas' ? 'status-lunas' : 'status-belum' }}">
-                                        @if($tagihan['status'] === 'lunas')
-                                            ✅ Lunas
-                                        @else
-                                            🕐 Belum Lunas
-                                        @endif
-                                        </span>
-                                    </td>
-                                    <td></td>
-                                </tr>
-                                {{-- Baris detail untuk setiap bulan (dropdown) --}}
-                                <tr class="details-row" id="details-{{ $tagihan['id'] }}">
-                                    <td colspan="9" style="padding: 0;">
-                                        <table class="details-table">
+                            @if($tagihan['is_grouped'])
+                                @php
+                                    $groupId = 'payment-group-' . $loop->index;
+                                    $groupOpen = $loop->index === $defaultOpenGroup;
+                                    $outstandingMonths = collect($tagihan['bulan_tagihan'])
+                                        ->filter(fn ($bulan) => (float) $bulan['sisa_bayar'] > 0);
+                                @endphp
+                                <article class="payment-group {{ $groupOpen ? 'is-open' : '' }}" data-payment-group>
+                                    <header class="payment-group-header">
+                                        <div class="payment-group-title">
+                                            <button class="payment-group-toggle" type="button" data-group-toggle="{{ $groupId }}" aria-expanded="{{ $groupOpen ? 'true' : 'false' }}">
+                                                <i class="fas fa-chevron-down"></i>
+                                            </button>
+                                            <span class="payment-group-copy">
+                                                <strong>{{ $tagihan['nama_tagihan'] }}</strong>
+                                                <span>{{ count($tagihan['bulan_tagihan']) }} periode · {{ ucfirst($tagihan['tipe']) }}</span>
+                                            </span>
+                                        </div>
+
+                                        <div class="payment-group-meta">
+                                            <span class="payment-group-amount">
+                                                <span>Sisa</span>
+                                                <strong>{{ $formatRupiah(max(0, $tagihan['sisa_bayar'])) }}</strong>
+                                            </span>
+                                            @if($outstandingMonths->isNotEmpty())
+                                                <label class="payment-group-select">
+                                                    <input class="payment-group-check" type="checkbox" data-select-group="{{ $groupId }}">
+                                                    <span>Pilih grup</span>
+                                                </label>
+                                            @else
+                                                <span class="payment-status is-paid">Lunas</span>
+                                            @endif
+                                        </div>
+                                    </header>
+
+                                    <div class="payment-group-body" id="{{ $groupId }}" {{ $groupOpen ? '' : 'hidden' }}>
+                                        <table class="payment-bill-table">
                                             <thead>
                                                 <tr>
-                                                    <th class="checkbox-cell"><input type="checkbox" class="select-all-child checkbox-custom" data-parent-group="details-{{ $tagihan['id'] }}"></th>
-                                                    <th>Periode Bulan</th>
+                                                    <th></th>
+                                                    <th>Periode</th>
+                                                    <th>Jatuh tempo</th>
                                                     <th>Nominal</th>
-                                                    <th>Sisa Bayar</th>
+                                                    <th>Dibayar</th>
+                                                    <th>Sisa</th>
                                                     <th>Status</th>
-                                                    <th>Jatuh Tempo</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach($tagihan['bulan_tagihan'] as $bulan)
+                                                    @php
+                                                        $monthOutstanding = (float) $bulan['sisa_bayar'] > 0;
+                                                        $dueDate = $bulan['tanggal_jatuh_tempo']
+                                                            ? \Carbon\Carbon::parse($bulan['tanggal_jatuh_tempo'])
+                                                            : null;
+                                                    @endphp
                                                     <tr>
-                                                        <td class="checkbox-cell">
-                                                            @if($bulan['status'] !== 'lunas' && $bulan['sisa_bayar'] > 0)
-                                                                <input type="checkbox"
-                                                                       class="tagihan-checkbox checkbox-custom"
-                                                                       value="{{ $bulan['id'] }}"
-                                                                       data-nominal="{{ $bulan['sisa_bayar'] }}"
-                                                                       data-periode="{{ \Carbon\Carbon::parse($bulan['tanggal_jatuh_tempo'])->format('Y-m') }}"
-                                                                       data-is-spp="{{ str_contains(strtolower($tagihan['nama_tagihan']), 'spp') ? 'true' : 'false' }}">
+                                                        <td class="payment-bill-check-cell">
+                                                            @if($monthOutstanding)
+                                                                <input
+                                                                    class="payment-check bill-checkbox"
+                                                                    type="checkbox"
+                                                                    value="{{ $bulan['id'] }}"
+                                                                    data-group="{{ $groupId }}"
+                                                                    data-name="{{ $tagihan['nama_tagihan'] }} · {{ $bulan['periode_display'] ?? $bulan['periode'] }}"
+                                                                    data-nominal="{{ (float) $bulan['sisa_bayar'] }}"
+                                                                    data-periode="{{ $dueDate?->format('Y-m') }}"
+                                                                    data-is-spp="{{ str_contains(strtolower($tagihan['nama_tagihan']), 'spp') ? 'true' : 'false' }}"
+                                                                >
+                                                            @else
+                                                                <i class="fas fa-check" style="color:#12a06a;font-size:9px"></i>
                                                             @endif
                                                         </td>
-                                                        {{-- ✅ PERBAIKAN: Gunakan periode_display untuk nama bulan Indonesia --}}
-                                                        <td>{{ $bulan['periode_display'] ?? $bulan['periode'] }}</td>
-                                                        <td>Rp {{ number_format($bulan['nominal'], 0, ',', '.') }}</td>
-                                                        <td><strong>Rp {{ number_format($bulan['sisa_bayar'], 0, ',', '.') }}</strong></td>
-                                                        <td>
-                                                            <span class="status-badge {{ $bulan['status'] === 'lunas' ? 'status-lunas' : 'status-belum' }}">
-                                                                @if($bulan['status'] === 'lunas')
-                                                                    <i class="fas fa-check-circle"></i> Lunas
-                                                                @else
-                                                                    <i class="fas fa-clock"></i> Belum Lunas
-                                                                @endif
-                                                            </span>
+                                                        <td data-label="Periode">{{ $bulan['periode_display'] ?? $bulan['periode'] }}</td>
+                                                        <td data-label="Jatuh tempo">{{ $dueDate?->translatedFormat('d M Y') ?? '-' }}</td>
+                                                        <td data-label="Nominal"><span class="payment-money">{{ $formatRupiah($bulan['nominal']) }}</span></td>
+                                                        <td data-label="Dibayar"><span class="payment-money">{{ $formatRupiah($bulan['total_bayar']) }}</span></td>
+                                                        <td data-label="Sisa"><span class="payment-money {{ $monthOutstanding ? 'is-remaining' : '' }}">{{ $formatRupiah(max(0, $bulan['sisa_bayar'])) }}</span></td>
+                                                        <td data-label="Status">
+                                                            <span class="payment-status {{ $monthOutstanding ? '' : 'is-paid' }}">{{ $monthOutstanding ? 'Belum lunas' : 'Lunas' }}</span>
                                                         </td>
-                                                        <td>{{ \Carbon\Carbon::parse($bulan['tanggal_jatuh_tempo'])->format('d M Y') }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
                                         </table>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </article>
                             @else
-                                {{-- Baris untuk tagihan non-bulanan --}}
-                                <tr>
-                                    <td class="checkbox-cell">
-                                        @if($tagihan['status'] !== 'lunas' && $tagihan['sisa_bayar'] > 0)
-                                            <input type="checkbox" class="tagihan-checkbox checkbox-custom" value="{{ $tagihan['id'] }}" data-nominal="{{ $tagihan['sisa_bayar'] }}">
-                                        @endif
-                                    </td>
-                                    <td>{{ $tagihan['nama_tagihan'] }}</td>
-                                    <td><span class="badge">{{ ucfirst($tagihan['tipe']) }}</span></td>
-                                    <td>{{ $tagihan['periode'] ?? '-' }}</td>
-                                    <td>Rp {{ number_format($tagihan['nominal'], 0, ',', '.') }}</td>
-                                    <td>Rp {{ number_format($tagihan['total_bayar'], 0, ',', '.') }}</td>
-                                    <td><strong>Rp {{ number_format($tagihan['sisa_bayar'], 0, ',', '.') }}</strong></td>
-                                    <td>
-                                        <span class="status-badge {{ $tagihan['status'] === 'lunas' ? 'status-lunas' : 'status-belum' }}">
-                                        @if($tagihan['status'] === 'lunas')
-                                            ✅ Lunas
+                                @php
+                                    $billOutstanding = (float) $tagihan['sisa_bayar'] > 0;
+                                @endphp
+                                <article class="payment-single">
+                                    <div class="payment-single-check">
+                                        @if($billOutstanding)
+                                            <input
+                                                class="payment-check bill-checkbox"
+                                                type="checkbox"
+                                                value="{{ $tagihan['id'] }}"
+                                                data-name="{{ $tagihan['nama_tagihan'] }}"
+                                                data-nominal="{{ (float) $tagihan['sisa_bayar'] }}"
+                                                data-periode=""
+                                                data-is-spp="false"
+                                            >
                                         @else
-                                            🕐 Belum Lunas
+                                            <i class="fas fa-check" style="color:#12a06a;font-size:9px"></i>
                                         @endif
-                                        </span>
-                                    </td>
-                                </tr>
+                                    </div>
+                                    <div class="payment-single-name">
+                                        <strong>{{ $tagihan['nama_tagihan'] }}</strong>
+                                        <span>{{ ucfirst($tagihan['tipe']) }}</span>
+                                    </div>
+                                    <div class="payment-single-period">
+                                        <span class="payment-single-label">Periode</span>
+                                        <div class="payment-single-value"><strong>{{ $tagihan['periode'] ?? '-' }}</strong></div>
+                                    </div>
+                                    <div>
+                                        <span class="payment-single-label">Nominal</span>
+                                        <div class="payment-single-value"><strong>{{ $formatRupiah($tagihan['nominal']) }}</strong></div>
+                                    </div>
+                                    <div>
+                                        <span class="payment-single-label">Sisa</span>
+                                        <div class="payment-single-value"><strong class="payment-money {{ $billOutstanding ? 'is-remaining' : '' }}">{{ $formatRupiah(max(0, $tagihan['sisa_bayar'])) }}</strong></div>
+                                    </div>
+                                    <div>
+                                        <span class="payment-single-label">Status</span>
+                                        <span class="payment-status {{ $billOutstanding ? '' : 'is-paid' }}">{{ $billOutstanding ? 'Belum lunas' : 'Lunas' }}</span>
+                                    </div>
+                                </article>
                             @endif
                         @endforeach
-                    </tbody>
-                </table>
+                    </div>
 
-                <div id="action-buttons" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--surface-alt);">
-                   <div>
-                       <span style="font-weight: 500;">Tagihan Dipilih: <strong id="selected-count">0</strong></span>
-                       <span style="margin-left: 1rem; font-weight: 500;">Total Pembayaran: <strong id="total-payment">Rp 0</strong></span>
-                   </div>
-                   <button id="multi-payment-btn" class="btn btn-success" onclick="processMultiPayment()">
-                       <i class="fas fa-check-circle"></i> Bayar Tagihan Terpilih
-                   </button>
-               </div>
+                @else
+                    <div class="payment-empty">
+                        <div>
+                            <i class="fas fa-file-invoice"></i>
+                            <strong>Belum ada tagihan</strong>
+                            <span>Buat tagihan siswa agar pembayaran dapat diproses.</span>
+                        </div>
+                    </div>
+                @endif
+            </section>
 
-                <div id="payment-form" class="payment-form">
-                    <h3><i class="fas fa-credit-card"></i> Pembayaran Multi-Tagihan</h3>
-                    <p style="margin-top: -0.5rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">
-                       Jumlah bayar di bawah ini dapat Anda sesuaikan untuk pembayaran angsuran (parsial).
-                    </p>
+            @if($canPay && count($tagihanList) > 0)
+                <section class="payment-panel" id="paymentFormPanel" hidden>
+                    <div class="payment-panel-heading">
+                        <div class="payment-step-title">
+                            <span class="payment-step-number">2</span>
+                            <div>
+                                <h2 class="payment-panel-title">Atur pembayaran</h2>
+                                <p class="payment-panel-context">Jumlah dapat disesuaikan untuk pembayaran sebagian.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                    <form action="{{ route('tagihan.proses.multi') }}" method="POST" id="multi-payment-form">
+                    <form action="{{ route('tagihan.proses.multi') }}" method="POST" id="multiPaymentForm">
                         @csrf
                         <input type="hidden" name="siswa_id" value="{{ $siswa->id }}">
 
-                        {{-- Container for dynamic payment inputs --}}
-                        <div id="selected-tagihan-container">
-                           {{-- JS will populate this area --}}
-                        </div>
+                        <div class="payment-form-body">
+                            <div class="payment-selected-list" id="selectedBillsContainer"></div>
 
-                        <div class="form-group">
-                            <label class="form-label">Tanggal Bayar</label>
-                            <input type="date" name="tanggal_bayar" id="tanggal-bayar" class="form-control" value="{{ date('Y-m-d') }}" required>
-                        </div>
+                            <div class="payment-details-grid">
+                                <div class="payment-field">
+                                    <label for="paymentDate">Tanggal bayar</label>
+                                    <input id="paymentDate" type="date" name="tanggal_bayar" value="{{ date('Y-m-d') }}" required>
+                                </div>
+                                <div class="payment-field">
+                                    <label for="paymentMethod">Metode pembayaran</label>
+                                    <select id="paymentMethod" name="metode_bayar" required>
+                                        <option value="tunai">Tunai</option>
+                                        <option value="transfer">Transfer bank</option>
+                                        <option value="kjc">KJC</option>
+                                        <option value="tabungan">Potongan dari tabungan</option>
+                                    </select>
+                                </div>
+                                <div class="payment-field is-full">
+                                    <label for="paymentNote">Keterangan <span style="color:#98a2b3;font-weight:500">(opsional)</span></label>
+                                    <textarea id="paymentNote" name="keterangan" placeholder="Tambahkan catatan pembayaran jika diperlukan..."></textarea>
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Metode Pembayaran</label>
-                            <select name="metode_bayar" class="form-control" required>
-                                <option value="tunai">💵 Tunai</option>
-                                <option value="transfer">🏦 Transfer Bank</option>
-                                <option value="kjc">🏢 KJC</option>
-                                <option value="tabungan">💰 Potongan Dari Tabungan</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Keterangan (Opsional)</label>
-                            <textarea name="keterangan" class="form-control" rows="3" placeholder="Tambahkan keterangan jika diperlukan..."></textarea>
-                        </div>
-
-                        <div class="button-group">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-check-circle"></i> Proses Pembayaran
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="cancelMultiPayment()">
-                                <i class="fas fa-times"></i> Batal
-                            </button>
+                            <div class="payment-form-footer">
+                                <div class="payment-form-total">
+                                    <span>Total uang diterima</span>
+                                    <strong id="paymentCashTotal">Rp0</strong>
+                                </div>
+                                <div class="payment-form-actions">
+                                    <button class="payment-button" id="cancelPaymentButton" type="button">
+                                        <i class="fas fa-xmark"></i>
+                                        <span>Batal</span>
+                                    </button>
+                                    <button class="payment-button is-primary" id="submitPaymentButton" type="submit">
+                                        <i class="fas fa-circle-check"></i>
+                                        <span>Konfirmasi pembayaran</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </form>
-                </div>
-            @else
-                <div class="empty-state">
-                    <i class="fas fa-file-invoice"></i>
-                    <p>Tidak ada tagihan untuk siswa ini</p>
-                </div>
+                </section>
             @endif
         </div>
     </div>
 </div>
 
+@if($canGenerate)
+    <div class="modal fade" id="generateStudentModal" tabindex="-1" aria-labelledby="generateStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title" id="generateStudentModalLabel">Buat tagihan siswa</h2>
+                        <p class="payment-panel-context">{{ $siswa->nama }}</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="payment-modal-list">
+                        <li><i class="fas fa-circle-check"></i><span>Membuat SPP untuk tahun berjalan.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>Membuat jenis pembayaran yang sesuai sekolah dan kelas.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>Tagihan yang sudah ada tidak akan digandakan.</span></li>
+                    </ul>
+                    <div class="payment-modal-note">
+                        <i class="fas fa-circle-info"></i>
+                        <span>Pastikan nominal SPP dan penempatan kelas siswa sudah benar.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="payment-button" type="button" data-bs-dismiss="modal">Batal</button>
+                    <form id="generateStudentForm" action="{{ route('tagihan.generate.manual.siswa', $siswa->id) }}" method="POST">
+                        @csrf
+                        <button class="payment-button is-primary" id="generateStudentButton" type="submit">
+                            <i class="fas fa-file-circle-plus"></i>
+                            <span>Buat tagihan sekarang</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 <script>
-// ✅ PERBAIKAN LENGKAP JAVASCRIPT UNTUK SISTEM DISKON
-document.addEventListener('DOMContentLoaded', function() {
-    const selectAllParent = document.getElementById('select-all-parent');
-    const tagihanCheckboxes = document.querySelectorAll('.tagihan-checkbox');
-    const toggleButtons = document.querySelectorAll('.toggle-details-btn');
-    const selectAllChildren = document.querySelectorAll('.select-all-child');
-    const tanggalBayarEl = document.getElementById('tanggal-bayar');
+document.addEventListener('DOMContentLoaded', () => {
+    const billCheckboxes = [...document.querySelectorAll('.bill-checkbox')];
+    const selectAll = document.getElementById('selectAllBills');
+    const groupChecks = [...document.querySelectorAll('[data-select-group]')];
+    const selectedCount = document.getElementById('selectedBillCount');
+    const selectedTotal = document.getElementById('selectedBillTotal');
+    const continueButton = document.getElementById('continuePaymentButton');
+    const selectionPanel = document.getElementById('billSelectionPanel');
+    const formPanel = document.getElementById('paymentFormPanel');
+    const selectedContainer = document.getElementById('selectedBillsContainer');
+    const paymentDate = document.getElementById('paymentDate');
+    const paymentForm = document.getElementById('multiPaymentForm');
+    const submitButton = document.getElementById('submitPaymentButton');
 
-    // ✅ Event listener untuk perubahan tanggal bayar
-    if (tanggalBayarEl) {
-        tanggalBayarEl.addEventListener('change', function() {
-            recalculateDiscounts();
+    const currency = (amount) => 'Rp' + Number(amount || 0).toLocaleString('id-ID');
+    const escapeHtml = (value) => String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+
+    document.querySelectorAll('[data-group-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const panel = document.getElementById(button.dataset.groupToggle);
+            const group = button.closest('[data-payment-group]');
+            const willOpen = panel.hidden;
+
+            panel.hidden = !willOpen;
+            group?.classList.toggle('is-open', willOpen);
+            button.setAttribute('aria-expanded', String(willOpen));
         });
-    }
+    });
 
-    // ✅ PERBAIKAN: Event listener untuk input jumlah bayar agar diskon langsung terpotong
-    document.addEventListener('input', function(e) {
-        if (e.target && e.target.classList.contains('payment-amount-input')) {
-            const row = e.target.closest('tr');
-            const tagihanId = row.dataset.tagihanId;
-            const sisaBayarAsli = parseInt(row.dataset.sisaBayarAsli, 10);
-            const amountInput = e.target;
-            const errorDiv = document.getElementById(`error-${tagihanId}`);
-            const maxAmount = parseInt(amountInput.max) || sisaBayarAsli;
+    const updateGroupChecks = () => {
+        groupChecks.forEach((groupCheck) => {
+            const children = billCheckboxes.filter((checkbox) => checkbox.dataset.group === groupCheck.dataset.selectGroup);
+            const checked = children.filter((checkbox) => checkbox.checked).length;
 
-            // Bersihkan error sebelumnya
-            if (errorDiv) errorDiv.style.display = 'none';
+            groupCheck.checked = children.length > 0 && checked === children.length;
+            groupCheck.indeterminate = checked > 0 && checked < children.length;
+        });
+    };
 
-            // ✅ TRIGGER: Recalculate discount ketika value valid
-            // Delay sedikit untuk memastikan DOM terupdate
-            setTimeout(recalculateDiscounts, 50);
+    const updateSelection = () => {
+        const checked = billCheckboxes.filter((checkbox) => checkbox.checked);
+        const total = checked.reduce((sum, checkbox) => sum + Number(checkbox.dataset.nominal || 0), 0);
+
+        if (selectedCount) selectedCount.textContent = checked.length.toLocaleString('id-ID');
+        if (selectedTotal) selectedTotal.textContent = currency(total);
+        if (continueButton) continueButton.disabled = checked.length === 0;
+
+        if (selectAll) {
+            selectAll.checked = billCheckboxes.length > 0 && checked.length === billCheckboxes.length;
+            selectAll.indeterminate = checked.length > 0 && checked.length < billCheckboxes.length;
         }
-    });
 
-    function updateSelectedCount() {
-        const selectedCheckboxes = document.querySelectorAll('.tagihan-checkbox:checked');
-        const multiPaymentBtn = document.getElementById('multi-payment-btn');
-        const actionButtons = document.getElementById('action-buttons');
-        const count = selectedCheckboxes.length;
-        let total = 0;
+        updateGroupChecks();
+    };
 
-        selectedCheckboxes.forEach(checkbox => {
-            total += parseInt(checkbox.dataset.nominal) || 0;
+    selectAll?.addEventListener('change', () => {
+        billCheckboxes.forEach((checkbox) => {
+            checkbox.checked = selectAll.checked;
         });
-
-        const selectedCountEl = document.getElementById('selected-count');
-        const totalPaymentEl = document.getElementById('total-payment');
-        if (selectedCountEl) selectedCountEl.textContent = count;
-        if (totalPaymentEl) totalPaymentEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
-
-        if (actionButtons) {
-            actionButtons.style.display = count > 0 ? 'flex' : 'none';
-        }
-
-        if (selectAllParent) {
-            const totalCheckboxes = document.querySelectorAll('.tagihan-checkbox').length;
-            if (count === 0) {
-                selectAllParent.checked = false;
-                selectAllParent.indeterminate = false;
-            } else if (count === totalCheckboxes) {
-                selectAllParent.checked = true;
-                selectAllParent.indeterminate = false;
-            } else {
-                selectAllParent.checked = false;
-                selectAllParent.indeterminate = true;
-            }
-        }
-    }
-
-    selectAllParent?.addEventListener('change', function() {
-        tagihanCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
-        });
-        updateSelectedCount();
+        updateSelection();
     });
 
-    tagihanCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedCount);
-    });
-
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.dataset.target;
-            const targetRow = document.getElementById(targetId);
-            if (targetRow) {
-                targetRow.classList.toggle('show');
-                this.classList.toggle('fa-chevron-down');
-                this.classList.toggle('fa-chevron-up');
-            }
-        });
-    });
-
-    selectAllChildren.forEach(parentCheckbox => {
-        parentCheckbox.addEventListener('change', function() {
-            const parentGroupId = this.dataset.parentGroup;
-            const parentGroup = document.getElementById(parentGroupId);
-            if (parentGroup) {
-                const childCheckboxes = parentGroup.querySelectorAll('.tagihan-checkbox');
-                childCheckboxes.forEach(child => {
-                    child.checked = this.checked;
+    groupChecks.forEach((groupCheck) => {
+        groupCheck.addEventListener('change', () => {
+            billCheckboxes
+                .filter((checkbox) => checkbox.dataset.group === groupCheck.dataset.selectGroup)
+                .forEach((checkbox) => {
+                    checkbox.checked = groupCheck.checked;
                 });
-                updateSelectedCount();
-            }
+            updateSelection();
         });
     });
 
-    updateSelectedCount();
-});
+    billCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', updateSelection));
 
-// ✅ PERBAIKAN: Update fungsi processMultiPayment dengan hidden inputs yang benar
-function processMultiPayment() {
-    const selectedCheckboxes = document.querySelectorAll('.tagihan-checkbox:checked');
-    if (selectedCheckboxes.length === 0) {
-        alert('Pilih minimal satu tagihan untuk dibayar!');
-        return;
-    }
+    const resetDiscount = (row) => {
+        row.querySelector('[data-discount-amount]').value = '0';
+        row.querySelector('[data-has-discount]').value = 'false';
+    };
 
-    const paymentForm = document.getElementById('payment-form');
-    const actionButtons = document.getElementById('action-buttons');
-    const container = document.getElementById('selected-tagihan-container');
+    const validateAmount = (input) => {
+        const max = Number(input.dataset.maxAmount || 0);
+        const value = Number(input.value || 0);
+        const error = input.closest('[data-payment-row]').querySelector('[data-payment-error]');
+        const invalid = value < 0 || value > max;
 
-    let tableHTML = `
-        <table id="payment-details-table">
-            <thead>
-                <tr>
-                    <th>Nama Tagihan</th>
-                    <th>Sisa Tagihan</th>
-                    <th>Jumlah Bayar</th>
-                </tr>
-            </thead>
-            <tbody>`;
+        input.classList.toggle('is-invalid', invalid);
+        error.classList.toggle('is-visible', invalid);
+        error.textContent = value > max
+            ? `Maksimal ${currency(max)}`
+            : 'Jumlah tidak boleh kurang dari 0';
 
-    selectedCheckboxes.forEach(checkbox => {
-        const tableRow = checkbox.closest('tr');
-        let tagName = 'Tagihan';
-        if (tableRow) {
-            let nameCell = tableRow.querySelector('td:nth-child(2)');
-            if (nameCell) tagName = nameCell.textContent.trim();
-        }
+        return !invalid;
+    };
 
-        const tagihanId = checkbox.value;
-        const sisaBayar = parseInt(checkbox.dataset.nominal) || 0;
-        const isSpp = checkbox.dataset.isSpp === 'true';
-        const periode = checkbox.dataset.periode;
+    const updateCashTotal = () => {
+        const total = [...document.querySelectorAll('.payment-amount-input')]
+            .reduce((sum, input) => sum + Number(input.value || 0), 0);
+        const output = document.getElementById('paymentCashTotal');
+        if (output) output.textContent = currency(total);
+    };
 
-        tableHTML += `
-            <tr data-tagihan-id="${tagihanId}" 
-                data-is-spp="${isSpp}" 
-                data-periode="${periode}" 
-                data-sisa-bayar-asli="${sisaBayar}">
-                <td>
-                   ${tagName}
-                   <div class="discount-info" style="display: none;" id="diskon-info-${tagihanId}"></div>
-                </td>
-                <td id="sisa-bayar-${tagihanId}">Rp ${sisaBayar.toLocaleString('id-ID')}</td>
-                <td>
-                    <input type="number" 
-                           name="pembayaran[${tagihanId}]"
-                           class="form-control payment-amount-input"
-                           value="${sisaBayar}"
-                           data-original-max="${sisaBayar}"
-                           min="0"
-                           oninput="validateAngsuran(this)"
-                           required>
-                    <div class="error-message" style="display: none;">Jumlah melebihi sisa tagihan!</div>
-
-                    <!-- ✅ PERBAIKAN: Hidden inputs untuk mengirim data diskon ke backend -->
-                    <input type="hidden" name="original_amount[${tagihanId}]" value="${sisaBayar}" id="original-amount-${tagihanId}">
-                    <input type="hidden" name="discount_amount[${tagihanId}]" value="0" id="discount-amount-${tagihanId}">
-                    <input type="hidden" name="has_discount[${tagihanId}]" value="false" id="has-discount-${tagihanId}">
-                </td>
-            </tr>`;
-    });
-
-    tableHTML += `</tbody></table>`;
-    container.innerHTML = tableHTML;
-
-    // ✅ PENTING: Hitung diskon setelah tabel dibuat
-    recalculateDiscounts();
-
-    paymentForm.classList.add('active');
-    if(actionButtons) actionButtons.style.display = 'none';
-    paymentForm.scrollIntoView({ behavior: 'smooth' });
-}
-
-// ✅ PERBAIKAN UTAMA: Fungsi recalculateDiscounts dengan logika yang benar
-function recalculateDiscounts() {
-    const tanggalBayarEl = document.getElementById('tanggal-bayar');
-    if (!tanggalBayarEl || !tanggalBayarEl.value) return;
-
-    const tanggalBayar = new Date(tanggalBayarEl.value + 'T00:00:00');
-    const paymentRows = document.querySelectorAll('#payment-details-table tbody tr');
-
-    paymentRows.forEach(row => {
+    const recalculateRowDiscount = (row) => {
+        const input = row.querySelector('.payment-amount-input');
+        const info = row.querySelector('[data-discount-info]');
         const isSpp = row.dataset.isSpp === 'true';
-        const tagihanId = row.dataset.tagihanId;
-        const periode = row.dataset.periode;
-        const sisaBayarAsli = parseInt(row.dataset.sisaBayarAsli, 10);
+        const period = row.dataset.period;
+        const original = Number(row.dataset.originalAmount || 0);
 
-        // Ambil elemen-elemen yang dibutuhkan
-        const diskonInfo = document.getElementById(`diskon-info-${tagihanId}`);
-        const amountInput = row.querySelector('input[type="number"]');
-        const sisaBayarDisplay = document.getElementById(`sisa-bayar-${tagihanId}`);
+        resetDiscount(row);
+        info.className = 'payment-discount-info';
+        info.innerHTML = '';
 
-        // Hidden inputs
-        const discountAmountInput = document.getElementById(`discount-amount-${tagihanId}`);
-        const hasDiscountInput = document.getElementById(`has-discount-${tagihanId}`);
-        const originalAmountInput = document.getElementById(`original-amount-${tagihanId}`);
-
-        if (!isSpp || !periode) {
-            // For non-SPP payments, ensure the input is editable and no discount logic is applied
-            resetDiskonInfoNonSpp(diskonInfo, amountInput, discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli);
-            
-            // Make sure the input is properly configured for non-SPP payments
-            if (amountInput) {
-                amountInput.max = sisaBayarAsli;
-                amountInput.dataset.originalMax = sisaBayarAsli;
-                amountInput.readOnly = false; // Ensure it's not readonly
-                // Jangan mengatur ulang nilai - biarkan pengguna mengedit
-            }
+        if (!isSpp || !period || !paymentDate?.value) {
+            validateAmount(input);
+            updateCashTotal();
             return;
         }
 
-        // Untuk tagihan SPP, cek apakah dapat diskon
-        const periodeDate = new Date(periode + '-01T00:00:00');
-        const batasDiskon = new Date(periodeDate.getFullYear(), periodeDate.getMonth(), 10); // Tanggal 10
+        const paidAt = new Date(paymentDate.value + 'T00:00:00');
+        const periodDate = new Date(period + '-01T00:00:00');
+        const deadline = new Date(periodDate.getFullYear(), periodDate.getMonth(), 10);
+        const discount = Math.min(25000, original);
+        const discountedAmount = Math.max(0, original - discount);
+        const amount = Number(input.value || 0);
 
-        const dapatDiskon = tanggalBayar <= batasDiskon;
-        const jumlahBayar = parseInt(amountInput.value) || 0;
+        if (paidAt <= deadline && (amount === original || amount === discountedAmount)) {
+            input.value = discountedAmount;
+            row.querySelector('[data-discount-amount]').value = discount;
+            row.querySelector('[data-has-discount]').value = 'true';
+            info.classList.add('is-visible');
+            info.innerHTML = `<i class="fas fa-tag"></i><span>Diskon ${currency(discount)} diterapkan. Tagihan lunas dengan pembayaran ${currency(discountedAmount)}.</span>`;
+        } else if (paidAt <= deadline) {
+            info.classList.add('is-visible', 'is-warning');
+            info.innerHTML = `<i class="fas fa-circle-info"></i><span>Diskon ${currency(discount)} tersedia hanya untuk pembayaran lunas sebelum tanggal 10.</span>`;
+        }
 
-        if (dapatDiskon && jumlahBayar > 0) {
-            // ✅ LOGIKA BARU: Diskon hanya berlaku jika pembayaran LUNAS
-            const diskonAmount = 25000;
-            const jumlahBayarSetelahDiskon = Math.max(0, sisaBayarAsli - diskonAmount);
+        validateAmount(input);
+        updateCashTotal();
+    };
 
-            // ✅ CEK: Apakah user akan membayar LUNAS?
-            const akanLunas = jumlahBayar >= sisaBayarAsli;
+    const recalculateAllDiscounts = () => {
+        document.querySelectorAll('[data-payment-row]').forEach(recalculateRowDiscount);
+    };
 
-            if (akanLunas) {
-                // ✅ DAPAT DISKON - Pembayaran Lunas
-                if (diskonInfo) {
-                    diskonInfo.style.display = 'block';
-                    diskonInfo.innerHTML = `
-                        <i class="fas fa-tag" style="color: #16a34a;"></i> 
-                        <span style="color: #16a34a; font-weight: 600;">
-                            DISKON Rp ${diskonAmount.toLocaleString('id-ID')} - 
-                            Bayar Rp ${jumlahBayarSetelahDiskon.toLocaleString('id-ID')} = LUNAS!
+    const renderSelectedBills = () => {
+        const checked = billCheckboxes.filter((checkbox) => checkbox.checked);
+
+        selectedContainer.innerHTML = checked.map((checkbox) => {
+            const id = checkbox.value;
+            const amount = Number(checkbox.dataset.nominal || 0);
+
+            return `
+                <article class="payment-selected-item" data-payment-row data-bill-id="${id}" data-is-spp="${checkbox.dataset.isSpp}" data-period="${escapeHtml(checkbox.dataset.periode || '')}" data-original-amount="${amount}">
+                    <div class="payment-selected-main">
+                        <span class="payment-selected-icon"><i class="fas fa-file-invoice"></i></span>
+                        <span class="payment-selected-copy">
+                            <strong>${escapeHtml(checkbox.dataset.name)}</strong>
+                            <span>Sisa tagihan ${currency(amount)}</span>
                         </span>
-                    `;
-                }
+                    </div>
+                    <div class="payment-selected-actions">
+                        <div class="payment-amount-field">
+                            <label for="payment-amount-${id}">Jumlah bayar</label>
+                            <input id="payment-amount-${id}" class="payment-amount-input" type="number" name="pembayaran[${id}]" value="${amount}" min="0" max="${amount}" data-max-amount="${amount}" required>
+                            <span class="payment-input-error" data-payment-error></span>
+                        </div>
+                        <button class="payment-quick-button" type="button" data-pay-full>
+                            <i class="fas fa-check"></i><span>Lunasi</span>
+                        </button>
+                    </div>
+                    <div class="payment-discount-info" data-discount-info></div>
+                    <input type="hidden" name="original_amount[${id}]" value="${amount}">
+                    <input type="hidden" name="discount_amount[${id}]" value="0" data-discount-amount>
+                    <input type="hidden" name="has_discount[${id}]" value="false" data-has-discount>
+                </article>
+            `;
+        }).join('');
 
-                // Set nilai otomatis untuk mendapatkan diskon
-                amountInput.value = jumlahBayarSetelahDiskon;
-
-                // Update hidden inputs
-                if (discountAmountInput) discountAmountInput.value = diskonAmount.toString();
-                if (hasDiscountInput) hasDiscountInput.value = 'true';
-                if (originalAmountInput) originalAmountInput.value = sisaBayarAsli.toString();
-
-            } else {
-                // ✅ TIDAK DAPAT DISKON - Pembayaran Angsuran
-                if (diskonInfo) {
-                    diskonInfo.style.display = 'block';
-                    diskonInfo.innerHTML = `
-                        <i class="fas fa-info-circle" style="color: #f59e0b;"></i> 
-                        <span style="color: #f59e0b; font-weight: 600;">
-                            Diskon Rp ${diskonAmount.toLocaleString('id-ID')} hanya berlaku untuk pembayaran LUNAS.
-                            <br>Bayar Rp ${sisaBayarAsli.toLocaleString('id-ID')} untuk mendapat diskon.
-                        </span>
-                    `;
-                }
-
-                // Reset diskon
-                resetDiskonValue(discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli);
-            }
-
-        } else if (dapatDiskon) {
-            // Masih dalam periode diskon tapi belum input jumlah atau jumlah = 0
-            if (diskonInfo) {
-                diskonInfo.style.display = 'block';
-                const jumlahBayarOptimal = Math.max(0, sisaBayarAsli - 25000);
-                diskonInfo.innerHTML = `
-                    <i class="fas fa-tag" style="color: #3b82f6;"></i> 
-                    <span style="color: #3b82f6; font-weight: 600;">
-                        Tersedia diskon Rp ${(25000).toLocaleString('id-ID')} untuk pembayaran LUNAS.
-                        <br>Bayar Rp ${sisaBayarAsli.toLocaleString('id-ID')} untuk mendapat diskon.
-                    </span>
-                `;
-            }
-            resetDiskonValue(discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli);
-        } else {
-            // ✅ TIDAK DAPAT DISKON - Lewat tanggal
-            if (diskonInfo) {
-                diskonInfo.style.display = 'block';
-                diskonInfo.innerHTML = `
-                    <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> 
-                    <span style="color: #ef4444; font-weight: 600;">
-                        Periode diskon sudah berakhir (batas tanggal 10 setiap bulan).
-                    </span>
-                `;
-            }
-            resetDiskonValue(discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli);
-        }
-
-        // Update max input
-        if (amountInput) {
-            amountInput.max = sisaBayarAsli;
-            amountInput.dataset.originalMax = sisaBayarAsli;
-            amountInput.readOnly = false; // Ensure it's not readonly
-            // Jangan mengatur ulang nilai - biarkan pengguna mengedit
-        }
-
-        // Validasi input setelah perubahan
-        if (amountInput) {
-            validateAngsuran(amountInput);
-        }
-    });
-}
-
-// ✅ Helper functions
-function resetDiskonInfoNonSpp(diskonInfo, amountInput, discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli) {
-    if (diskonInfo) diskonInfo.style.display = 'none';
-    // Jangan mengatur ulang nilai amountInput untuk pembayaran non-SPP
-    if (amountInput) {
-        amountInput.max = sisaBayarAsli;
-        amountInput.dataset.originalMax = sisaBayarAsli;
-        amountInput.readOnly = false; // Ensure it's not readonly
-    }
-    resetDiskonValue(discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli);
-}
-
-function resetDiskonInfo(diskonInfo, amountInput, discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli) {
-    if (diskonInfo) diskonInfo.style.display = 'none';
-    if (amountInput) {
-        // Hapus nilai amountInput agar tidak mengatur ulang ke sisaBayarAsli
-        // Biarkan pengguna mengedit nilai sesuai keinginan mereka
-        amountInput.max = sisaBayarAsli;
-        amountInput.dataset.originalMax = sisaBayarAsli;
-        amountInput.readOnly = false; // Ensure it's not readonly
-    }
-    resetDiskonValue(discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli);
-}
-
-function resetDiskonValue(discountAmountInput, hasDiscountInput, originalAmountInput, sisaBayarAsli) {
-    if (discountAmountInput) discountAmountInput.value = '0';
-    if (hasDiscountInput) hasDiscountInput.value = 'false';
-    if (originalAmountInput) originalAmountInput.value = sisaBayarAsli.toString();
-}
-
-function cancelMultiPayment() {
-    document.getElementById('payment-form').classList.remove('active');
-    document.getElementById('action-buttons').style.display = 'flex';
-}
-
-// ✅ PERBAIKAN: Fungsi validasi yang lebih akurat
-function validateAngsuran(input) {
-    const value = parseInt(input.value, 10) || 0;
-    const originalMax = parseInt(input.dataset.originalMax, 10) || parseInt(input.max, 10) || 0;
-    const errorDiv = input.parentElement.querySelector('.error-message');
-
-    if (value > originalMax) {
-        input.classList.add('input-error');
-        if (errorDiv) {
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = `Jumlah tidak boleh melebihi Rp ${originalMax.toLocaleString('id-ID')}`;
-        }
-    } else if (value < 0) {
-        input.classList.add('input-error');
-        if (errorDiv) {
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = 'Jumlah tidak boleh kurang dari 0';
-        }
-    } else {
-        input.classList.remove('input-error');
-        if (errorDiv) errorDiv.style.display = 'none';
-        
-        // ✅ HAPUS: Pemaksaan nilai yang mengganggu pengeditan pengguna
-        // Tidak perlu memaksa nilai kembali ke maksimum - biarkan pengguna mengedit
-    }
-}
-
-// ✅ TAMBAHAN: Validasi form sebelum submit
-document.addEventListener('DOMContentLoaded', function() {
-    const multiPaymentForm = document.getElementById('multi-payment-form');
-    if (multiPaymentForm) {
-        multiPaymentForm.addEventListener('submit', function(e) {
-            const inputs = this.querySelectorAll('.payment-amount-input');
-            let hasError = false;
-            let totalBayar = 0;
-
-            inputs.forEach(input => {
-                validateAngsuran(input);
-                if (input.classList.contains('input-error')) {
-                    hasError = true;
-                } else {
-                    totalBayar += parseInt(input.value) || 0;
-                }
-            });
-
-            if (hasError) {
-                e.preventDefault();
-                alert('Harap perbaiki jumlah pembayaran yang tidak valid sebelum melanjutkan.');
-                return false;
-            }
-
-            if (totalBayar <= 0) {
-                e.preventDefault();
-                alert('Minimal satu tagihan harus memiliki jumlah pembayaran > 0.');
-                return false;
-            }
-
-            // Konfirmasi sebelum submit
-            const confirmMsg = `Anda akan memproses pembayaran dengan total Rp ${totalBayar.toLocaleString('id-ID')}. Lanjutkan?`;
-            if (!confirm(confirmMsg)) {
-                e.preventDefault();
-                return false;
-            }
+        selectedContainer.querySelectorAll('.payment-amount-input').forEach((input) => {
+            input.addEventListener('input', () => recalculateRowDiscount(input.closest('[data-payment-row]')));
         });
-    }
-});
 
-// ✅ TAMBAHAN: Auto-suggest optimal payment amount
-function suggestOptimalPayment(tagihanId) {
-    const row = document.querySelector(`tr[data-tagihan-id="${tagihanId}"]`);
-    if (!row) return;
+        selectedContainer.querySelectorAll('[data-pay-full]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const row = button.closest('[data-payment-row]');
+                const input = row.querySelector('.payment-amount-input');
+                input.value = row.dataset.originalAmount;
+                recalculateRowDiscount(row);
+            });
+        });
 
-    const isSpp = row.dataset.isSpp === 'true';
-    const periode = row.dataset.periode;
-    const sisaBayarAsli = parseInt(row.dataset.sisaBayarAsli, 10);
-    const amountInput = row.querySelector('input[type="number"]');
+        recalculateAllDiscounts();
+    };
 
-    if (!isSpp || !periode || !amountInput) return;
+    continueButton?.addEventListener('click', () => {
+        renderSelectedBills();
+        formPanel.hidden = false;
+        formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
-    const tanggalBayarEl = document.getElementById('tanggal-bayar');
-    if (!tanggalBayarEl || !tanggalBayarEl.value) return;
+    document.getElementById('cancelPaymentButton')?.addEventListener('click', () => {
+        formPanel.hidden = true;
+        selectionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
-    const tanggalBayar = new Date(tanggalBayarEl.value + 'T00:00:00');
-    const periodeDate = new Date(periode + '-01T00:00:00');
-    const batasDiskon = new Date(periodeDate.getFullYear(), periodeDate.getMonth(), 10);
+    paymentDate?.addEventListener('change', recalculateAllDiscounts);
 
-    if (tanggalBayar <= batasDiskon) {
-        const jumlahOptimal = Math.max(0, sisaBayarAsli - 25000);
-        if (confirm(`Saran: Bayar Rp ${jumlahOptimal.toLocaleString('id-ID')} untuk mendapat diskon Rp 25.000. Setuju?`)) {
-            amountInput.value = jumlahOptimal;
-            recalculateDiscounts();
+    paymentForm?.addEventListener('submit', (event) => {
+        const inputs = [...paymentForm.querySelectorAll('.payment-amount-input')];
+        const valid = inputs.every(validateAmount);
+        const total = inputs.reduce((sum, input) => sum + Number(input.value || 0), 0);
+
+        if (!valid || total <= 0) {
+            event.preventDefault();
+            window.alert(valid ? 'Jumlah pembayaran harus lebih dari Rp0.' : 'Periksa kembali jumlah pembayaran.');
+            return;
         }
-    }
-}
 
-// ✅ TAMBAHAN: Quick action buttons
-function quickPayLunas(tagihanId) {
-    const row = document.querySelector(`tr[data-tagihan-id="${tagihanId}"]`);
-    if (!row) return;
+        if (!window.confirm(`Konfirmasi pembayaran sebesar ${currency(total)}?`)) {
+            event.preventDefault();
+            return;
+        }
 
-    const sisaBayarAsli = parseInt(row.dataset.sisaBayarAsli, 10);
-    const amountInput = row.querySelector('input[type="number"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Memproses...</span>';
+    });
 
-    if (amountInput) {
-        amountInput.value = sisaBayarAsli;
-        recalculateDiscounts();
-    }
-}
+    const generateForm = document.getElementById('generateStudentForm');
+    const generateButton = document.getElementById('generateStudentButton');
+    generateForm?.addEventListener('submit', () => {
+        generateButton.disabled = true;
+        generateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Sedang membuat...</span>';
+    });
 
-function quickPayOptimal(tagihanId) {
-    suggestOptimalPayment(tagihanId);
-}
-
-// ✅ Console log untuk debugging
-console.log('✅ SPP Discount System Loaded Successfully');
-console.log('📋 Features:');
-console.log('   - Discount only for FULL payment (not installment)');
-console.log('   - Discount valid until 10th of each month');
-console.log('   - Real-time discount calculation');
-console.log('   - Input validation with discount consideration');
+    updateSelection();
+});
 </script>
 @endsection

@@ -25,63 +25,7 @@ class TagihanController extends Controller
      */
     public function indexOriginal(Request $request)
     {
-        // Ambil semua sekolah & kelas untuk dropdown filter
-        $sekolah = \App\Models\Sekolah::all();
-        $kelas   = \App\Models\Kelas::all();
-
-        // Ambil parameter filter dari request
-        $selectedSekolah = $request->input('sekolah_id');
-        $selectedKelas   = $request->input('kelas_id');
-        $search          = $request->input('search');
-
-        // Query Tagihan dengan relasi penting
-        $query = \App\Models\Tagihan::with([
-            'siswa.kelas',
-            'siswa.sekolah',
-            'jenisPembayaran'
-        ])->latest();
-
-        // Filter berdasarkan sekolah
-        if ($selectedSekolah) {
-            $query->whereHas('siswa', function ($q) use ($selectedSekolah) {
-                $q->where('id_sekolah', $selectedSekolah);
-            });
-        }
-
-        // Filter berdasarkan kelas
-        if ($selectedKelas) {
-            $query->whereHas('siswa', function ($q) use ($selectedKelas) {
-                $q->where('kelas_id', $selectedKelas);
-            });
-        }
-
-        // Filter berdasarkan kata kunci (nama siswa / nama tagihan / NIS)
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_tagihan', 'like', "%{$search}%")
-                ->orWhereHas('siswa', function ($sub) use ($search) {
-                    $sub->where('nama', 'like', "%{$search}%")
-                        ->orWhere('nis', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        // Eksekusi query dan paginasi
-        $tagihan = $query->paginate(10)->appends($request->query());
-
-        // Catat log aktivitas
-        \App\Models\LogAktivitas::create([
-            'aktor_type' => 'admin',
-            'aktor_id'   => Auth::id(),
-            'aktivitas'  => 'Melihat daftar tagihan (original view)',
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return view('tagihan.index', compact(
-            'tagihan', 'sekolah', 'kelas',
-            'selectedSekolah', 'selectedKelas', 'search'
-        ));
+        return redirect()->route('tagihan.index.grouped', $request->query());
     }
 
 
@@ -818,16 +762,22 @@ class TagihanController extends Controller
             }
         }
 
-        // Log aktivitas
-        LogAktivitas::create([
-            'aktor_type' => 'admin',
-            'aktor_id'   => Auth::guard('web')->id(),
-            'aktivitas'  => 'Membuka halaman proses tagihan siswa: ' . $siswa->nama,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $billItems = collect($tagihanList)->flatMap(function ($tagihan) {
+            return $tagihan['is_grouped']
+                ? collect($tagihan['bulan_tagihan'])
+                : collect([$tagihan]);
+        });
 
-        return view('tagihan.proses_siswa', compact('siswa', 'tagihanList'));
+        $studentSummary = [
+            'total_tagihan' => $billItems->count(),
+            'total_nominal' => $billItems->sum('nominal'),
+            'total_dibayar' => $billItems->sum('total_bayar'),
+            'total_diskon' => $billItems->sum('total_diskon'),
+            'sisa_bayar' => $billItems->sum(fn ($item) => max(0, (float) $item['sisa_bayar'])),
+            'belum_lunas' => $billItems->filter(fn ($item) => (float) $item['sisa_bayar'] > 0)->count(),
+        ];
+
+        return view('tagihan.proses_siswa', compact('siswa', 'tagihanList', 'studentSummary'));
     }
 
 
@@ -1144,7 +1094,6 @@ class TagihanController extends Controller
                     'tanggal_bayar' => $request->tanggal_bayar,
                     'metode_bayar' => $request->metode_bayar,
                     'keterangan' => $keteranganPembayaran,
-                    'transaction_id' => $transactionId, // Gunakan transaction_id yang sama untuk semua pembayaran dalam satu transaksi
                     'transaction_id' => $transactionId, // ✅ TAMBAHKAN TRANSACTION ID
                     // nomor_kwitansi akan auto-generate via model boot
                 ]);

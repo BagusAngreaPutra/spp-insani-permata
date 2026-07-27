@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Admin;
+use App\Models\Pembayaran;
 use App\Models\Siswa;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -79,7 +80,11 @@ class UiSmokeTest extends TestCase
                 $response->isSuccessful(),
                 "{$routeName} returned HTTP {$response->getStatusCode()}"
             );
-            $response->assertSee('permata-design-system', false);
+            $this->assertStringContainsString(
+                'permata-design-system',
+                $response->getContent(),
+                "{$routeName} did not render the admin design system"
+            );
         }
     }
 
@@ -121,6 +126,47 @@ class UiSmokeTest extends TestCase
             ->assertSee('Sisa tagihan')
             ->assertSee('billing-scope-form', false)
             ->assertSee('Buat tagihan');
+    }
+
+    public function test_active_tagihan_flow_uses_the_redesigned_pages(): void
+    {
+        $admin = Admin::query()->firstOrFail();
+        $siswa = Siswa::query()->whereHas('tagihan')->firstOrFail();
+        $this->actingAs($admin, 'web');
+
+        $this->get(route('tagihan.index.original'))
+            ->assertRedirect(route('tagihan.index.grouped'));
+
+        $this->get(route('tagihan.proses.siswa', $siswa->id))
+            ->assertOk()
+            ->assertSee('Pilih tagihan')
+            ->assertSee('Lanjut pembayaran')
+            ->assertSee('Atur pembayaran')
+            ->assertSee('payment-summary-bar', false);
+
+        $pembayaran = Pembayaran::query()->first();
+        if ($pembayaran) {
+            $this->get(route('pembayaran.kwitansi', $pembayaran->id))
+                ->assertOk()
+                ->assertSee('Kwitansi pembayaran')
+                ->assertSee('Jumlah diterima')
+                ->assertSee('receipt-paper', false);
+        }
+
+        $paymentGroup = Pembayaran::query()
+            ->whereNotNull('transaction_id')
+            ->get()
+            ->groupBy('transaction_id')
+            ->first(fn ($items) => $items->count() > 1);
+
+        if ($paymentGroup) {
+            $this->get(route('pembayaran.kwitansi.grup', [
+                'ids' => $paymentGroup->pluck('id')->implode(','),
+            ]))
+                ->assertOk()
+                ->assertSee('Kwitansi pembayaran')
+                ->assertSee($paymentGroup->count() . ' tagihan');
+        }
     }
 
     public function test_primary_student_pages_render(): void

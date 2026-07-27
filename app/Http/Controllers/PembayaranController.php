@@ -382,7 +382,6 @@ class PembayaranController extends Controller
 
     public function cetakKwitansi($id)
     {
-        // PERBAIKAN: Pastikan semua relasi di-load dengan benar
         $pembayaran = Pembayaran::with([
             'siswa' => function($query) {
                 $query->with(['kelas', 'sekolah']);
@@ -392,59 +391,74 @@ class PembayaranController extends Controller
             }
         ])->findOrFail($id);
 
-        // DEBUGGING: Uncomment baris di bawah untuk debug jika masih ada masalah
-        // dd($pembayaran->toArray()); 
+        $tagihan = $pembayaran->tagihan;
+        $billName = $tagihan
+            ? convertBulanToIndonesia($tagihan->nama_tagihan)
+            : 'Pembayaran';
 
-        LogAktivitas::create([
-            'aktor_type' => 'admin',
-            'aktor_id'   => Auth::id(),
-            'aktivitas'  => 'Mencetak kwitansi pembayaran siswa: ' . $pembayaran->siswa->nama,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
+        $receipt = [
+            'student' => $pembayaran->siswa,
+            'number' => $pembayaran->nomor_kwitansi ?? str_pad((string) $pembayaran->id, 6, '0', STR_PAD_LEFT),
+            'date' => $pembayaran->tanggal_bayar,
+            'method' => $this->paymentMethodLabel($pembayaran->metode_bayar),
+            'note' => $pembayaran->keterangan,
+            'items' => [[
+                'name' => $billName,
+                'amount' => (float) $pembayaran->jumlah_bayar,
+                'discount' => (float) $pembayaran->diskon,
+            ]],
+            'total_paid' => (float) $pembayaran->jumlah_bayar,
+            'total_discount' => (float) $pembayaran->diskon,
+        ];
 
-        return view('tagihan.kwitansi.index', compact('pembayaran'));
+        return view('tagihan.kwitansi.receipt', compact('receipt'));
     }
-   public function cetakKwitansiGrup(Request $request)
-   {
-       $ids = explode(',', $request->query('ids'));
 
-       if (empty($ids[0])) {
-           return back()->with('error', 'Tidak ada data pembayaran yang dipilih.');
-       }
+    public function cetakKwitansiGrup(Request $request)
+    {
+        $ids = array_values(array_filter(explode(',', (string) $request->query('ids'))));
 
-       $pembayaranItems = Pembayaran::with(['siswa.kelas', 'siswa.sekolah', 'tagihan'])->whereIn('id', $ids)->get();
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada data pembayaran yang dipilih.');
+        }
 
-       if ($pembayaranItems->isEmpty()) {
-           return back()->with('error', 'Data pembayaran tidak ditemukan.');
-       }
+        $pembayaranItems = Pembayaran::with(['siswa.kelas', 'siswa.sekolah', 'tagihan'])
+            ->whereIn('id', $ids)
+            ->get();
 
-       // Reconstruct data for the kwitansi_multi view
-       $firstItem = $pembayaranItems->first();
-       $pembayaranList = $pembayaranItems->map(function ($item) {
-           return [
-               'nama_tagihan' => optional($item->tagihan)->nama_tagihan ?? 'Tagihan Dihapus',
-               'periode' => optional($item->tagihan)->periode,
-               'jumlah' => $item->jumlah_bayar,
-               'jumlah_asli' => $item->jumlah_bayar + $item->diskon, // Jumlah sebelum diskon
-               'diskon' => $item->diskon,
-               'is_angsuran' => (optional($item->tagihan)->nominal) ? ($item->jumlah_bayar + $item->diskon) < $item->tagihan->nominal : false,
-               'pembayaran_id' => $item->id,
-               'nomor_kwitansi' => $item->nomor_kwitansi,
-               'metode_bayar' => $item->metode_bayar,
-           ];
-       })->all();
+        if ($pembayaranItems->isEmpty()) {
+            return back()->with('error', 'Data pembayaran tidak ditemukan.');
+        }
 
-       $kwitansiData = [
-           'siswa' => $firstItem->siswa,
-           'pembayaran_list' => $pembayaranList,
-           'total_bayar' => $pembayaranItems->sum('jumlah_bayar'),
-           'tanggal_bayar' => $firstItem->tanggal_bayar,
-           'metode_bayar' => $firstItem->metode_bayar,
-           'keterangan' => $firstItem->keterangan,
-           'no_kwitansi' => $firstItem->nomor_kwitansi,
-       ];
+        $firstItem = $pembayaranItems->first();
+        $receipt = [
+            'student' => $firstItem->siswa,
+            'number' => $firstItem->nomor_kwitansi ?? str_pad((string) $firstItem->id, 6, '0', STR_PAD_LEFT),
+            'date' => $firstItem->tanggal_bayar,
+            'method' => $this->paymentMethodLabel($firstItem->metode_bayar),
+            'note' => $firstItem->keterangan,
+            'items' => $pembayaranItems->map(function (Pembayaran $item) {
+                return [
+                    'name' => convertBulanToIndonesia(optional($item->tagihan)->nama_tagihan ?? 'Tagihan dihapus'),
+                    'amount' => (float) $item->jumlah_bayar,
+                    'discount' => (float) $item->diskon,
+                ];
+            })->all(),
+            'total_paid' => (float) $pembayaranItems->sum('jumlah_bayar'),
+            'total_discount' => (float) $pembayaranItems->sum('diskon'),
+        ];
 
-       return view('tagihan.kwitansi_multi', $kwitansiData);
-   }
+        return view('tagihan.kwitansi.receipt', compact('receipt'));
+    }
+
+    private function paymentMethodLabel(?string $method): string
+    {
+        return match ($method) {
+            'tunai' => 'Tunai',
+            'transfer' => 'Transfer bank',
+            'kjc' => 'KJC',
+            'tabungan' => 'Potongan tabungan',
+            default => ucfirst((string) $method) ?: '-',
+        };
+    }
 }

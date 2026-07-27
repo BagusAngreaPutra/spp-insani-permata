@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pembayaran', function (Blueprint $table) {
-            $table->string('transaction_id')->nullable()->after('id');
-            $table->index('transaction_id');
-        });
+        if (!Schema::hasColumn('pembayaran', 'transaction_id')) {
+            Schema::table('pembayaran', function (Blueprint $table) {
+                $table->string('transaction_id')->nullable()->after('id');
+                $table->index('transaction_id');
+            });
+        }
     }
 
     /**
@@ -22,9 +24,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pembayaran', function (Blueprint $table) {
-            $table->dropIndex(['transaction_id']);
-            $table->dropColumn('transaction_id');
-        });
+        if (Schema::hasColumn('pembayaran', 'transaction_id')) {
+            Schema::table('pembayaran', function (Blueprint $table) {
+                $table->dropIndex(['transaction_id']);
+                $table->dropColumn('transaction_id');
+            });
+        }
     }
 };

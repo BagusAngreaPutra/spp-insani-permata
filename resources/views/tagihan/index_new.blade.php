@@ -16,9 +16,10 @@
         }
 
         $name = trim((string) $kelas->nama_kelas);
-        $suffix = in_array($name, ['', '-', '–'], true) ? '' : ' ' . $name;
 
-        return 'Kelas ' . $kelas->tingkat . $suffix;
+        return in_array($name, ['', '-', '–'], true)
+            ? 'Tingkat ' . $kelas->tingkat
+            : 'Tingkat ' . $kelas->tingkat . ' · ' . $name;
     };
     $selectedContext = $selectedSekolah && $selectedKelas
         ? $selectedSekolah->nama_sekolah . ' · ' . $classLabel($selectedKelas)
