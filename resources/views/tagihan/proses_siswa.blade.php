@@ -385,10 +385,25 @@
 
     .payment-group,
     .payment-single {
+        position: relative;
         overflow: hidden;
         background: #fff;
         border: 1px solid #e4e7ec;
         border-radius: 8px;
+    }
+
+    .payment-group {
+        border-color: #cbdaf5;
+        box-shadow: inset 3px 0 0 #2878f0;
+    }
+
+    .payment-group.is-open {
+        border-color: #a9c5f5;
+        box-shadow: inset 3px 0 0 #2878f0, 0 2px 7px rgba(40, 120, 240, .08);
+    }
+
+    .payment-single {
+        box-shadow: inset 3px 0 0 #d0d5dd;
     }
 
     .payment-group-header {
@@ -396,22 +411,45 @@
         gap: 14px;
         min-height: 58px;
         padding: 10px 12px;
+        background: #fcfdff;
     }
 
     .payment-group-title {
+        appearance: none;
+        flex: 1 1 auto;
         min-width: 0;
         gap: 9px;
+        padding: 3px !important;
+        color: inherit !important;
+        text-align: left !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 7px !important;
+        cursor: pointer;
+    }
+
+    .payment-group-title:hover,
+    .payment-group-title:focus-visible {
+        background: #f2f7ff !important;
+    }
+
+    .payment-group-title:focus-visible {
+        outline: 2px solid rgba(40, 120, 240, .28);
+        outline-offset: 2px;
     }
 
     .payment-group-toggle {
+        display: grid;
+        place-items: center;
         flex: 0 0 28px;
         width: 28px !important;
         height: 28px !important;
         min-height: 0 !important;
         padding: 0 !important;
-        color: #667085 !important;
-        border: 0 !important;
-        background: #f2f4f7 !important;
+        color: #2878f0 !important;
+        border: 1px solid #d6e4fb !important;
+        background: #eef5ff !important;
+        border-radius: 7px;
         font-size: 9px !important;
     }
 
@@ -445,6 +483,61 @@
         margin-top: 2px;
         color: #98a2b3;
         font-size: 8.5px;
+    }
+
+    .payment-group-subline,
+    .payment-single-subline {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px 8px;
+        margin-top: 3px;
+    }
+
+    .payment-group-subline > span,
+    .payment-single-subline > span {
+        margin-top: 0;
+    }
+
+    .payment-row-kind {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 4px;
+        min-height: 19px;
+        padding: 0 6px;
+        border-radius: 999px;
+        font-size: 7.5px !important;
+        font-weight: 650;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .payment-row-kind.is-expandable {
+        color: #175cd3;
+        background: #eef5ff;
+        border: 1px solid #d6e4fb;
+    }
+
+    .payment-row-kind.is-static {
+        color: #667085;
+        background: #f2f4f7;
+        border: 1px solid #e4e7ec;
+    }
+
+    .payment-row-kind i {
+        font-size: 7px;
+    }
+
+    .payment-group .payment-kind-open {
+        display: none;
+    }
+
+    .payment-group.is-open .payment-kind-closed {
+        display: none;
+    }
+
+    .payment-group.is-open .payment-kind-open {
+        display: inline;
     }
 
     .payment-group-meta {
@@ -612,6 +705,10 @@
         margin-top: 2px;
         color: #98a2b3;
         font-size: 8.5px;
+    }
+
+    .payment-single-subline .payment-row-kind {
+        margin-top: 0;
     }
 
     .payment-single-value strong {
@@ -1315,15 +1412,28 @@
                                 @endphp
                                 <article class="payment-group {{ $groupOpen ? 'is-open' : '' }}" data-payment-group>
                                     <header class="payment-group-header">
-                                        <div class="payment-group-title">
-                                            <button class="payment-group-toggle" type="button" data-group-toggle="{{ $groupId }}" aria-expanded="{{ $groupOpen ? 'true' : 'false' }}">
+                                        <button
+                                            class="payment-group-title"
+                                            type="button"
+                                            data-group-toggle="{{ $groupId }}"
+                                            aria-controls="{{ $groupId }}"
+                                            aria-expanded="{{ $groupOpen ? 'true' : 'false' }}"
+                                        >
+                                            <span class="payment-group-toggle" aria-hidden="true">
                                                 <i class="fas fa-chevron-down"></i>
-                                            </button>
-                                            <span class="payment-group-copy">
-                                                <strong>{{ $tagihan['nama_tagihan'] }}</strong>
-                                                <span>{{ count($tagihan['bulan_tagihan']) }} periode · {{ ucfirst($tagihan['tipe']) }}</span>
                                             </span>
-                                        </div>
+                                            <div class="payment-group-copy">
+                                                <strong>{{ $tagihan['nama_tagihan'] }}</strong>
+                                                <div class="payment-group-subline">
+                                                    <span>{{ count($tagihan['bulan_tagihan']) }} periode &middot; {{ ucfirst($tagihan['tipe']) }}</span>
+                                                    <span class="payment-row-kind is-expandable">
+                                                        <i class="fas fa-table-list" aria-hidden="true"></i>
+                                                        <span class="payment-kind-closed">Buka rincian</span>
+                                                        <span class="payment-kind-open">Tutup rincian</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
 
                                         <div class="payment-group-meta">
                                             <span class="payment-group-amount">
@@ -1415,7 +1525,13 @@
                                     </div>
                                     <div class="payment-single-name">
                                         <strong>{{ $tagihan['nama_tagihan'] }}</strong>
-                                        <span>{{ ucfirst($tagihan['tipe']) }}</span>
+                                        <div class="payment-single-subline">
+                                            <span>{{ ucfirst($tagihan['tipe']) }}</span>
+                                            <span class="payment-row-kind is-static">
+                                                <i class="fas fa-file-lines" aria-hidden="true"></i>
+                                                <span>Tanpa rincian</span>
+                                            </span>
+                                        </div>
                                     </div>
                                     <div class="payment-single-period">
                                         <span class="payment-single-label">Periode</span>
