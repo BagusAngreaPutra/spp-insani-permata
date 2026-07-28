@@ -95,7 +95,7 @@
         color: #333 !important;
         background: #fff !important;
         border: 1px solid #d0d5dd !important;
-        border-radius: 7px !important;
+        border-radius: 3px !important;
         box-shadow: none !important;
         font-family: inherit !important;
         font-size: 11px !important;
@@ -113,7 +113,7 @@
 
     .receipt-button:hover {
         color: #181818 !important;
-        background: #f5f5f5 !important;
+        background: #fff !important;
     }
 
     .receipt-button.is-primary:hover {
@@ -123,16 +123,16 @@
     }
 
     .receipt-paper {
-        width: min(100%, 860px);
+        width: min(100%, 760px);
         min-width: 0;
         margin: 0 auto;
-        padding: 30px 32px 24px;
+        padding: 32px 36px 24px;
         overflow: hidden;
         color: #181818;
         background: #fff;
-        border: 1px solid #dfe3e8;
-        border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(16, 24, 40, .04);
+        border: 1px solid #d7d7d7;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .receipt-document-header {
@@ -147,16 +147,6 @@
     .receipt-brand {
         align-items: flex-start;
         min-width: 0;
-        gap: 13px;
-    }
-
-    .receipt-brand img {
-        flex: 0 0 56px;
-        width: 56px;
-        height: 56px;
-        object-fit: cover;
-        border: 1px solid #e4e7ec;
-        border-radius: 50%;
     }
 
     .receipt-brand-copy {
@@ -186,11 +176,11 @@
 
     .receipt-document-id {
         min-width: 0;
-        padding: 13px 14px;
+        padding: 0;
         text-align: right;
-        background: #fff;
-        border: 1px solid #d7d7d7;
-        border-radius: 8px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
     }
 
     .receipt-document-id > span,
@@ -222,39 +212,38 @@
 
     .receipt-paid-badge {
         justify-content: flex-end;
-        gap: 5px;
-        margin-top: 9px;
-        color: #333;
+        margin-top: 7px;
+        color: #555;
         font-size: 8.5px;
-        font-weight: 700;
+        font-weight: 600;
+        letter-spacing: .04em;
         text-transform: uppercase;
-    }
-
-    .receipt-paid-badge i {
-        display: grid;
-        place-items: center;
-        width: 16px;
-        height: 16px;
-        color: #181818;
-        background: #fff;
-        border: 1px solid #777;
-        border-radius: 50%;
-        font-size: 7px;
     }
 
     .receipt-meta {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 9px;
+        gap: 0;
         margin: 18px 0;
+        padding: 12px 0;
+        border-top: 1px solid #d7d7d7;
+        border-bottom: 1px solid #d7d7d7;
     }
 
     .receipt-meta-item {
         min-width: 0;
-        padding: 11px 12px;
-        background: #fff;
-        border: 1px solid #e2e2e2;
-        border-radius: 7px;
+        padding: 0 16px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .receipt-meta-item:first-child {
+        padding-left: 0;
+    }
+
+    .receipt-meta-item + .receipt-meta-item {
+        border-left: 1px solid #e2e2e2;
     }
 
     .receipt-meta-item span,
@@ -284,11 +273,12 @@
         display: grid;
         grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
         gap: 0;
-        margin-bottom: 19px;
-        padding: 14px 15px;
-        background: #fff;
-        border: 1px solid #e4e7ec;
-        border-radius: 8px;
+        margin-bottom: 20px;
+        padding: 0 0 16px;
+        background: transparent;
+        border: 0;
+        border-bottom: 1px solid #d7d7d7;
+        border-radius: 0;
     }
 
     .receipt-recipient-block {
@@ -343,14 +333,13 @@
     }
 
     .receipt-section-heading span {
-        display: inline-flex;
-        align-items: center;
-        min-height: 22px;
-        padding: 0 8px;
+        display: inline;
+        min-height: 0;
+        padding: 0;
         color: #4a4a4a;
-        background: #fff;
-        border: 1px solid #d7d7d7;
-        border-radius: 999px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         font-size: 8.5px;
         font-weight: 650;
     }
@@ -360,8 +349,9 @@
         min-width: 0;
         max-width: 100%;
         overflow-x: auto;
-        border: 1px solid #dfe3e8;
-        border-radius: 8px;
+        border-top: 1px solid #999;
+        border-bottom: 1px solid #999;
+        border-radius: 0;
     }
 
     .receipt-table {
@@ -369,6 +359,12 @@
         min-width: 620px !important;
         table-layout: fixed !important;
         border-collapse: collapse !important;
+        background: #fff !important;
+    }
+
+    .receipt-table thead,
+    .receipt-table tr {
+        background: #fff !important;
     }
 
     .receipt-table th {
@@ -434,11 +430,11 @@
 
     .receipt-spelled {
         min-width: 0;
-        padding: 12px 13px;
+        padding: 10px 0;
         color: #4a4a4a;
-        background: #fff;
-        border: 1px solid #d7d7d7;
-        border-radius: 8px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
     }
 
     .receipt-spelled span,
@@ -464,10 +460,11 @@
 
     .receipt-summary {
         width: 100%;
-        padding: 12px 13px;
-        background: #fff;
-        border: 1px solid #d7d7d7;
-        border-radius: 8px;
+        padding: 0 0 0 18px;
+        background: transparent;
+        border: 0;
+        border-left: 1px solid #d7d7d7;
+        border-radius: 0;
     }
 
     .receipt-summary-row {
@@ -501,29 +498,17 @@
     }
 
     .receipt-note {
-        display: grid;
-        grid-template-columns: 24px minmax(0, 1fr);
-        gap: 9px;
+        display: block;
         margin-top: 14px;
-        padding: 10px 11px;
+        padding: 10px 0;
         color: #4a4a4a;
-        background: #fff;
-        border: 1px solid #d7d7d7;
-        border-radius: 7px;
+        background: transparent;
+        border: 0;
+        border-top: 1px solid #d7d7d7;
+        border-bottom: 1px solid #d7d7d7;
+        border-radius: 0;
         font-size: 9.5px;
         line-height: 1.5;
-    }
-
-    .receipt-note i {
-        display: grid;
-        place-items: center;
-        width: 24px;
-        height: 24px;
-        color: #444;
-        background: #fff;
-        border: 1px solid #d7d7d7;
-        border-radius: 6px;
-        font-size: 9px;
     }
 
     .receipt-note strong,
@@ -555,20 +540,6 @@
         align-items: flex-start;
         min-width: 0;
         max-width: 390px;
-        gap: 10px;
-    }
-
-    .receipt-validity > i {
-        display: grid;
-        place-items: center;
-        flex: 0 0 30px;
-        width: 30px;
-        height: 30px;
-        color: #333;
-        background: #fff;
-        border: 1px solid #d7d7d7;
-        border-radius: 7px;
-        font-size: 11px;
     }
 
     .receipt-validity strong,
@@ -654,7 +625,7 @@
             width: 100%;
             max-width: 100%;
             padding: 19px 16px 16px;
-            border-radius: 8px;
+            border-radius: 0;
         }
 
         .receipt-document-header {
@@ -665,12 +636,6 @@
 
         .receipt-brand {
             width: 100%;
-        }
-
-        .receipt-brand img {
-            flex-basis: 50px;
-            width: 50px;
-            height: 50px;
         }
 
         .receipt-brand-copy strong {
@@ -692,6 +657,11 @@
 
         .receipt-meta-item:last-child {
             grid-column: 1 / -1;
+            margin-top: 12px;
+            padding-top: 12px;
+            padding-left: 0;
+            border-top: 1px solid #e2e2e2;
+            border-left: 0;
         }
 
         .receipt-meta-item strong {
@@ -736,15 +706,17 @@
         }
 
         .receipt-table tr {
-            margin-bottom: 8px;
-            overflow: hidden;
-            background: #fff;
-            border: 1px solid #dfe3e8;
-            border-radius: 7px;
+            margin-bottom: 0;
+            overflow: visible;
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid #cfcfcf;
+            border-radius: 0;
         }
 
         .receipt-table tr:last-child {
             margin-bottom: 0;
+            border-bottom: 0;
         }
 
         .receipt-table td {
@@ -780,7 +752,7 @@
             grid-template-columns: 1fr !important;
             padding: 10px !important;
             text-align: left !important;
-            background: #fff !important;
+            background: transparent !important;
         }
 
         .receipt-table-description::before {
@@ -794,6 +766,9 @@
 
         .receipt-summary {
             grid-row: 1;
+            padding: 0 0 12px;
+            border-bottom: 1px solid #d7d7d7;
+            border-left: 0;
         }
 
         .receipt-signature-grid {
@@ -823,6 +798,23 @@
 
         .receipt-meta-item:last-child {
             grid-column: auto;
+            margin-top: 0;
+            padding-top: 0;
+            border-top: 0;
+        }
+
+        .receipt-meta-item,
+        .receipt-meta-item:first-child,
+        .receipt-meta-item:last-child {
+            padding-right: 0;
+            padding-left: 0;
+            border-left: 0;
+        }
+
+        .receipt-meta-item + .receipt-meta-item {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e2e2;
         }
 
         .receipt-table td {
@@ -975,11 +967,9 @@
                 </div>
                 <div class="receipt-actions">
                     <a class="receipt-button" href="{{ route('tagihan.proses.siswa', $student->id) }}">
-                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         <span>Kembali ke siswa</span>
                     </a>
                     <button class="receipt-button is-primary" type="button" onclick="window.print()">
-                        <i class="fas fa-print" aria-hidden="true"></i>
                         <span>Cetak kwitansi</span>
                     </button>
                 </div>
@@ -988,7 +978,6 @@
             <article class="receipt-paper">
                 <header class="receipt-document-header">
                     <div class="receipt-brand">
-                        <img src="{{ asset('images/logo.jpg') }}" alt="Logo Permata Insani">
                         <div class="receipt-brand-copy">
                             <strong>Yayasan Kemilau Permata Insani</strong>
                             <span>{{ $school?->nama_sekolah ?? 'Permata Insani Islamic School' }}</span>
@@ -1002,7 +991,6 @@
                         </span>
                         <strong>{{ $receipt['number'] }}</strong>
                         <span class="receipt-paid-badge">
-                            <i class="fas fa-check" aria-hidden="true"></i>
                             Pembayaran diterima
                         </span>
                     </div>
@@ -1102,7 +1090,6 @@
 
                 @if($showNote)
                     <div class="receipt-note">
-                        <i class="fas fa-note-sticky" aria-hidden="true"></i>
                         <div>
                             <strong>Keterangan</strong>
                             <span>{{ $rawNote }}</span>
@@ -1112,7 +1099,6 @@
 
                 <footer class="receipt-signature-grid">
                     <div class="receipt-validity">
-                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
                         <div>
                             <strong>Bukti pembayaran resmi</strong>
                             <span>Kwitansi ini dibuat oleh Sistem Pembayaran Permata Insani dan sah tanpa stempel tambahan.</span>
