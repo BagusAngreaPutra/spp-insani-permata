@@ -507,72 +507,97 @@ class TagihanController extends Controller
     public function indexGrouped(Request $request)
     {
         $sekolahData = Sekolah::query()
-            ->with(['kelas' => function ($query) {
-                $query
-                    ->withCount('siswa')
-                    ->orderBy('tingkat')
-                    ->orderBy('nama_kelas');
-            }])
             ->orderBy('nama_sekolah')
             ->get();
 
-        $selectedSekolah = $sekolahData->firstWhere('id', $request->integer('sekolah'))
-            ?? $sekolahData->first();
-        $availableClasses = $selectedSekolah?->kelas ?? collect();
-        $selectedKelas = $availableClasses->firstWhere('id', $request->integer('kelas'))
-            ?? $availableClasses->first();
+        $selectedSekolah = $request->filled('sekolah')
+            ? $sekolahData->firstWhere('id', $request->integer('sekolah'))
+            : null;
 
-        $studentRows = collect();
+        $availableClasses = Kelas::query()
+            ->with('sekolah')
+            ->withCount('siswa')
+            ->when(
+                $selectedSekolah,
+                fn ($query) => $query->where('sekolah_id', $selectedSekolah->id)
+            )
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
 
-        if ($selectedSekolah && $selectedKelas) {
-            $studentRows = Siswa::query()
-                ->where('id_sekolah', $selectedSekolah->id)
-                ->where('kelas_id', $selectedKelas->id)
-                ->with(['tagihan.pembayaran'])
-                ->orderBy('nama')
-                ->get()
-                ->map(function (Siswa $siswa) {
-                    $totalTagihan = $siswa->tagihan->count();
-                    $totalNominal = 0;
-                    $totalDibayar = 0;
-                    $totalDiskon = 0;
-                    $sisaBayar = 0;
+        $selectedKelas = $request->filled('kelas')
+            ? $availableClasses->firstWhere('id', $request->integer('kelas'))
+            : null;
 
-                    foreach ($siswa->tagihan as $tagihan) {
-                        $nominal = (float) $tagihan->nominal;
-                        $dibayar = (float) $tagihan->pembayaran->sum('jumlah_bayar');
-                        $diskon = (float) $tagihan->pembayaran->sum('diskon');
+        $studentRows = Siswa::query()
+            ->when(
+                $selectedSekolah,
+                fn ($query) => $query->where('id_sekolah', $selectedSekolah->id)
+            )
+            ->when(
+                $selectedKelas,
+                fn ($query) => $query->where('kelas_id', $selectedKelas->id)
+            )
+            ->with([
+                'sekolah',
+                'kelas',
+                'tagihan' => fn ($query) => $query
+                    ->withSum('pembayaran as total_dibayar', 'jumlah_bayar')
+                    ->withSum('pembayaran as total_diskon', 'diskon'),
+            ])
+            ->orderBy('nama')
+            ->get()
+            ->map(function (Siswa $siswa) {
+                $totalTagihan = $siswa->tagihan->count();
+                $totalNominal = 0;
+                $totalDibayar = 0;
+                $totalDiskon = 0;
+                $sisaBayar = 0;
 
-                        $totalNominal += $nominal;
-                        $totalDibayar += $dibayar;
-                        $totalDiskon += $diskon;
-                        $sisaBayar += max(0, $nominal - ($dibayar + $diskon));
-                    }
+                foreach ($siswa->tagihan as $tagihan) {
+                    $nominal = (float) $tagihan->nominal;
+                    $dibayar = (float) ($tagihan->total_dibayar ?? 0);
+                    $diskon = (float) ($tagihan->total_diskon ?? 0);
 
-                    if ($totalTagihan === 0) {
-                        $status = 'kosong';
-                    } elseif ($sisaBayar <= 0) {
-                        $status = 'lunas';
-                    } elseif (($totalDibayar + $totalDiskon) > 0) {
-                        $status = 'sebagian';
-                    } else {
-                        $status = 'belum';
-                    }
+                    $totalNominal += $nominal;
+                    $totalDibayar += $dibayar;
+                    $totalDiskon += $diskon;
+                    $sisaBayar += max(0, $nominal - ($dibayar + $diskon));
+                }
 
-                    return [
-                        'id' => $siswa->id,
-                        'nama' => $siswa->nama,
-                        'nis' => $siswa->nis,
-                        'initial' => strtoupper(substr($siswa->nama, 0, 1)),
-                        'total_tagihan' => $totalTagihan,
-                        'total_nominal' => $totalNominal,
-                        'total_dibayar' => $totalDibayar,
-                        'total_diskon' => $totalDiskon,
-                        'sisa_bayar' => $sisaBayar,
-                        'status' => $status,
-                    ];
-                });
-        }
+                if ($totalTagihan === 0) {
+                    $status = 'kosong';
+                } elseif ($sisaBayar <= 0) {
+                    $status = 'lunas';
+                } elseif (($totalDibayar + $totalDiskon) > 0) {
+                    $status = 'sebagian';
+                } else {
+                    $status = 'belum';
+                }
+
+                $className = trim((string) ($siswa->kelas?->nama_kelas ?? ''));
+                $classLabel = !$siswa->kelas
+                    ? 'Kelas belum diatur'
+                    : (in_array($className, ['', '-', '–'], true)
+                        ? 'Tingkat ' . $siswa->kelas->tingkat
+                        : 'Tingkat ' . $siswa->kelas->tingkat . ' · ' . $className);
+
+                return [
+                    'id' => $siswa->id,
+                    'nama' => $siswa->nama,
+                    'nis' => $siswa->nis,
+                    'initial' => strtoupper(substr($siswa->nama, 0, 1)),
+                    'school_name' => $siswa->sekolah?->nama_sekolah ?? 'Sekolah belum diatur',
+                    'class_name' => $classLabel,
+                    'total_tagihan' => $totalTagihan,
+                    'total_nominal' => $totalNominal,
+                    'total_dibayar' => $totalDibayar,
+                    'total_diskon' => $totalDiskon,
+                    'sisa_bayar' => $sisaBayar,
+                    'status' => $status,
+                ];
+            });
 
         $workspaceSummary = [
             'total_siswa' => $studentRows->count(),

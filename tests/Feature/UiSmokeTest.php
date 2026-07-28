@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\TagihanController;
 use App\Models\Admin;
+use App\Models\Kelas;
 use App\Models\Pembayaran;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
@@ -120,14 +121,55 @@ class UiSmokeTest extends TestCase
     {
         $admin = Admin::query()->firstOrFail();
 
-        $this->actingAs($admin, 'web')
-            ->get(route('tagihan.index.grouped'))
+        $response = $this->actingAs($admin, 'web')
+            ->get(route('tagihan.index.grouped'));
+
+        $response
             ->assertOk()
             ->assertSee('Tagihan siswa')
             ->assertSee('Daftar siswa')
             ->assertSee('Sisa tagihan')
+            ->assertSee('Semua sekolah')
+            ->assertSee('Semua kelas')
+            ->assertSee('Cari nama, NIS, sekolah, atau kelas')
             ->assertSee('billing-scope-form', false)
             ->assertSee('Buat tagihan');
+
+        $this->assertNull($response->viewData('selectedSekolah'));
+        $this->assertNull($response->viewData('selectedKelas'));
+        $this->assertCount(Siswa::query()->count(), $response->viewData('studentRows'));
+        $this->assertCount(Kelas::query()->count(), $response->viewData('availableClasses'));
+    }
+
+    public function test_tagihan_workspace_filters_school_and_class_without_forcing_the_first_option(): void
+    {
+        $admin = Admin::query()->firstOrFail();
+        $class = Kelas::query()->whereHas('siswa')->with('sekolah')->firstOrFail();
+        $this->actingAs($admin, 'web');
+
+        $schoolResponse = $this->get(route('tagihan.index.grouped', [
+            'sekolah' => $class->sekolah_id,
+        ]));
+
+        $schoolResponse->assertOk();
+        $this->assertSame($class->sekolah_id, $schoolResponse->viewData('selectedSekolah')->id);
+        $this->assertNull($schoolResponse->viewData('selectedKelas'));
+        $this->assertCount(
+            Siswa::query()->where('id_sekolah', $class->sekolah_id)->count(),
+            $schoolResponse->viewData('studentRows')
+        );
+
+        $classResponse = $this->get(route('tagihan.index.grouped', [
+            'sekolah' => $class->sekolah_id,
+            'kelas' => $class->id,
+        ]));
+
+        $classResponse->assertOk();
+        $this->assertSame($class->id, $classResponse->viewData('selectedKelas')->id);
+        $this->assertCount(
+            Siswa::query()->where('kelas_id', $class->id)->count(),
+            $classResponse->viewData('studentRows')
+        );
     }
 
     public function test_active_tagihan_flow_uses_the_redesigned_pages(): void

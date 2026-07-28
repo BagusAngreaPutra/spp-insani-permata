@@ -12,7 +12,7 @@
     $formatRupiah = static fn ($amount) => 'Rp' . number_format((float) $amount, 0, ',', '.');
     $classLabel = static function ($kelas) {
         if (!$kelas) {
-            return 'Belum ada kelas dipilih';
+            return 'Semua kelas';
         }
 
         $name = trim((string) $kelas->nama_kelas);
@@ -21,9 +21,13 @@
             ? 'Tingkat ' . $kelas->tingkat
             : 'Tingkat ' . $kelas->tingkat . ' · ' . $name;
     };
-    $selectedContext = $selectedSekolah && $selectedKelas
-        ? $selectedSekolah->nama_sekolah . ' · ' . $classLabel($selectedKelas)
-        : 'Pilih sekolah dan kelas';
+    $selectedContext = match (true) {
+        (bool) $selectedKelas => ($selectedSekolah?->nama_sekolah
+            ?? $selectedKelas->sekolah?->nama_sekolah
+            ?? 'Sekolah belum diatur') . ' · ' . $classLabel($selectedKelas),
+        (bool) $selectedSekolah => $selectedSekolah->nama_sekolah . ' · Semua kelas',
+        default => 'Semua sekolah · Semua kelas',
+    };
 @endphp
 
 <style>
@@ -461,6 +465,12 @@
         font-size: 9px;
     }
 
+    .billing-student-copy .billing-student-scope {
+        max-width: 270px;
+        color: #667085;
+        font-size: 8.5px;
+    }
+
     .billing-status {
         display: inline-flex;
         align-items: center;
@@ -864,10 +874,10 @@
                 <article class="billing-stat">
                     <div class="billing-stat-main">
                         <span class="billing-stat-icon"><i class="fas fa-user-graduate"></i></span>
-                        <span class="billing-stat-label">Siswa di kelas</span>
+                        <span class="billing-stat-label">Siswa ditampilkan</span>
                         <strong class="billing-stat-value">{{ number_format($workspaceSummary['total_siswa'], 0, ',', '.') }}</strong>
                     </div>
-                    <span class="billing-stat-note">{{ $classLabel($selectedKelas) }}</span>
+                    <span class="billing-stat-note">{{ $selectedContext }}</span>
                 </article>
 
                 <article class="billing-stat is-amber">
@@ -911,6 +921,7 @@
                         <div class="billing-field">
                             <label for="billingSchool">Sekolah</label>
                             <select id="billingSchool" name="sekolah">
+                                <option value="" {{ !$selectedSekolah ? 'selected' : '' }}>Semua sekolah</option>
                                 @foreach($sekolahData as $sekolah)
                                     <option value="{{ $sekolah->id }}" {{ $selectedSekolah?->id === $sekolah->id ? 'selected' : '' }}>
                                         {{ $sekolah->nama_sekolah }}
@@ -921,14 +932,16 @@
 
                         <div class="billing-field">
                             <label for="billingClass">Kelas</label>
-                            <select id="billingClass" name="kelas" {{ $availableClasses->isEmpty() ? 'disabled' : '' }}>
-                                @forelse($availableClasses as $kelas)
+                            <select id="billingClass" name="kelas">
+                                <option value="" {{ !$selectedKelas ? 'selected' : '' }}>Semua kelas</option>
+                                @foreach($availableClasses as $kelas)
                                     <option value="{{ $kelas->id }}" {{ $selectedKelas?->id === $kelas->id ? 'selected' : '' }}>
+                                        @if(!$selectedSekolah)
+                                            {{ $kelas->sekolah?->nama_sekolah ?? 'Sekolah belum diatur' }} ·
+                                        @endif
                                         {{ $classLabel($kelas) }} · {{ $kelas->siswa_count }} siswa
                                     </option>
-                                @empty
-                                    <option value="">Belum ada kelas</option>
-                                @endforelse
+                                @endforeach
                             </select>
                         </div>
 
@@ -939,11 +952,11 @@
                     </form>
                 @endif
 
-                @if($selectedKelas && $studentRows->isNotEmpty())
+                @if($studentRows->isNotEmpty())
                     <div class="billing-table-tools">
                         <label class="billing-search" for="billingStudentSearch">
                             <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
-                            <input id="billingStudentSearch" type="search" placeholder="Cari nama atau NIS siswa..." autocomplete="off">
+                            <input id="billingStudentSearch" type="search" placeholder="Cari nama, NIS, sekolah, atau kelas..." autocomplete="off">
                             <button class="billing-search-clear" id="billingSearchClear" type="button" aria-label="Hapus pencarian">
                                 <i class="fas fa-xmark"></i>
                             </button>
@@ -988,7 +1001,7 @@
                                     @endphp
                                     <tr
                                         data-student-row
-                                        data-search="{{ strtolower($student['nama'] . ' ' . $student['nis']) }}"
+                                        data-search="{{ strtolower($student['nama'] . ' ' . $student['nis'] . ' ' . $student['school_name'] . ' ' . $student['class_name']) }}"
                                         data-status="{{ $student['status'] }}"
                                     >
                                         <td class="billing-student-cell" data-label="Siswa">
@@ -997,6 +1010,9 @@
                                                 <span class="billing-student-copy">
                                                     <strong>{{ $student['nama'] }}</strong>
                                                     <span>NIS {{ $student['nis'] }}</span>
+                                                    <span class="billing-student-scope">
+                                                        {{ $student['school_name'] }} · {{ $student['class_name'] }}
+                                                    </span>
                                                 </span>
                                             </div>
                                         </td>
@@ -1047,7 +1063,7 @@
                         <span><strong id="billingResultCount">{{ $studentRows->count() }}</strong> dari {{ $studentRows->count() }} siswa ditampilkan</span>
                         <span>Gunakan tombol Bayar untuk membuka rincian tagihan siswa.</span>
                     </footer>
-                @elseif(!$selectedSekolah)
+                @elseif($sekolahData->isEmpty())
                     <div class="billing-empty">
                         <div>
                             <i class="fas fa-school"></i>
@@ -1055,20 +1071,12 @@
                             <span>Tambahkan sekolah agar kelas, siswa, dan tagihan dapat dikelola.</span>
                         </div>
                     </div>
-                @elseif(!$selectedKelas)
-                    <div class="billing-empty">
-                        <div>
-                            <i class="fas fa-chalkboard"></i>
-                            <strong>Belum ada kelas di sekolah ini</strong>
-                            <span>Tambahkan kelas dan siswa sebelum membuat tagihan.</span>
-                        </div>
-                    </div>
                 @else
                     <div class="billing-empty">
                         <div>
                             <i class="fas fa-user-graduate"></i>
-                            <strong>Belum ada siswa di kelas ini</strong>
-                            <span>Pilih kelas lain atau tambahkan siswa terlebih dahulu.</span>
+                            <strong>Belum ada siswa</strong>
+                            <span>Tidak ada siswa pada cakupan {{ strtolower($selectedContext) }}.</span>
                         </div>
                     </div>
                 @endif
