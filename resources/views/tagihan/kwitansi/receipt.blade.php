@@ -57,7 +57,7 @@
 
     .receipt-eyebrow {
         margin: 0 0 3px;
-        color: #98a2b3;
+        color: #888;
         font-size: 10px;
         font-weight: 600;
         letter-spacing: .03em;
@@ -65,7 +65,7 @@
 
     .receipt-title {
         margin: 0;
-        color: #101828;
+        color: #181818;
         font-size: clamp(25px, 2.6vw, 32px);
         font-weight: 700;
         letter-spacing: -.04em;
@@ -74,7 +74,7 @@
 
     .receipt-subtitle {
         margin: 7px 0 0;
-        color: #667085;
+        color: #666;
         font-size: 12px;
     }
 
@@ -92,7 +92,7 @@
         min-height: 38px !important;
         margin: 0 !important;
         padding: 0 13px !important;
-        color: #344054 !important;
+        color: #333 !important;
         background: #fff !important;
         border: 1px solid #d0d5dd !important;
         border-radius: 7px !important;
@@ -107,19 +107,19 @@
 
     .receipt-button.is-primary {
         color: #fff !important;
-        background: #2878f0 !important;
-        border-color: #2878f0 !important;
+        background: #181818 !important;
+        border-color: #181818 !important;
     }
 
     .receipt-button:hover {
-        color: #101828 !important;
-        background: #f9fafb !important;
+        color: #181818 !important;
+        background: #f5f5f5 !important;
     }
 
     .receipt-button.is-primary:hover {
         color: #fff !important;
-        background: #1768dc !important;
-        border-color: #1768dc !important;
+        background: #333 !important;
+        border-color: #333 !important;
     }
 
     .receipt-paper {
@@ -128,7 +128,7 @@
         margin: 0 auto;
         padding: 30px 32px 24px;
         overflow: hidden;
-        color: #101828;
+        color: #181818;
         background: #fff;
         border: 1px solid #dfe3e8;
         border-radius: 10px;
@@ -141,7 +141,7 @@
         align-items: start;
         gap: 24px;
         padding-bottom: 22px;
-        border-bottom: 2px solid #101828;
+        border-bottom: 2px solid #181818;
     }
 
     .receipt-brand {
@@ -169,7 +169,7 @@
     }
 
     .receipt-brand-copy strong {
-        color: #101828;
+        color: #181818;
         font-size: 15px;
         font-weight: 700;
         letter-spacing: -.02em;
@@ -179,7 +179,7 @@
     .receipt-brand-copy span {
         max-width: 430px;
         margin-top: 3px;
-        color: #667085;
+        color: #666;
         font-size: 10px;
         line-height: 1.45;
     }
@@ -188,8 +188,8 @@
         min-width: 0;
         padding: 13px 14px;
         text-align: right;
-        background: #f8fafc;
-        border: 1px solid #e4e7ec;
+        background: #fff;
+        border: 1px solid #d7d7d7;
         border-radius: 8px;
     }
 
@@ -199,7 +199,7 @@
     }
 
     .receipt-document-label {
-        color: #667085;
+        color: #666;
         font-size: 8.5px;
         font-weight: 700;
         letter-spacing: .08em;
@@ -209,7 +209,7 @@
     .receipt-document-id > strong {
         margin-top: 5px;
         overflow-wrap: anywhere;
-        color: #101828;
+        color: #181818;
         font-size: 16px;
         font-weight: 750;
         letter-spacing: -.02em;
@@ -224,7 +224,7 @@
         justify-content: flex-end;
         gap: 5px;
         margin-top: 9px;
-        color: #087451;
+        color: #333;
         font-size: 8.5px;
         font-weight: 700;
         text-transform: uppercase;
@@ -235,8 +235,9 @@
         place-items: center;
         width: 16px;
         height: 16px;
-        color: #fff;
-        background: #12b76a;
+        color: #181818;
+        background: #fff;
+        border: 1px solid #777;
         border-radius: 50%;
         font-size: 7px;
     }
@@ -251,8 +252,8 @@
     .receipt-meta-item {
         min-width: 0;
         padding: 11px 12px;
-        background: #f8fafc;
-        border: 1px solid #eef0f3;
+        background: #fff;
+        border: 1px solid #e2e2e2;
         border-radius: 7px;
     }
 
@@ -262,7 +263,7 @@
     }
 
     .receipt-meta-item span {
-        color: #98a2b3;
+        color: #777;
         font-size: 8px;
         font-weight: 700;
         letter-spacing: .03em;
@@ -272,7 +273,7 @@
     .receipt-meta-item strong {
         margin-top: 4px;
         overflow: hidden;
-        color: #344054;
+        color: #333;
         font-size: 11px;
         font-weight: 650;
         text-overflow: ellipsis;
@@ -307,7 +308,7 @@
     }
 
     .receipt-recipient-block > span {
-        color: #98a2b3;
+        color: #777;
         font-size: 8px;
         font-weight: 700;
         letter-spacing: .05em;
@@ -317,14 +318,14 @@
     .receipt-recipient-block > strong {
         margin-top: 5px;
         overflow-wrap: anywhere;
-        color: #101828;
+        color: #181818;
         font-size: 12px;
         font-weight: 700;
     }
 
     .receipt-recipient-block > small {
         margin-top: 3px;
-        color: #667085;
+        color: #666;
         font-size: 9.5px;
         line-height: 1.45;
     }
@@ -336,7 +337,7 @@
     }
 
     .receipt-section-heading strong {
-        color: #101828;
+        color: #181818;
         font-size: 11.5px;
         font-weight: 700;
     }
@@ -346,8 +347,9 @@
         align-items: center;
         min-height: 22px;
         padding: 0 8px;
-        color: #475467;
-        background: #f2f4f7;
+        color: #4a4a4a;
+        background: #fff;
+        border: 1px solid #d7d7d7;
         border-radius: 999px;
         font-size: 8.5px;
         font-weight: 650;
@@ -372,8 +374,8 @@
     .receipt-table th {
         height: 36px !important;
         padding: 8px 10px !important;
-        color: #667085 !important;
-        background: #f8fafc !important;
+        color: #555 !important;
+        background: #fff !important;
         border-bottom: 1px solid #dfe3e8 !important;
         font-size: 8.5px !important;
         font-weight: 700 !important;
@@ -385,7 +387,7 @@
         height: 44px !important;
         padding: 9px 10px !important;
         overflow-wrap: anywhere;
-        color: #344054 !important;
+        color: #333 !important;
         background: #fff !important;
         border-bottom: 1px solid #eef0f3 !important;
         font-size: 10px !important;
@@ -399,7 +401,7 @@
 
     .receipt-table-number {
         width: 42px;
-        color: #98a2b3 !important;
+        color: #777 !important;
         text-align: center !important;
     }
 
@@ -408,7 +410,7 @@
     }
 
     .receipt-table-description strong {
-        color: #344054;
+        color: #333;
         font-weight: 600;
     }
 
@@ -433,9 +435,9 @@
     .receipt-spelled {
         min-width: 0;
         padding: 12px 13px;
-        color: #475467;
-        background: #eef5ff;
-        border: 1px solid #d6e4fb;
+        color: #4a4a4a;
+        background: #fff;
+        border: 1px solid #d7d7d7;
         border-radius: 8px;
     }
 
@@ -445,7 +447,7 @@
     }
 
     .receipt-spelled span {
-        color: #2878f0;
+        color: #555;
         font-size: 8px;
         font-weight: 700;
         letter-spacing: .05em;
@@ -454,7 +456,7 @@
 
     .receipt-spelled strong {
         margin-top: 5px;
-        color: #344054;
+        color: #333;
         font-size: 10px;
         font-weight: 600;
         line-height: 1.55;
@@ -463,8 +465,8 @@
     .receipt-summary {
         width: 100%;
         padding: 12px 13px;
-        background: #f8fafc;
-        border: 1px solid #eef0f3;
+        background: #fff;
+        border: 1px solid #d7d7d7;
         border-radius: 8px;
     }
 
@@ -472,12 +474,12 @@
         justify-content: space-between;
         gap: 18px;
         min-height: 27px;
-        color: #667085;
+        color: #666;
         font-size: 9.5px;
     }
 
     .receipt-summary-row strong {
-        color: #344054;
+        color: #333;
         font-weight: 650;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
@@ -486,14 +488,14 @@
     .receipt-summary-row.is-total {
         margin-top: 6px;
         padding-top: 10px;
-        color: #101828;
+        color: #181818;
         border-top: 1px solid #d0d5dd;
         font-size: 10.5px;
         font-weight: 700;
     }
 
     .receipt-summary-row.is-total strong {
-        color: #101828;
+        color: #181818;
         font-size: 14px;
         font-weight: 750;
     }
@@ -504,9 +506,9 @@
         gap: 9px;
         margin-top: 14px;
         padding: 10px 11px;
-        color: #475467;
-        background: #fffaeb;
-        border: 1px solid #fef0c7;
+        color: #4a4a4a;
+        background: #fff;
+        border: 1px solid #d7d7d7;
         border-radius: 7px;
         font-size: 9.5px;
         line-height: 1.5;
@@ -517,8 +519,9 @@
         place-items: center;
         width: 24px;
         height: 24px;
-        color: #b54708;
-        background: #fef0c7;
+        color: #444;
+        background: #fff;
+        border: 1px solid #d7d7d7;
         border-radius: 6px;
         font-size: 9px;
     }
@@ -529,7 +532,7 @@
     }
 
     .receipt-note strong {
-        color: #7a2e0e;
+        color: #333;
         font-size: 9px;
         font-weight: 700;
     }
@@ -561,8 +564,9 @@
         flex: 0 0 30px;
         width: 30px;
         height: 30px;
-        color: #087451;
-        background: #ecfdf3;
+        color: #333;
+        background: #fff;
+        border: 1px solid #d7d7d7;
         border-radius: 7px;
         font-size: 11px;
     }
@@ -573,21 +577,21 @@
     }
 
     .receipt-validity strong {
-        color: #344054;
+        color: #333;
         font-size: 9.5px;
         font-weight: 700;
     }
 
     .receipt-validity span {
         margin-top: 3px;
-        color: #98a2b3;
+        color: #777;
         font-size: 8.5px;
         line-height: 1.5;
     }
 
     .receipt-signature {
         width: 100%;
-        color: #475467;
+        color: #4a4a4a;
         font-size: 9.5px;
         text-align: center;
     }
@@ -599,8 +603,8 @@
     .receipt-signature-line {
         margin-top: 48px;
         padding-top: 7px;
-        color: #101828;
-        border-top: 1px solid #667085;
+        color: #181818;
+        border-top: 1px solid #666;
         font-weight: 650;
     }
 
@@ -610,7 +614,7 @@
         gap: 16px;
         margin-top: 21px;
         padding-top: 10px;
-        color: #98a2b3;
+        color: #777;
         border-top: 1px dashed #d0d5dd;
         font-size: 7.5px;
         line-height: 1.4;
@@ -756,7 +760,7 @@
         }
 
         .receipt-table td::before {
-            color: #98a2b3;
+            color: #777;
             font-size: 8px;
             font-weight: 700;
             text-align: left;
@@ -776,7 +780,7 @@
             grid-template-columns: 1fr !important;
             padding: 10px !important;
             text-align: left !important;
-            background: #f8fafc !important;
+            background: #fff !important;
         }
 
         .receipt-table-description::before {
