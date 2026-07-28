@@ -1038,6 +1038,15 @@
     }
 
     @media print {
+        html,
+        body,
+        main {
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
         .app-sidebar,
         .app-topbar,
         .sidebar-overlay-bg {
@@ -1047,7 +1056,28 @@
         body:has(.app-sidebar) .main-content {
             width: 100% !important;
             max-width: 100% !important;
+            min-height: 0 !important;
             margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body:has(.app-sidebar) .content-area,
+        body:has(.app-sidebar) .dashboard-content,
+        body:has(.app-sidebar) .receipt-page,
+        body:has(.app-sidebar) .receipt-paper {
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
         }
     }
 
