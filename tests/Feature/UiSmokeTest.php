@@ -224,8 +224,11 @@ class UiSmokeTest extends TestCase
             $this->get(route('pembayaran.kwitansi', $pembayaran->id))
                 ->assertOk()
                 ->assertSee('Kwitansi pembayaran')
+                ->assertSee('Pembayaran diterima')
+                ->assertSee('Rincian transaksi')
                 ->assertSee('Jumlah diterima')
-                ->assertSee('receipt-paper', false);
+                ->assertSee('receipt-totals-area', false)
+                ->assertSee('receipt-document-footer', false);
         }
 
         $paymentGroup = Pembayaran::query()
@@ -239,7 +242,8 @@ class UiSmokeTest extends TestCase
                 'ids' => $paymentGroup->pluck('id')->implode(','),
             ]))
                 ->assertOk()
-                ->assertSee('Kwitansi pembayaran')
+                ->assertSee('Kwitansi gabungan')
+                ->assertSee('Rincian transaksi')
                 ->assertSee($paymentGroup->count() . ' tagihan');
         }
     }
