@@ -147,6 +147,16 @@
     .receipt-brand {
         align-items: flex-start;
         min-width: 0;
+        gap: 12px;
+    }
+
+    .receipt-brand img {
+        flex: 0 0 48px;
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        filter: grayscale(1);
+        opacity: .8;
     }
 
     .receipt-brand-copy {
@@ -638,6 +648,12 @@
             width: 100%;
         }
 
+        .receipt-brand img {
+            flex-basis: 42px;
+            width: 42px;
+            height: 42px;
+        }
+
         .receipt-brand-copy strong {
             font-size: 13px;
         }
@@ -978,6 +994,7 @@
             <article class="receipt-paper">
                 <header class="receipt-document-header">
                     <div class="receipt-brand">
+                        <img src="{{ asset('images/logo.jpg') }}" alt="Logo Permata Insani">
                         <div class="receipt-brand-copy">
                             <strong>Yayasan Kemilau Permata Insani</strong>
                             <span>{{ $school?->nama_sekolah ?? 'Permata Insani Islamic School' }}</span>
