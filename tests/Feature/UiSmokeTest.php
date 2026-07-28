@@ -9,6 +9,7 @@ use App\Models\Pembayaran;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Tests\TestCase;
 
 class UiSmokeTest extends TestCase
@@ -170,6 +171,59 @@ class UiSmokeTest extends TestCase
             Siswa::query()->where('kelas_id', $class->id)->count(),
             $classResponse->viewData('studentRows')
         );
+    }
+
+    public function test_transaction_history_uses_aligned_filters_and_list_rows(): void
+    {
+        $admin = Admin::query()->firstOrFail();
+        $this->actingAs($admin, 'web');
+
+        $response = $this->get(route('riwayat.index'));
+
+        $response
+            ->assertOk()
+            ->assertSee('Riwayat transaksi')
+            ->assertSee('Daftar transaksi')
+            ->assertSee('Semua sekolah')
+            ->assertSee('Semua kelas')
+            ->assertSee('Semua transaksi')
+            ->assertSee('Cari transaksi')
+            ->assertSee('Rincian tagihan')
+            ->assertSee('history-filter-form', false)
+            ->assertSee('history-list-head', false)
+            ->assertSee('history-row-summary', false);
+
+        $this->assertCount(Kelas::query()->count(), $response->viewData('kelasList'));
+        $this->assertInstanceOf(LengthAwarePaginator::class, $response->viewData('transaksi'));
+
+        $payment = Pembayaran::query()->with('siswa')->first();
+        if (!$payment?->siswa?->kelas_id) {
+            return;
+        }
+
+        $filteredResponse = $this->get(route('riwayat.index', [
+            'jenis_pembayaran' => 'sekolah',
+            'sekolah_id' => $payment->siswa->id_sekolah,
+            'kelas_id' => $payment->siswa->kelas_id,
+            'search' => $payment->siswa->nis,
+        ]));
+
+        $filteredResponse->assertOk();
+        $this->assertNotEmpty($filteredResponse->viewData('transaksi')->items());
+        $this->assertCount(
+            Kelas::query()->where('sekolah_id', $payment->siswa->id_sekolah)->count(),
+            $filteredResponse->viewData('kelasList')
+        );
+
+        foreach ($filteredResponse->viewData('transaksi')->items() as $transaction) {
+            $this->assertSame('sekolah', $transaction['source_type']);
+            $this->assertSame($payment->siswa->id_sekolah, $transaction['siswa']->id_sekolah);
+            $this->assertSame($payment->siswa->kelas_id, $transaction['siswa']->kelas_id);
+        }
+
+        $this->get(route('riwayat.index', [
+            'end_date' => $payment->tanggal_bayar->format('Y-m-d'),
+        ]))->assertOk();
     }
 
     public function test_active_tagihan_flow_uses_the_redesigned_pages(): void

@@ -10,6 +10,7 @@ use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use App\Models\LogAktivitas;
 use App\Models\KoperasiPenjualan;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -17,16 +18,49 @@ class PembayaranController extends Controller
 {
     public function index(Request $request)
     {
-        $sekolahList = Sekolah::all();
-        $selectedSekolah = $request->input('sekolah_id');
-        $selectedKelas = $request->input('kelas_id');
-        $search = $request->input('search');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $selectedJenisPembayaran = $request->input('jenis_pembayaran');
+        $filterRules = [
+            'sekolah_id' => ['nullable', 'integer', 'exists:sekolah,id'],
+            'kelas_id' => ['nullable', 'integer', 'exists:kelas,id'],
+            'jenis_pembayaran' => ['nullable', 'in:sekolah,koperasi'],
+            'search' => ['nullable', 'string', 'max:120'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+        ];
 
-        // Get classes if school is selected
-        $kelasList = $selectedSekolah ? Kelas::where('sekolah_id', $selectedSekolah)->get() : collect();
+        if ($request->filled('start_date')) {
+            $filterRules['end_date'][] = 'after_or_equal:start_date';
+        }
+
+        $filters = $request->validate($filterRules);
+
+        $selectedSekolah = isset($filters['sekolah_id']) ? (int) $filters['sekolah_id'] : null;
+        $selectedKelas = isset($filters['kelas_id']) ? (int) $filters['kelas_id'] : null;
+        $selectedJenisPembayaran = $filters['jenis_pembayaran'] ?? null;
+        $search = trim((string) ($filters['search'] ?? ''));
+        $startDate = $filters['start_date'] ?? null;
+        $endDate = $filters['end_date'] ?? null;
+
+        if ($selectedSekolah && $selectedKelas) {
+            $classBelongsToSchool = Kelas::query()
+                ->whereKey($selectedKelas)
+                ->where('sekolah_id', $selectedSekolah)
+                ->exists();
+
+            if (!$classBelongsToSchool) {
+                $selectedKelas = null;
+            }
+        }
+
+        $sekolahList = Sekolah::query()
+            ->orderBy('nama_sekolah')
+            ->get();
+
+        $kelasList = Kelas::query()
+            ->with('sekolah')
+            ->when($selectedSekolah, fn ($query) => $query->where('sekolah_id', $selectedSekolah))
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
 
         return $this->indexWithKoperasi(
             $request,
@@ -39,76 +73,6 @@ class PembayaranController extends Controller
             $startDate,
             $endDate
         );
-
-        // ✅ PERBAIKAN: Mengambil semua kolom termasuk diskon
-        $query = Pembayaran::with(['siswa.kelas', 'siswa.sekolah', 'tagihan'])
-                    ->orderBy('created_at', 'desc');
-
-        // Apply school filter
-        if ($selectedSekolah) {
-            $query->whereHas('siswa', function ($q) use ($selectedSekolah) {
-                $q->where('id_sekolah', $selectedSekolah);
-            });
-        }
-
-        // Apply class filter
-        if ($selectedKelas) {
-            $query->whereHas('siswa', function ($q) use ($selectedKelas) {
-                $q->where('kelas_id', $selectedKelas);
-            });
-        }
-
-        // Apply search filter (name or NIS)
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('siswa', function($sq) use ($search) {
-                    $sq->where('nama', 'like', "%{$search}%")
-                      ->orWhere('nis', 'like', "%{$search}%");
-                })->orWhere('keterangan', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply date range filter
-        if ($startDate && $endDate) {
-            $start = Carbon::parse($startDate)->startOfDay();
-            $end = Carbon::parse($endDate)->endOfDay();
-            $query->whereBetween('tanggal_bayar', [$start, $end]);
-        }
-
-        $pembayaran = $query->get();
-
-        // ✅ PERBAIKAN: Group by transaction_id jika tersedia, fallback ke timestamp dan siswa_id
-        $transaksi = $pembayaran->groupBy(function ($item) {
-            // Gunakan transaction_id jika tersedia
-            if (!empty($item->transaction_id)) {
-                return $item->transaction_id;
-            }
-            
-            // Fallback ke timestamp dan siswa_id
-            return $item->created_at->toDateTimeString() . '-' . $item->siswa_id;
-        })->map(function ($group) {
-            return [
-                'items' => $group,
-                'total_bayar' => $group->sum('jumlah_bayar'),
-                'total_diskon' => $group->sum(function($item) { return $item->diskon ?? 0; }),  // ✅ PERBAIKAN: Gunakan closure untuk mengakses atribut diskon
-                'siswa' => $group->first()->siswa,
-                'tanggal_bayar' => $group->first()->tanggal_bayar,
-                'metode_bayar' => $group->first()->metode_bayar,
-                'keterangan' => $group->first()->keterangan,
-                'ids' => $group->pluck('id')->implode(','),
-                'transaction_id' => $group->first()->transaction_id, // ✅ Tambahkan transaction_id
-            ];
-        });
-
-        LogAktivitas::create([
-            'aktor_type' => 'admin', 'aktor_id' => Auth::id(),
-            'aktivitas'  => 'Melihat halaman riwayat pembayaran',
-            'ip_address' => $request->ip(), 'user_agent' => $request->userAgent(),
-        ]);
-
-        return view('riwayat.index', compact(
-            'transaksi', 'sekolahList', 'kelasList', 'selectedSekolah', 'selectedKelas', 'search', 'startDate', 'endDate'
-        ));
     }
 
     private function indexWithKoperasi(
@@ -126,7 +90,8 @@ class PembayaranController extends Controller
 
         if ($selectedJenisPembayaran !== 'koperasi') {
             $query = Pembayaran::with(['siswa.kelas', 'siswa.sekolah', 'tagihan'])
-                ->orderBy('created_at', 'desc');
+                ->latest('tanggal_bayar')
+                ->latest('id');
 
             if ($selectedSekolah) {
                 $query->whereHas('siswa', function ($q) use ($selectedSekolah) {
@@ -145,15 +110,21 @@ class PembayaranController extends Controller
                     $q->whereHas('siswa', function ($sq) use ($search) {
                         $sq->where('nama', 'like', "%{$search}%")
                             ->orWhere('nis', 'like', "%{$search}%");
-                    })->orWhere('keterangan', 'like', "%{$search}%");
+                    })
+                        ->orWhere('transaction_id', 'like', "%{$search}%")
+                        ->orWhere('nomor_kwitansi', 'like', "%{$search}%")
+                        ->orWhere('metode_bayar', 'like', "%{$search}%")
+                        ->orWhere('keterangan', 'like', "%{$search}%")
+                        ->orWhereHas('tagihan', function ($tagihanQuery) use ($search) {
+                            $tagihanQuery->where('nama_tagihan', 'like', "%{$search}%")
+                                ->orWhere('periode', 'like', "%{$search}%");
+                        });
                 });
             }
 
-            if ($startDate && $endDate) {
-                $start = Carbon::parse($startDate)->startOfDay();
-                $end = Carbon::parse($endDate)->endOfDay();
-                $query->whereBetween('tanggal_bayar', [$start, $end]);
-            }
+            $query
+                ->when($startDate, fn ($paymentQuery) => $paymentQuery->whereDate('tanggal_bayar', '>=', $startDate))
+                ->when($endDate, fn ($paymentQuery) => $paymentQuery->whereDate('tanggal_bayar', '<=', $endDate));
 
             $transaksi = $transaksi->merge($query->get()->groupBy(function ($item) {
                 if (!empty($item->transaction_id)) {
@@ -209,11 +180,9 @@ class PembayaranController extends Controller
                 });
             }
 
-            if ($startDate && $endDate) {
-                $start = Carbon::parse($startDate)->startOfDay();
-                $end = Carbon::parse($endDate)->endOfDay();
-                $koperasiQuery->whereBetween('tanggal', [$start, $end]);
-            }
+            $koperasiQuery
+                ->when($startDate, fn ($salesQuery) => $salesQuery->whereDate('tanggal', '>=', $startDate))
+                ->when($endDate, fn ($salesQuery) => $salesQuery->whereDate('tanggal', '<=', $endDate));
 
             $transaksi = $transaksi->merge($koperasiQuery->get()->map(function ($penjualan) {
                 return [
@@ -236,6 +205,26 @@ class PembayaranController extends Controller
             ->sortByDesc(fn ($item) => Carbon::parse($item['tanggal_bayar']))
             ->values();
 
+        $transactionSummary = [
+            'total' => $transaksi->count(),
+            'sekolah' => $transaksi->where('source_type', 'sekolah')->count(),
+            'koperasi' => $transaksi->where('source_type', 'koperasi')->count(),
+            'nominal' => (float) $transaksi->sum('total_bayar'),
+        ];
+
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 20;
+        $transaksi = new LengthAwarePaginator(
+            $transaksi->forPage($currentPage, $perPage)->values(),
+            $transactionSummary['total'],
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
         LogAktivitas::create([
             'aktor_type' => 'admin',
             'aktor_id' => Auth::id(),
@@ -253,7 +242,8 @@ class PembayaranController extends Controller
             'selectedJenisPembayaran',
             'search',
             'startDate',
-            'endDate'
+            'endDate',
+            'transactionSummary'
         ));
     }
 

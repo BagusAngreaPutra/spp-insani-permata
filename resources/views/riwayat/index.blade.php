@@ -1,457 +1,758 @@
 @extends('layouts.app')
 @include('layouts.sidebar')
 
+@section('title', 'Riwayat Transaksi')
+
 @section('content')
-<style>
-    .main-content {
-        margin-left: 280px;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: calc(100% - 280px);
-    }
-
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0;
-            width: 100%;
-            position: relative;
-            top: 0;
-            right: auto;
+@php
+    $formatRupiah = static fn ($amount) => 'Rp' . number_format((float) $amount, 0, ',', '.');
+    $classLabel = static function ($kelas) {
+        if (!$kelas) {
+            return 'Kelas belum diatur';
         }
+
+        $name = trim((string) $kelas->nama_kelas);
+
+        return in_array($name, ['', '-', '–'], true)
+            ? 'Tingkat ' . $kelas->tingkat
+            : 'Tingkat ' . $kelas->tingkat . ' · ' . $name;
+    };
+    $selectedSchoolName = $selectedSekolah
+        ? optional($sekolahList->firstWhere('id', $selectedSekolah))->nama_sekolah
+        : null;
+    $selectedClassName = $selectedKelas
+        ? $classLabel($kelasList->firstWhere('id', $selectedKelas))
+        : null;
+    $selectedTypeName = match($selectedJenisPembayaran) {
+        'sekolah' => 'Pembayaran sekolah',
+        'koperasi' => 'Koperasi',
+        default => null,
+    };
+    $filterContext = collect([
+        $selectedSchoolName,
+        $selectedClassName,
+        $selectedTypeName,
+        $startDate ? 'Mulai ' . \Carbon\Carbon::parse($startDate)->translatedFormat('d M Y') : null,
+        $endDate ? 'Sampai ' . \Carbon\Carbon::parse($endDate)->translatedFormat('d M Y') : null,
+        $search ? 'Pencarian: “' . $search . '”' : null,
+    ])->filter()->implode(' · ');
+    $hasActiveFilters = filled($selectedSekolah)
+        || filled($selectedKelas)
+        || filled($selectedJenisPembayaran)
+        || filled($search)
+        || filled($startDate)
+        || filled($endDate);
+@endphp
+
+<style>
+    .history-page,
+    .history-page * {
+        box-sizing: border-box;
     }
 
-    .content-area {
-        padding: 3rem 2.5rem;
+    .history-page {
+        display: grid;
+        min-width: 0;
+        gap: 18px;
     }
 
-    /* Page Header */
-    .page-header {
+    .history-heading,
+    .history-heading-actions,
+    .history-filter-actions,
+    .history-summary,
+    .history-student,
+    .history-source,
+    .history-detail-heading,
+    .history-detail-actions,
+    .history-pagination {
         display: flex;
+        align-items: center;
+    }
+
+    .history-heading {
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(20px);
-        padding: 2rem;
-        border-radius: 24px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        gap: 20px;
     }
 
-    .page-title {
-        font-size: 2rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #2d3748, #4a5568);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
+    .history-eyebrow {
+        margin: 0 0 3px;
+        color: #98a2b3;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .03em;
     }
 
-    /* Alert Styles */
-    .alert-success {
-        background: linear-gradient(135deg, #d1fae5, #bbf7d0);
-        border: 1px solid rgba(34, 197, 94, 0.2);
-        color: #166534;
-        padding: 1.25rem 1.5rem;
-        border-radius: 16px;
-        margin-bottom: 1.5rem;
-    }
-
-    /* Filter Styles */
-    .filter-container {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 24px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .filter-container h3 {
-        margin-top: 0;
-        color: #2d3748;
+    .history-title {
+        margin: 0;
+        color: #101828;
+        font-size: clamp(25px, 2.6vw, 32px);
         font-weight: 700;
-        margin-bottom: 1.5rem;
+        letter-spacing: -.04em;
+        line-height: 1.16;
     }
 
-    .filter-row {
+    .history-subtitle {
+        margin: 7px 0 0;
+        color: #667085;
+        font-size: 12px;
+    }
+
+    .history-heading-actions,
+    .history-filter-actions,
+    .history-detail-actions {
+        flex: 0 0 auto;
+        gap: 8px;
+    }
+
+    .history-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        min-height: 38px !important;
+        margin: 0 !important;
+        padding: 0 13px !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font: inherit !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+    }
+
+    .history-button.is-primary {
+        color: #fff !important;
+        background: #2878f0 !important;
+        border-color: #2878f0 !important;
+    }
+
+    .history-button.is-compact {
+        min-height: 32px !important;
+        padding: 0 10px !important;
+        font-size: 10px !important;
+    }
+
+    .history-button:hover {
+        color: #101828 !important;
+        background: #f9fafb !important;
+    }
+
+    .history-button.is-primary:hover {
+        color: #fff !important;
+        background: #1768dc !important;
+        border-color: #1768dc !important;
+    }
+
+    .history-alert {
         display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1rem;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 11px 13px;
+        color: #087451;
+        background: #ecfdf3;
+        border: 1px solid #abefc6;
+        border-radius: 8px;
+        font-size: 11px;
     }
 
-    .filter-group {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .filter-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: #4a5568;
-    }
-
-    .filter-group input,
-    .filter-group select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-
-    .filter-group input:focus,
-    .filter-group select:focus {
-        outline: none;
-        border-color: #22c55e;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
-    }
-
-    .filter-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .btn-filter {
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-apply {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: white;
-        border: none;
-    }
-
-    .btn-apply:hover {
-        background: linear-gradient(135deg, #16a34a, #15803d);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-    }
-
-    .btn-reset {
-        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-        color: #4b5563;
-        border: none;
-    }
-
-    .btn-reset:hover {
-        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
-        transform: translateY(-2px);
-    }
-
-    /* Transaction Cards */
-    .transaction-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
+    .history-panel {
+        min-width: 0;
         overflow: hidden;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
     }
 
-    .transaction-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 35px 65px rgba(0, 0, 0, 0.2);
-    }
-
-    .card-header {
+    .history-panel-heading {
         display: flex;
+        align-items: flex-start;
         justify-content: space-between;
-        align-items: center;
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid rgba(220, 252, 231, 0.8);
-        cursor: pointer;
-        transition: all 0.3s ease;
+        gap: 16px;
+        padding: 17px 18px 15px;
+        border-bottom: 1px solid #e4e7ec;
     }
 
-    .card-header:hover {
-        background: rgba(34, 197, 94, 0.02);
+    .history-panel-title,
+    .history-panel-context {
+        margin: 0;
     }
 
-    .header-main-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .header-main-info .student-name {
-        font-size: 1.2rem;
+    .history-panel-title {
+        color: #101828;
+        font-size: 14px;
         font-weight: 700;
-        color: #1f2937;
     }
 
-    .header-main-info .transaction-date {
-        font-size: 0.95rem;
-        color: #6b7280;
-        font-weight: 500;
+    .history-panel-context {
+        margin-top: 4px;
+        color: #667085;
+        font-size: 10px;
+        line-height: 1.45;
     }
 
-    .header-details {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        margin-top: 0.5rem;
+    .history-filter-form {
+        padding: 16px 18px;
+        background: #fbfcfd;
+        border-bottom: 1px solid #e4e7ec;
     }
 
-    .detail-item {
+    .history-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .history-field {
+        min-width: 0;
+    }
+
+    .history-field.is-wide {
+        grid-column: span 3;
+    }
+
+    .history-field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #475467;
+        font-size: 9px;
+        font-weight: 650;
+    }
+
+    .history-field input,
+    .history-field select {
+        width: 100% !important;
+        height: 38px !important;
+        margin: 0 !important;
+        padding: 0 10px !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        outline: none !important;
+        box-shadow: none !important;
+        font: inherit !important;
+        font-size: 11px !important;
+    }
+
+    .history-field input:focus,
+    .history-field select:focus {
+        border-color: #8fb7f5 !important;
+        box-shadow: 0 0 0 3px rgba(40, 120, 240, .08) !important;
+    }
+
+    .history-filter-footer {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        color: #6b7280;
-        font-weight: 500;
-        font-size: 0.9rem;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 14px;
+        padding-top: 13px;
+        border-top: 1px solid #eef0f3;
     }
 
-    .detail-item i {
-        color: #22c55e;
-        font-size: 0.9rem;
+    .history-filter-context {
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        color: #667085;
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .card-actions {
+    .history-summary {
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 18px;
+        color: #667085;
+        background: #fff;
+        border-bottom: 1px solid #e4e7ec;
+        font-size: 10px;
+    }
+
+    .history-summary-group {
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 16px;
     }
 
-    .total-amount {
-        font-weight: 800;
-        font-size: 1.3rem;
-        color: #166534;
-        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-        padding: 0.75rem 1.25rem;
-        border-radius: 12px;
-        text-align: center;
-        min-width: 150px;
+    .history-summary strong {
+        color: #344054;
+        font-weight: 700;
     }
 
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
+    .history-list-head,
+    .history-row-summary {
+        display: grid;
+        grid-template-columns:
+            minmax(210px, 1.45fr)
+            minmax(170px, 1fr)
+            minmax(115px, .68fr)
+            minmax(105px, .62fr)
+            minmax(125px, .72fr)
+            34px;
+        align-items: center;
+        gap: 14px;
     }
 
-    .details-toggle {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: #fff;
-        padding: 0.6rem 1rem;
-        border-radius: 12px;
-        font-weight: 600;
-        border: none;
+    .history-list-head {
+        min-height: 35px;
+        padding: 0 18px;
+        color: #667085;
+        background: #f8fafc;
+        border-bottom: 1px solid #e4e7ec;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+    }
+
+    .history-list {
+        min-width: 0;
+    }
+
+    .history-row {
+        background: #fff;
+        border-bottom: 1px solid #e4e7ec;
+    }
+
+    .history-row:last-child {
+        border-bottom: 0;
+    }
+
+    .history-row > summary {
+        list-style: none;
+    }
+
+    .history-row > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .history-row-summary {
+        min-height: 72px;
+        padding: 12px 18px;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-        font-size: 0.9rem;
+        transition: background .15s ease;
     }
 
-    .details-toggle:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+    .history-row-summary:hover,
+    .history-row[open] > .history-row-summary {
+        background: #f9fafb;
     }
 
-    .print-btn {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: #fff;
-        padding: 0.6rem;
-        border-radius: 12px;
-        text-decoration: none;
-        transition: all 0.3s ease;
+    .history-student {
+        min-width: 0;
+        gap: 10px;
+    }
+
+    .history-avatar {
+        display: grid;
+        place-items: center;
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        color: #344054;
+        background: #f2f4f7;
+        border: 1px solid #e4e7ec;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .history-student-copy,
+    .history-column-copy {
+        min-width: 0;
+    }
+
+    .history-student-copy strong,
+    .history-student-copy span,
+    .history-column-copy strong,
+    .history-column-copy span {
+        display: block;
+    }
+
+    .history-student-copy strong,
+    .history-column-copy strong {
+        overflow: hidden;
+        color: #101828;
+        font-size: 11px;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .history-student-copy span,
+    .history-column-copy span {
+        margin-top: 2px;
+        overflow: hidden;
+        color: #667085;
+        font-size: 9px;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .history-source {
+        justify-content: flex-start;
+    }
+
+    .history-source-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-self: start;
+        min-height: 23px;
+        padding: 0 8px;
+        color: #344054;
+        background: #f2f4f7;
+        border-radius: 999px;
+        font-size: 8.5px;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .history-source-badge.is-school {
+        color: #175cd3;
+        background: #eff8ff;
+    }
+
+    .history-total {
+        color: #101828;
+        font-size: 11.5px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .history-toggle {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        margin-left: auto;
+        color: #667085;
+        background: #fff;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 9px;
+    }
+
+    .history-toggle i {
+        transition: transform .18s ease;
+    }
+
+    .history-row[open] .history-toggle i {
+        transform: rotate(180deg);
+    }
+
+    .history-detail {
+        padding: 15px 18px 17px;
+        background: #fbfcfd;
+        border-top: 1px solid #e4e7ec;
+    }
+
+    .history-detail-heading {
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 10px;
+    }
+
+    .history-detail-title {
+        margin: 0;
+        color: #344054;
+        font-size: 10.5px;
+        font-weight: 700;
+    }
+
+    .history-detail-caption {
+        display: block;
+        margin-top: 2px;
+        color: #667085;
+        font-size: 8.5px;
+    }
+
+    .history-detail-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 7px;
+    }
+
+    .history-detail-table {
+        width: 100% !important;
+        min-width: 650px !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+    }
+
+    .history-detail-table th {
+        height: 34px !important;
+        padding: 7px 10px !important;
+        color: #667085 !important;
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e4e7ec !important;
+        font-size: 8px !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        text-transform: uppercase;
+    }
+
+    .history-detail-table td {
+        min-height: 39px !important;
+        padding: 8px 10px !important;
+        color: #344054 !important;
+        background: #fff !important;
+        border-bottom: 1px solid #eef0f3 !important;
+        font-size: 9.5px !important;
+        line-height: 1.4;
+        vertical-align: middle !important;
+    }
+
+    .history-detail-table tbody tr:last-child td {
+        border-bottom: 1px solid #d0d5dd !important;
+    }
+
+    .history-detail-table tfoot td {
+        color: #101828 !important;
+        font-weight: 700;
+    }
+
+    .history-detail-table th:first-child,
+    .history-detail-table td:first-child {
+        width: auto;
+    }
+
+    .history-detail-table th:not(:first-child),
+    .history-detail-table td:not(:first-child) {
+        width: 125px;
+    }
+
+    .history-money {
+        font-variant-numeric: tabular-nums;
+        text-align: right !important;
+        white-space: nowrap;
+    }
+
+    .history-empty {
+        display: grid;
+        min-height: 250px;
+        place-items: center;
+        padding: 32px 18px;
+        text-align: center;
+    }
+
+    .history-empty i {
+        color: #98a2b3;
+        font-size: 22px;
+    }
+
+    .history-empty strong,
+    .history-empty span {
+        display: block;
+    }
+
+    .history-empty strong {
+        margin-top: 11px;
+        color: #344054;
+        font-size: 12px;
+    }
+
+    .history-empty span {
+        margin-top: 4px;
+        color: #667085;
+        font-size: 10px;
+    }
+
+    .history-list-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 13px 18px;
+        color: #667085;
+        background: #fff;
+        border-top: 1px solid #e4e7ec;
+        font-size: 9.5px;
+    }
+
+    .history-pagination {
+        justify-content: flex-end;
+        gap: 7px;
+    }
+
+    .history-pagination a,
+    .history-pagination span {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        font-size: 0.9rem;
-    }
-
-    .print-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
-        text-decoration: none;
-        color: #fff;
-    }
-
-    .card-body {
-        display: none;
-        padding: 2rem;
-        background: linear-gradient(135deg, #f9fafb, #f3f4f6);
-    }
-
-    /* Details Table */
-    .details-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.95rem;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-    }
-
-    .details-table th,
-    .details-table td {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid rgba(220, 252, 231, 0.8);
-        text-align: left;
-    }
-
-    .details-table th {
-        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-        font-weight: 700;
-        color: #166534;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .details-table tbody tr {
-        transition: all 0.3s ease;
-    }
-
-    .details-table tbody tr:hover {
-        background: rgba(34, 197, 94, 0.05);
-    }
-
-    .details-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    /* Discount display styles */
-    .discount-amount.has-discount {
-        color: #dc2626;
+        min-height: 30px;
+        padding: 0 10px;
+        color: #475467;
+        background: #fff;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 9px;
         font-weight: 600;
+        text-decoration: none;
     }
 
-    .discount-amount.no-discount {
-        color: #9ca3af;
-        font-style: italic;
+    .history-pagination span {
+        border: 0;
     }
 
-    .source-badge {
-        background: #ecfdf5;
-        border: 1px solid #bbf7d0;
-        border-radius: 999px;
-        color: #166534;
-        display: inline-flex;
-        font-size: 0.78rem;
-        font-weight: 800;
-        padding: 0.25rem 0.65rem;
-        text-transform: uppercase;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #6b7280;
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        color: #22c55e;
-        margin-bottom: 1rem;
-    }
-
-    .empty-state p {
-        font-size: 1.1rem;
-        margin: 0;
-        font-weight: 500;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .content-area {
-            padding: 1.5rem 1rem;
+    @media (max-width: 1100px) {
+        .history-filter-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
-        
-        .page-header {
-            padding: 1.5rem;
+
+        .history-list-head,
+        .history-row-summary {
+            grid-template-columns:
+                minmax(190px, 1.35fr)
+                minmax(145px, 1fr)
+                minmax(105px, .72fr)
+                minmax(95px, .62fr)
+                minmax(115px, .72fr)
+                32px;
+            gap: 10px;
         }
-        
-        .page-title {
-            font-size: 1.5rem;
-        }
-        
-        .card-header {
+    }
+
+    @media (max-width: 820px) {
+        .history-heading {
+            align-items: flex-start;
             flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
-            padding: 1.25rem 1.5rem;
         }
-        
-        .header-main-info {
-            align-items: center;
-        }
-        
-        .card-actions {
-            align-items: center;
-            flex-direction: row;
-            justify-content: center;
-        }
-        
-        .total-amount {
-            font-size: 1.1rem;
-            padding: 0.5rem 1rem;
-        }
-        
-        .details-table th,
-        .details-table td {
-            padding: 0.75rem 0.5rem;
-            font-size: 0.875rem;
-        }
-        
-        .filter-row {
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .filter-group {
-            min-width: 100%;
-        }
-        
-        .action-buttons {
+
+        .history-heading-actions,
+        .history-heading-actions .history-button {
             width: 100%;
-            justify-content: center;
+        }
+
+        .history-filter-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .history-field.is-wide {
+            grid-column: 1 / -1;
+        }
+
+        .history-filter-footer,
+        .history-summary,
+        .history-list-footer {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .history-filter-context {
+            white-space: normal;
+        }
+
+        .history-filter-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+        }
+
+        .history-filter-actions .history-button:only-child {
+            grid-column: 1 / -1;
+        }
+
+        .history-list-head {
+            display: none;
+        }
+
+        .history-row-summary {
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 11px 14px;
+            min-height: 0;
+            padding: 15px;
+        }
+
+        .history-student {
+            grid-column: 1;
+        }
+
+        .history-toggle {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .history-column,
+        .history-source,
+        .history-total {
+            display: grid;
+            grid-column: 1 / -1;
+            grid-template-columns: 94px minmax(0, 1fr);
+            align-items: start;
+            gap: 9px;
+            text-align: left;
+        }
+
+        .history-column::before,
+        .history-source::before,
+        .history-total::before {
+            color: #98a2b3;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            content: attr(data-label);
+        }
+
+        .history-total {
+            font-size: 12px;
+        }
+
+        .history-detail {
+            padding: 14px 15px 16px;
+        }
+
+        .history-detail-heading {
+            align-items: flex-start;
+            flex-direction: column;
         }
     }
 
-    /* Animation untuk slide down */
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
+    @media (max-width: 520px) {
+        .history-panel-heading,
+        .history-filter-form,
+        .history-summary {
+            padding-right: 14px;
+            padding-left: 14px;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
 
-    .card-body {
-        animation: slideDown 0.3s ease;
-    }
-    
-    /* Loading state for class dropdown */
-    .loading-option {
-        color: #9ca3af;
-        font-style: italic;
+        .history-filter-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .history-field.is-wide {
+            grid-column: auto;
+        }
+
+        .history-filter-actions {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .history-filter-actions .history-button:only-child {
+            grid-column: auto;
+        }
+
+        .history-detail-actions,
+        .history-detail-actions .history-button {
+            width: 100%;
+        }
+
+        .history-pagination {
+            justify-content: space-between;
+            width: 100%;
+        }
     }
 </style>
 
@@ -459,308 +760,323 @@
     @include('layouts.header')
 
     <div class="content-area">
-        @if(session('success'))
-            <div class="alert-success">
-                <i class="fas fa-check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
-
-        <div class="page-header">
-            <h2 class="page-title">
-                <i class="fas fa-history"></i> Riwayat Transaksi
-            </h2>
-        </div>
-
-        <!-- Filter Section -->
-        <div class="filter-container">
-            <h3><i class="fas fa-filter"></i> Filter Pencarian</h3>
-            <form method="GET" action="{{ route('riwayat.index') }}" id="filterForm">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label for="search"><i class="fas fa-search"></i> Nama atau NIS</label>
-                        <input type="text" id="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari nama atau NIS...">
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="jenis_pembayaran"><i class="fas fa-receipt"></i> Jenis Pembayaran</label>
-                        <select id="jenis_pembayaran" name="jenis_pembayaran">
-                            <option value="">Semua Pembayaran</option>
-                            <option value="sekolah" {{ (isset($selectedJenisPembayaran) && $selectedJenisPembayaran === 'sekolah') ? 'selected' : '' }}>Pembayaran Sekolah</option>
-                            <option value="koperasi" {{ (isset($selectedJenisPembayaran) && $selectedJenisPembayaran === 'koperasi') ? 'selected' : '' }}>Koperasi</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="sekolah_id"><i class="fas fa-school"></i> Sekolah</label>
-                        <select id="sekolah_id" name="sekolah_id">
-                            <option value="">Semua Sekolah</option>
-                            @foreach($sekolahList as $sekolah)
-                                <option value="{{ $sekolah->id }}" {{ (isset($selectedSekolah) && $selectedSekolah == $sekolah->id) ? 'selected' : '' }}>
-                                    {{ $sekolah->nama_sekolah }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="kelas_id"><i class="fas fa-users"></i> Kelas</label>
-                        <select id="kelas_id" name="kelas_id">
-                            <option value="">Semua Kelas</option>
-                            @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}" {{ (isset($selectedKelas) && $selectedKelas == $kelas->id) ? 'selected' : '' }}>
-                                    {{ $kelas->tingkat }} - {{ $kelas->nama_kelas }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+        <div class="history-page">
+            @if(session('success'))
+                <div class="history-alert">
+                    <i class="fas fa-circle-check" aria-hidden="true"></i>
+                    <span>{{ session('success') }}</span>
                 </div>
-                
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label for="start_date"><i class="fas fa-calendar"></i> Tanggal Mulai</label>
-                        <input type="date" id="start_date" name="start_date" value="{{ $startDate ?? '' }}">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="end_date"><i class="fas fa-calendar"></i> Tanggal Selesai</label>
-                        <input type="date" id="end_date" name="end_date" value="{{ $endDate ?? '' }}">
-                    </div>
+            @endif
+
+            <header class="history-heading">
+                <div>
+                    <p class="history-eyebrow">Pembayaran</p>
+                    <h1 class="history-title" data-page-title>Riwayat transaksi</h1>
+                    <p class="history-subtitle">Filter transaksi, buka rincian tagihan, lalu cetak kwitansi dari satu daftar.</p>
                 </div>
-                
-                <div class="filter-buttons">
-                    <button type="submit" class="btn-filter btn-apply">
-                        <i class="fas fa-filter"></i> Terapkan Filter
-                    </button>
-                    <a href="{{ route('riwayat.index') }}" class="btn-filter btn-reset">
-                        <i class="fas fa-sync"></i> Reset
+
+                <div class="history-heading-actions">
+                    <a class="history-button" href="{{ route('tagihan.index.grouped') }}">
+                        <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                        <span>Kembali ke tagihan</span>
                     </a>
                 </div>
-            </form>
-        </div>
+            </header>
 
-        <div class="transactions-list">
-            @forelse($transaksi as $groupKey => $tx)
-                <div class="transaction-card">
-                    <div class="card-header" onclick="toggleDetails(this, 'details-{{ $loop->index }}')">
-                        <div class="header-main-info">
-                            <div class="student-name">
-                                <i class="fas fa-user"></i> {{ $tx['siswa']->nama }}
-                            </div>
-                            <span class="source-badge">{{ $tx['source_label'] ?? 'Pembayaran Sekolah' }}</span>
-                            <div class="transaction-date">
-                                <i class="fas fa-calendar-alt"></i> 
-                                {{ \Carbon\Carbon::parse($tx['tanggal_bayar'])->format('d M Y, H:i') }}
-                            </div>
-                            <div class="header-details">
-                                <div class="detail-item">
-                                    <i class="fas fa-school"></i>
-                                    {{ $tx['siswa']->sekolah->nama_sekolah ?? '-' }}
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-users"></i>
-                                    @if($tx['siswa']->kelas)
-                                        Kelas {{ $tx['siswa']->kelas->tingkat }} - {{ $tx['siswa']->kelas->nama_kelas }}
-                                    @else
-                                        -
-                                    @endif
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-receipt"></i>
-                                    {{ count($tx['items']) }} item
-                                </div>
-                                @if(!empty($tx['transaction_id']))
-                                <div class="detail-item">
-                                    <i class="fas fa-hashtag"></i>
-                                    Transaksi ID: {{ substr($tx['transaction_id'], 0, 8) }}...
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="card-actions">
-                            <div class="total-amount">
-                                Rp {{ number_format($tx['total_bayar'], 0, ',', '.') }}
-                            </div>
-                            <div class="action-buttons">
-                                <button class="details-toggle">Detail</button>
-                                <a href="{{ ($tx['source_type'] ?? 'sekolah') === 'koperasi' ? route('koperasi.penjualan.kwitansi', $tx['ids']) : route('pembayaran.kwitansi.grup', ['ids' => $tx['ids']]) }}" target="_blank" class="print-btn" title="Cetak Kwitansi">
-                                    <i class="fas fa-print"></i>
-                                </a>
-                            </div>
-                        </div>
+            <section class="history-panel">
+                <div class="history-panel-heading">
+                    <div>
+                        <h2 class="history-panel-title">Daftar transaksi</h2>
+                        <p class="history-panel-context">Semua sekolah dan kelas ditampilkan secara default.</p>
                     </div>
-                    <div class="card-body" id="details-{{ $loop->index }}">
-                        @if(($tx['source_type'] ?? 'sekolah') === 'koperasi')
-                        <table class="details-table">
-                            <thead>
-                                <tr>
-                                    <th>Nama Barang</th>
-                                    <th>Jumlah</th>
-                                    <th>Harga Satuan</th>
-                                    <th>Subtotal</th>
-                                    <th>Keterangan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($tx['items'] as $item)
-                                <tr>
-                                    <td>{{ $item->nama_barang }}</td>
-                                    <td>{{ $item->jumlah }}</td>
-                                    <td>Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-                                    <td>Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
-                                    <td>{{ $tx['keterangan'] ?? '-' }}</td>
-                                </tr>
+                </div>
+
+                <form class="history-filter-form" id="historyFilterForm" method="GET" action="{{ route('riwayat.index') }}">
+                    <div class="history-filter-grid">
+                        <div class="history-field is-wide">
+                            <label for="historySearch">Cari transaksi</label>
+                            <input
+                                id="historySearch"
+                                name="search"
+                                type="search"
+                                value="{{ $search }}"
+                                placeholder="Nama, NIS, nomor transaksi, tagihan, atau barang..."
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="history-field">
+                            <label for="historyType">Jenis transaksi</label>
+                            <select id="historyType" name="jenis_pembayaran">
+                                <option value="">Semua transaksi</option>
+                                <option value="sekolah" {{ $selectedJenisPembayaran === 'sekolah' ? 'selected' : '' }}>Pembayaran sekolah</option>
+                                <option value="koperasi" {{ $selectedJenisPembayaran === 'koperasi' ? 'selected' : '' }}>Koperasi</option>
+                            </select>
+                        </div>
+
+                        <div class="history-field">
+                            <label for="historySchool">Sekolah</label>
+                            <select id="historySchool" name="sekolah_id">
+                                <option value="">Semua sekolah</option>
+                                @foreach($sekolahList as $sekolah)
+                                    <option value="{{ $sekolah->id }}" {{ $selectedSekolah === $sekolah->id ? 'selected' : '' }}>
+                                        {{ $sekolah->nama_sekolah }}
+                                    </option>
                                 @endforeach
-                                <tr style="font-weight: bold; background: rgba(34, 197, 94, 0.1);">
-                                    <td colspan="3">TOTAL</td>
-                                    <td>Rp {{ number_format($tx['total_bayar'], 0, ',', '.') }}</td>
-                                    <td>-</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        @else
-                        <table class="details-table">
-                            <thead>
-                                <tr>
-                                    <th>Nama Tagihan</th>
-                                    <th>Periode</th>
-                                    <th>Nominal Asli</th>
-                                    <th>Jumlah Bayar</th>
-                                    <th>Diskon</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($tx['items'] as $item)
-                                <tr>
-                                    <td>{{ optional($item->tagihan)->nama_tagihan ?? 'Tagihan Dihapus' }}</td>
-                                    <td>{{ optional($item->tagihan)->periode ?? '-' }}</td>
-                                    <td>Rp {{ number_format(optional($item->tagihan)->nominal ?? 0, 0, ',', '.') }}</td>
-                                    <td>Rp {{ number_format($item->jumlah_bayar, 0, ',', '.') }}</td>
-                                    <td>
-                                        @if(($item->diskon ?? 0) > 0)
-                                            <span class="discount-amount has-discount">
-                                                Rp {{ number_format($item->diskon, 0, ',', '.') }}
-                                            </span>
-                                        @else
-                                            <span class="discount-amount no-discount">
-                                                -
-                                            </span>
+                            </select>
+                        </div>
+
+                        <div class="history-field">
+                            <label for="historyClass">Kelas</label>
+                            <select id="historyClass" name="kelas_id">
+                                <option value="">Semua kelas</option>
+                                @foreach($kelasList as $kelas)
+                                    <option value="{{ $kelas->id }}" {{ $selectedKelas === $kelas->id ? 'selected' : '' }}>
+                                        @if(!$selectedSekolah)
+                                            {{ $kelas->sekolah?->nama_sekolah ?? 'Sekolah belum diatur' }} ·
                                         @endif
-                                    </td>
-                                </tr>
+                                        {{ $classLabel($kelas) }}
+                                    </option>
                                 @endforeach
-                                {{-- TAMBAH ROW TOTAL --}}
-                                <tr style="font-weight: bold; background: rgba(34, 197, 94, 0.1);">
-                                    <td colspan="3">TOTAL</td>
-                                    <td>Rp {{ number_format($tx['total_bayar'], 0, ',', '.') }}</td>
-                                    <td>Rp {{ number_format($tx['total_diskon'], 0, ',', '.') }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        @endif
+                            </select>
+                        </div>
+
+                        <div class="history-field">
+                            <label for="historyStartDate">Dari tanggal</label>
+                            <input id="historyStartDate" name="start_date" type="date" value="{{ $startDate }}">
+                        </div>
+
+                        <div class="history-field">
+                            <label for="historyEndDate">Sampai tanggal</label>
+                            <input id="historyEndDate" name="end_date" type="date" value="{{ $endDate }}" min="{{ $startDate }}">
+                        </div>
                     </div>
+
+                    <div class="history-filter-footer">
+                        <p class="history-filter-context">
+                            {{ $filterContext ?: 'Menampilkan transaksi dari semua sekolah, kelas, dan jenis pembayaran.' }}
+                        </p>
+                        <div class="history-filter-actions">
+                            @if($hasActiveFilters)
+                                <a class="history-button" href="{{ route('riwayat.index') }}">
+                                    <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                                    <span>Reset</span>
+                                </a>
+                            @endif
+                            <button class="history-button is-primary" type="submit">
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                <span>Tampilkan</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="history-summary">
+                    <div class="history-summary-group">
+                        <span><strong>{{ number_format($transactionSummary['total'], 0, ',', '.') }}</strong> transaksi</span>
+                        <span>{{ number_format($transactionSummary['sekolah'], 0, ',', '.') }} pembayaran sekolah</span>
+                        <span>{{ number_format($transactionSummary['koperasi'], 0, ',', '.') }} koperasi</span>
+                    </div>
+                    <span>Total diterima <strong>{{ $formatRupiah($transactionSummary['nominal']) }}</strong></span>
                 </div>
-            @empty
-                <div class="empty-state">
-                    <i class="fas fa-history"></i>
-                    <p>Tidak ada riwayat transaksi yang ditemukan.</p>
-                </div>
-            @endforelse
+
+                @if($transaksi->isNotEmpty())
+                    <div class="history-list-head" aria-hidden="true">
+                        <span>Siswa / transaksi</span>
+                        <span>Sekolah / kelas</span>
+                        <span>Tanggal</span>
+                        <span>Jenis</span>
+                        <span style="text-align:right">Total</span>
+                        <span></span>
+                    </div>
+
+                    <div class="history-list">
+                        @foreach($transaksi as $tx)
+                            @php
+                                $siswa = $tx['siswa'];
+                                $items = collect($tx['items']);
+                                $firstItem = $items->first();
+                                $isCooperative = ($tx['source_type'] ?? 'sekolah') === 'koperasi';
+                                $reference = $tx['transaction_id']
+                                    ?: ($firstItem?->nomor_kwitansi ?: 'Transaksi #' . ($firstItem?->id ?? $loop->iteration));
+                                $studentName = $siswa?->nama ?? 'Siswa tidak tersedia';
+                                $initial = mb_strtoupper(mb_substr(trim($studentName), 0, 1));
+                                $receiptUrl = $isCooperative
+                                    ? route('koperasi.penjualan.kwitansi', $tx['ids'])
+                                    : route('pembayaran.kwitansi.grup', ['ids' => $tx['ids']]);
+                                $transactionValue = (float) $tx['total_bayar'] + (float) $tx['total_diskon'];
+                            @endphp
+
+                            <details class="history-row">
+                                <summary class="history-row-summary">
+                                    <div class="history-student">
+                                        <span class="history-avatar">{{ $initial ?: '?' }}</span>
+                                        <span class="history-student-copy">
+                                            <strong>{{ $studentName }}</strong>
+                                            <span>NIS {{ $siswa?->nis ?? '-' }}</span>
+                                            <span>{{ $reference }}</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="history-column" data-label="Sekolah / kelas">
+                                        <span class="history-column-copy">
+                                            <strong>{{ $siswa?->sekolah?->nama_sekolah ?? 'Sekolah belum diatur' }}</strong>
+                                            <span>{{ $classLabel($siswa?->kelas) }}</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="history-column" data-label="Tanggal">
+                                        <span class="history-column-copy">
+                                            <strong>{{ \Carbon\Carbon::parse($tx['tanggal_bayar'])->translatedFormat('d M Y') }}</strong>
+                                            <span>{{ $tx['metode_bayar'] ?: 'Metode tidak dicatat' }}</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="history-source" data-label="Jenis">
+                                        <span class="history-source-badge {{ $isCooperative ? '' : 'is-school' }}">
+                                            {{ $isCooperative ? 'Koperasi' : 'Sekolah' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="history-total" data-label="Total">
+                                        {{ $formatRupiah($tx['total_bayar']) }}
+                                    </div>
+
+                                    <span class="history-toggle" aria-hidden="true">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </span>
+                                </summary>
+
+                                <div class="history-detail">
+                                    <div class="history-detail-heading">
+                                        <div>
+                                            <h3 class="history-detail-title">{{ $isCooperative ? 'Rincian barang' : 'Rincian tagihan' }}</h3>
+                                            <span class="history-detail-caption">{{ $items->count() }} item dalam transaksi {{ $reference }}</span>
+                                        </div>
+                                        <div class="history-detail-actions">
+                                            <a class="history-button is-compact" href="{{ $receiptUrl }}" target="_blank" rel="noopener">
+                                                <i class="fas fa-print" aria-hidden="true"></i>
+                                                <span>Cetak kwitansi</span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="history-detail-table-wrap">
+                                        <table class="history-detail-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Rincian</th>
+                                                    <th>{{ $isCooperative ? 'Jumlah' : 'Periode' }}</th>
+                                                    <th class="history-money">Nilai transaksi</th>
+                                                    <th class="history-money">Potongan</th>
+                                                    <th class="history-money">Diterima</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($items as $item)
+                                                    <tr>
+                                                        @if($isCooperative)
+                                                            <td><strong>{{ $item->nama_barang }}</strong></td>
+                                                            <td>{{ number_format($item->jumlah, 0, ',', '.') }} item</td>
+                                                            <td class="history-money">{{ $formatRupiah($item->harga_satuan * $item->jumlah) }}</td>
+                                                            <td class="history-money">—</td>
+                                                            <td class="history-money"><strong>{{ $formatRupiah($item->subtotal) }}</strong></td>
+                                                        @else
+                                                            <td><strong>{{ $item->tagihan?->nama_tagihan ?? 'Tagihan dihapus' }}</strong></td>
+                                                            <td>{{ $item->tagihan?->periode ?? $item->periode ?? '-' }}</td>
+                                                            <td class="history-money">{{ $formatRupiah($item->jumlah_bayar + $item->diskon) }}</td>
+                                                            <td class="history-money">{{ $item->diskon > 0 ? '- ' . $formatRupiah($item->diskon) : '—' }}</td>
+                                                            <td class="history-money"><strong>{{ $formatRupiah($item->jumlah_bayar) }}</strong></td>
+                                                        @endif
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="2">Total transaksi</td>
+                                                    <td class="history-money">{{ $formatRupiah($transactionValue) }}</td>
+                                                    <td class="history-money">{{ $tx['total_diskon'] > 0 ? '- ' . $formatRupiah($tx['total_diskon']) : '—' }}</td>
+                                                    <td class="history-money">{{ $formatRupiah($tx['total_bayar']) }}</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </details>
+                        @endforeach
+                    </div>
+
+                    <footer class="history-list-footer">
+                        <span>
+                            Menampilkan {{ number_format($transaksi->firstItem(), 0, ',', '.') }}–{{ number_format($transaksi->lastItem(), 0, ',', '.') }}
+                            dari {{ number_format($transaksi->total(), 0, ',', '.') }} transaksi
+                        </span>
+
+                        @if($transaksi->hasPages())
+                            <nav class="history-pagination" aria-label="Navigasi halaman transaksi">
+                                @if($transaksi->onFirstPage())
+                                    <span>Sebelumnya</span>
+                                @else
+                                    <a href="{{ $transaksi->previousPageUrl() }}">Sebelumnya</a>
+                                @endif
+                                <span>Halaman {{ $transaksi->currentPage() }} dari {{ $transaksi->lastPage() }}</span>
+                                @if($transaksi->hasMorePages())
+                                    <a href="{{ $transaksi->nextPageUrl() }}">Berikutnya</a>
+                                @else
+                                    <span>Berikutnya</span>
+                                @endif
+                            </nav>
+                        @endif
+                    </footer>
+                @else
+                    <div class="history-empty">
+                        <div>
+                            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                            <strong>Transaksi tidak ditemukan</strong>
+                            <span>Ubah filter atau kata pencarian untuk menampilkan transaksi lain.</span>
+                        </div>
+                    </div>
+                @endif
+            </section>
         </div>
     </div>
 </div>
 
 <script>
-    function toggleDetails(headerElement, key) {
-        const content = document.getElementById(key);
-        const button = headerElement.querySelector('.details-toggle');
-        
-        if (content.style.display === 'block') {
-            content.style.display = 'none';
-            if(button) button.textContent = 'Detail';
-        } else {
-            content.style.display = 'block';
-            if(button) button.textContent = 'Sembunyikan';
-        }
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('historyFilterForm');
+    const school = document.getElementById('historySchool');
+    const classSelect = document.getElementById('historyClass');
+    const startDate = document.getElementById('historyStartDate');
+    const endDate = document.getElementById('historyEndDate');
+    const rows = [...document.querySelectorAll('.history-row')];
 
-    // Auto-hide success alerts
-    document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.alert-success');
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateY(-20px)';
-                alert.style.transition = 'all 0.3s ease';
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 300);
-            }, 5000);
+    school?.addEventListener('change', () => {
+        if (classSelect) {
+            classSelect.value = '';
+            classSelect.disabled = true;
+        }
+        form?.submit();
+    });
+
+    classSelect?.addEventListener('change', () => form?.submit());
+
+    startDate?.addEventListener('change', () => {
+        if (!endDate) return;
+        endDate.min = startDate.value;
+        if (endDate.value && endDate.value < startDate.value) {
+            endDate.value = startDate.value;
+        }
+    });
+
+    rows.forEach((row) => {
+        row.addEventListener('toggle', () => {
+            if (!row.open) return;
+            rows.forEach((otherRow) => {
+                if (otherRow !== row) otherRow.open = false;
+            });
         });
     });
-    
-    // Dynamic class filtering based on selected school
-    document.addEventListener('DOMContentLoaded', function() {
-        const sekolahSelect = document.getElementById('sekolah_id');
-        const kelasSelect = document.getElementById('kelas_id');
-        const filterForm = document.getElementById('filterForm');
-        
-        if (sekolahSelect && kelasSelect) {
-            sekolahSelect.addEventListener('change', function() {
-                const sekolahId = this.value;
-                
-                // Clear current options
-                kelasSelect.innerHTML = '<option value="">Memuat data kelas...</option>';
-                kelasSelect.disabled = true;
-                
-                if (sekolahId) {
-                    // Fetch classes based on selected school
-                    fetch(`/get-kelas-by-sekolah/${sekolahId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            // Populate class dropdown
-                            kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                            
-                            if (data.length > 0) {
-                                data.forEach(kelas => {
-                                    const option = document.createElement('option');
-                                    option.value = kelas.id;
-                                    option.textContent = `Kelas ${kelas.tingkat} - ${kelas.nama_kelas}`;
-                                    kelasSelect.appendChild(option);
-                                });
-                            } else {
-                                const option = document.createElement('option');
-                                option.value = '';
-                                option.textContent = 'Tidak ada kelas';
-                                option.disabled = true;
-                                kelasSelect.appendChild(option);
-                            }
-                            
-                            kelasSelect.disabled = false;
-                        })
-                        .catch(error => {
-                            console.error('Error fetching classes:', error);
-                            kelasSelect.innerHTML = '<option value="">Gagal memuat kelas</option>';
-                            kelasSelect.disabled = false;
-                        });
-                } else {
-                    kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                    kelasSelect.disabled = false;
-                }
-            });
-        }
-        
-        // Submit form when pressing Enter in search field
-        const searchInput = document.getElementById('search');
-        if (searchInput && filterForm) {
-            searchInput.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    filterForm.submit();
-                }
-            });
-        }
-    });
+});
 </script>
-
 @endsection
