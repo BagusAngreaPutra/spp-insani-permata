@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Tagihan;
 use Illuminate\Support\Facades\Auth;
+use App\Services\TagihanPeriodReconciler;
 use App\Models\LogAktivitas; // ✅ tambahkan import
 
 class TagihanSiswaController extends Controller
@@ -25,10 +26,14 @@ class TagihanSiswaController extends Controller
         ]);
 
         // ✅ Ambil tagihan hanya milik siswa ini
-        $tagihanSaya = Tagihan::with(['jenisPembayaran', 'pembayaran'])
+        $periodReconciler = app(TagihanPeriodReconciler::class);
+        $tagihanSaya = Tagihan::with(['jenisPembayaran.tahunAjaran', 'pembayaran'])
                         ->where('siswa_id', $siswa->id)
                         ->orderBy('tanggal_jatuh_tempo', 'asc')
-                        ->get();
+                        ->get()
+                        ->filter(fn (Tagihan $tagihan) =>
+                            $periodReconciler->belongsToConfiguredPeriod($tagihan)
+                        );
 
         // ✅ Kirim ke view
         return view('siswa.tagihan.index', [

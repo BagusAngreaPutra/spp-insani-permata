@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -116,7 +117,7 @@
         padding: 0.75rem 1rem;
         text-decoration: none;
     }
-    .btn-add { background: linear-gradient(135deg, #0ea5e9, #0284c7); margin-top: 1rem; }
+    .btn-add { background: linear-gradient(135deg, #25845d, #1d6b4c); margin-top: 1rem; }
     .btn-remove { background: linear-gradient(135deg, #ef4444, #dc2626); padding: 0.55rem 0.8rem; }
     .btn-submit { background: linear-gradient(135deg, #22c55e, #16a34a); }
     .btn-cancel { background: linear-gradient(135deg, #64748b, #475569); }
@@ -128,6 +129,7 @@
         .items-table { display: block; overflow-x: auto; }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

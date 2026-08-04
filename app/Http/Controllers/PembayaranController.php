@@ -57,7 +57,7 @@ class PembayaranController extends Controller
 
         $kelasList = Kelas::query()
             ->with('sekolah')
-            ->when($selectedSekolah, fn ($query) => $query->where('sekolah_id', $selectedSekolah))
+            ->orderBy('sekolah_id')
             ->orderBy('tingkat')
             ->orderBy('nama_kelas')
             ->get();

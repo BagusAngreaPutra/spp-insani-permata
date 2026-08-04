@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -68,6 +69,7 @@
     .alert-success { background: #dcfce7; border-radius: 14px; color: #166534; margin-bottom: 1rem; padding: 1rem 1.25rem; }
     .pagination-wrapper { display: flex; justify-content: flex-end; margin-top: 1.5rem; }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -142,7 +144,7 @@
                             <td>
                                 <div class="koperasi-actions">
                                     <a href="{{ route('koperasi.penjualan.show', $item->id) }}" class="btn-view">Detail</a>
-                                    <a href="{{ route('koperasi.penjualan.kwitansi', $item->id) }}" target="_blank" class="btn-view" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">Kwitansi</a>
+                                    <a href="{{ route('koperasi.penjualan.kwitansi', $item->id) }}" target="_blank" class="btn-view" style="background: linear-gradient(135deg, #25845d, #1d6b4c);">Kwitansi</a>
                                     <form action="{{ route('koperasi.penjualan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Batalkan transaksi ini dan kembalikan stok?')">
                                         @csrf
                                         @method('DELETE')

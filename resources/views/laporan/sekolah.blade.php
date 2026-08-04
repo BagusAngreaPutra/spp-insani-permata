@@ -2,268 +2,377 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
-    /* ====== STYLE NORMAL ====== */
-    .main-content {
-        margin-left: 280px;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: calc(100% - 280px);
-    }
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0;
-            width: 100%;
-            position: relative;
+    @media screen {
+        #pi-report-page .school-group-cell {
+            padding: 12px 14px !important;
+            background: #f8fafc !important;
+            border-color: #d0d5dd !important;
         }
-    }
-    .content-area {
-        padding: 3rem 2.5rem;
-    }
-    .table-container {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin-bottom: 2.5rem;
-    }
-    .modern-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.95rem;
-    }
-    .modern-table th,
-    .modern-table td {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid rgba(220, 252, 231, 0.8);
-        text-align: left;
-    }
-    .modern-table th {
-        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-        font-weight: 700;
-        color: #166534;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .modern-table tbody tr:hover {
-        background: rgba(34, 197, 94, 0.05);
-    }
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(20px);
-        padding: 2rem;
-        border-radius: 24px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    }
-    .page-title {
-        font-size: 2rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #2d3748, #4a5568);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    .btn-primary {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: #fff;
-        padding: 0.75rem 1.25rem;
-        border-radius: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        display: inline-block;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-    }
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+
+        #pi-report-page .school-group-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        #pi-report-page .school-group-main {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 11px;
+        }
+
+        #pi-report-page .school-group-icon {
+            display: inline-grid;
+            flex: 0 0 34px;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            color: #175cd3;
+            background: #eff8ff;
+            border: 1px solid #b2ddff;
+            border-radius: 9px;
+        }
+
+        #pi-report-page .school-group-name {
+            margin: 0;
+            color: #101828;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        #pi-report-page .school-group-meta {
+            display: flex;
+            margin-top: 3px;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            color: #667085;
+            font-size: 10.5px;
+            line-height: 1.4;
+        }
+
+        #pi-report-page .school-group-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #pi-report-page .school-group-stats {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #pi-report-page .school-stat {
+            display: inline-flex;
+            min-height: 26px;
+            padding: 4px 8px;
+            align-items: center;
+            gap: 5px;
+            color: #475467;
+            background: #fff;
+            border: 1px solid #d0d5dd;
+            border-radius: 7px;
+            font-size: 10.5px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+
+        #pi-report-page .class-name {
+            color: #101828;
+            font-weight: 750;
+        }
+
+        #pi-report-page .class-empty {
+            padding: 18px !important;
+            color: #667085 !important;
+            text-align: center !important;
+            font-style: italic;
+        }
     }
 
-    /* ====== STYLE KHUSUS CETAK ====== */
+    @media screen and (max-width: 760px) {
+        #pi-report-page .school-group-content {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        #pi-report-page .school-group-stats {
+            padding-left: 45px;
+            flex-wrap: wrap;
+        }
+    }
+
     @media print {
-@page{
-            size: landscape;
+        #pi-report-page .school-group-cell {
+            padding: 2mm !important;
+            color: #000 !important;
+            background: #fff !important;
+            border: 1px solid #000 !important;
         }
-        @page{
-            size: landscape;
+
+        #pi-report-page .school-group-content {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 5mm !important;
         }
-        aside.sidebar,
-        .page-header,
-        nav,
-        header {
+
+        #pi-report-page .school-group-main {
+            display: block !important;
+        }
+
+        #pi-report-page .school-group-icon,
+        #pi-report-page .school-group-meta i {
             display: none !important;
         }
-        body, .main-content {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            background: #fff !important;
+
+        #pi-report-page .school-group-name {
+            color: #000 !important;
+            font-size: 9pt !important;
+            font-weight: 700 !important;
         }
-        .content-area {
-            padding: 20px;
+
+        #pi-report-page .school-group-meta,
+        #pi-report-page .school-group-stats {
+            display: flex !important;
+            margin-top: 1mm !important;
+            flex-wrap: wrap !important;
+            gap: 2mm 4mm !important;
+            color: #000 !important;
+            font-size: 8pt !important;
         }
-        .table-container {
-            background: none;
-            box-shadow: none;
-            border: none;
-            border-radius: 0;
-        }
-        .modern-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        .modern-table th,
-        .modern-table td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: left;
-        }
-        .modern-table th {
-            background: #f0f0f0;
-            color: #000;
-            font-weight: bold;
-            text-transform: none;
-            letter-spacing: normal;
-        }
-        h3.print-title {
-            text-align: center;
-            margin: 10px 0;
-            font-size: 18px;
-            font-weight: bold;
-            color: #000;
-        }
-        .kop-laporan {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .kop-laporan h2 {
-            margin: 0;
-            font-size: 22px;
-        }
-        .kop-laporan p {
-            margin: 2px 0;
-            font-size: 14px;
-        }
-        hr.print-hr {
-            border: 1px solid #000;
-            margin: 20px 0;
-        }
-        .tanggal-laporan {
-            text-align: right;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .print-footer {
-            margin-top: 30px;
-            page-break-inside: avoid;
-        }
-        
-        .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-        }
-        
-        .signature-box {
-            width: 45%;
-            text-align: center;
-        }
-        
-        .signature-line {
-            margin: 60px 0 10px 0;
-            border-top: 1px solid #000;
+
+        #pi-report-page .school-stat {
+            padding: 0 !important;
+            color: #000 !important;
+            background: transparent !important;
+            border: 0 !important;
+            font-size: 8pt !important;
         }
     }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page pi-school-class-report">
     @include('layouts.header')
 
-    <div class="content-area">
-        <!-- Kop laporan hanya tampil saat cetak -->
+    <div class="content-area pi-report-document">
         <div class="kop-laporan d-none d-print-block">
-            <div style="display: flex; align-items: center; margin-bottom: 20px; text-align: center; justify-content: center;">
-                <img src="{{ asset('images/logo.jpg') }}" onerror="this.style.display='none'" alt="Logo" style="width: 90px; height: 90px; margin-right: 20px; border-radius: 50%;">
-                <div style="font-weight: bold; font-size: 16px; line-height: 1.3; text-align: left;">
+            <div style="display:flex; align-items:center; justify-content:center;">
+                <img src="{{ asset('images/logo.jpg') }}" onerror="this.style.display='none'" alt="Logo sekolah">
+                <div>
                     YAYASAN KEMILAU PERMATA INSANI<br>
                     PAUD (KB/TK) - Permata Insani Islamic School<br>
-                    <span style="font-weight: normal; font-size: 14px;">Jl. Abdul Muis Rt. 09, Kel. Lingkar Selatan, Kec. Paal Merah Jambi 36139</span>
+                    <span>Jl. Abdul Muis Rt. 09, Kel. Lingkar Selatan, Kec. Paal Merah Jambi 36139</span>
                 </div>
             </div>
         </div>
-        <hr class="print-hr d-none d-print-block">
-        <div class="tanggal-laporan d-none d-print-block">
-            Tanggal Laporan: {{ $tanggalLaporan }}
-        </div>
-        <h3 class="print-title d-none d-print-block">LAPORAN DATA SEKOLAH</h3>
+        <div class="tanggal-laporan d-none d-print-block">Tanggal laporan: {{ $tanggalLaporan }}</div>
+        <h3 class="print-title d-none d-print-block">LAPORAN DATA SEKOLAH DAN KELAS</h3>
 
         <div class="page-header no-print">
-            <h2 class="page-title">
-                <i class="fas fa-school"></i> Laporan sekolah
-            </h2>
-            <div>
-                <button onclick="window.print()" class="btn-primary">
-                    <i class="fas fa-print"></i> Print
+            <h1 class="page-title">
+                <i class="fas fa-school-flag"></i>
+                Laporan sekolah & kelas
+            </h1>
+            <div class="header-actions">
+                <button type="button" class="btn-primary print-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i>
+                    Print
                 </button>
-                <a href="{{ route('laporan.sekolah.excel') }}" class="btn-primary">Download Excel</a>
+                <a href="{{ route('laporan.sekolah.excel', request()->query()) }}" class="btn-primary export-btn">
+                    <i class="fas fa-file-excel"></i>
+                    Download Excel
+                </a>
             </div>
         </div>
 
-        <div class="table-container">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Nama Sekolah</th>
-                        <th>Alamat</th>
-                        <th>Kontak</th>
-                        <th>Jenjang</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($sekolahs as $i => $s)
+        <section class="filter-section no-print">
+            <h2 class="filter-title">
+                <i class="fas fa-filter"></i>
+                Filter data
+            </h2>
+
+            <form method="GET" action="{{ route('laporan.sekolah') }}" class="report-filter-form pi-filter-form">
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label for="sekolah_id"><i class="fas fa-school"></i> Sekolah</label>
+                        <select name="sekolah_id" id="sekolah_id" class="form-control">
+                            <option value="">Semua sekolah</option>
+                            @foreach($daftarSekolah as $sekolahItem)
+                                <option value="{{ $sekolahItem->id }}" {{ (string) request('sekolah_id') === (string) $sekolahItem->id ? 'selected' : '' }}>
+                                    {{ $sekolahItem->nama_sekolah }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tahun_ajaran_id"><i class="fas fa-calendar-days"></i> Tahun ajaran</label>
+                        <select name="tahun_ajaran_id" id="tahun_ajaran_id" class="form-control">
+                            <option value="">Semua tahun ajaran</option>
+                            @foreach($daftarTahun as $tahunItem)
+                                <option value="{{ $tahunItem->id }}" {{ (string) request('tahun_ajaran_id') === (string) $tahunItem->id ? 'selected' : '' }}>
+                                    {{ $tahunItem->label }}{{ $tahunItem->aktif ? ' · Aktif' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tingkat"><i class="fas fa-layer-group"></i> Tingkat</label>
+                        <select name="tingkat" id="tingkat" class="form-control">
+                            <option value="">Semua tingkat</option>
+                            @foreach($daftarTingkat as $tingkatItem)
+                                <option value="{{ $tingkatItem }}" {{ (string) request('tingkat') === (string) $tingkatItem ? 'selected' : '' }}>
+                                    Tingkat {{ $tingkatItem }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="search"><i class="fas fa-search"></i> Cari sekolah atau kelas</label>
+                        <input
+                            type="search"
+                            name="search"
+                            id="search"
+                            class="form-control"
+                            value="{{ request('search') }}"
+                            placeholder="Nama sekolah, kode, kelas..."
+                        >
+                    </div>
+                </div>
+
+                <div class="filter-actions report-filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                        Tampilkan
+                    </button>
+                    <a href="{{ route('laporan.sekolah') }}" class="btn btn-secondary">
+                        <i class="fas fa-xmark"></i>
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <section class="summary-section no-print" aria-label="Ringkasan laporan">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Sekolah ditampilkan</div>
+                    <div class="summary-value">{{ number_format($ringkasan['sekolah'], 0, ',', '.') }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Kelas ditampilkan</div>
+                    <div class="summary-value">{{ number_format($ringkasan['kelas'], 0, ',', '.') }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Siswa dalam kelas</div>
+                    <div class="summary-value">{{ number_format($ringkasan['siswa'], 0, ',', '.') }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Sekolah tanpa kelas</div>
+                    <div class="summary-value">{{ number_format($ringkasan['tanpa_kelas'], 0, ',', '.') }}</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-container">
+            <div class="table-header no-print">
+                <h2 class="table-title">
+                    <i class="fas fa-table-list"></i>
+                    Daftar sekolah dan kelas
+                </h2>
+            </div>
+
+            <div class="table-responsive">
+                <table class="modern-table" data-sort-disabled="true" data-sortable="false">
+                    <thead>
                         <tr>
-                            <td>{{ $i+1 }}</td>
-                            <td>{{ $s->nama_sekolah }}</td>
-                            <td>{{ $s->alamat }}</td>
-                            <td>{{ $s->kontak }}</td>
-                            <td>{{ $s->jenjang }}</td>
+                            <th style="width:7%;">No</th>
+                            <th>Kelas</th>
+                            <th style="width:15%;">Tingkat</th>
+                            <th style="width:22%;">Tahun ajaran</th>
+                            <th style="width:16%;">Jumlah siswa</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Footer untuk cetak -->
+                    </thead>
+                    <tbody>
+                        @forelse($sekolahs as $sekolah)
+                            @php
+                                $contact = $sekolah->kontak ?: ($sekolah->telepon ?: '-');
+                                $filteredStudents = $sekolah->kelas->sum('siswa_count');
+                            @endphp
+                            <tr class="school-group-row" data-sort-fixed>
+                                <td colspan="5" class="school-group-cell">
+                                    <div class="school-group-content">
+                                        <div class="school-group-main">
+                                            <span class="school-group-icon"><i class="fas fa-school"></i></span>
+                                            <div>
+                                                <p class="school-group-name">{{ $sekolah->nama_sekolah }}</p>
+                                                <div class="school-group-meta">
+                                                    <span><i class="fas fa-hashtag"></i> {{ $sekolah->kode_sekolah ?: 'Tanpa kode' }}</span>
+                                                    <span><i class="fas fa-graduation-cap"></i> {{ $sekolah->jenjang ?: 'Jenjang belum diisi' }}</span>
+                                                    <span><i class="fas fa-location-dot"></i> {{ $sekolah->alamat ?: 'Alamat belum diisi' }}</span>
+                                                    <span><i class="fas fa-phone"></i> {{ $contact }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="school-group-stats">
+                                            <span class="school-stat"><i class="fas fa-chalkboard"></i> {{ $sekolah->kelas->count() }} kelas</span>
+                                            <span class="school-stat"><i class="fas fa-user-graduate"></i> {{ $filteredStudents }} siswa</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            @forelse($sekolah->kelas as $index => $kelas)
+                                @php
+                                    $className = trim((string) $kelas->nama_kelas);
+                                    $className = in_array($className, ['', '-', '–'], true) ? 'Tanpa nama kelas' : $className;
+                                @endphp
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td class="class-name">{{ $className }}</td>
+                                    <td>Tingkat {{ $kelas->tingkat }}</td>
+                                    <td>{{ $kelas->tahunAjaran?->label ?? '-' }}</td>
+                                    <td>{{ number_format($kelas->siswa_count, 0, ',', '.') }} siswa</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="class-empty">Belum ada kelas yang sesuai dengan filter untuk sekolah ini.</td>
+                                </tr>
+                            @endforelse
+                        @empty
+                            <tr>
+                                <td colspan="5" class="class-empty">Tidak ada sekolah atau kelas yang sesuai dengan filter.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <div class="print-footer d-none d-print-block">
             <div class="signature-section">
                 <div class="signature-box">
                     <p>Mengetahui,</p>
                     <p>Kepala Sekolah</p>
                     <div class="signature-line"></div>
-                    <p class="signature-name">________________________</p>
-                    <p class="signature-title">NIP. ________________________</p>
+                    <p>________________________</p>
+                    <p>NIP. ________________________</p>
                 </div>
                 <div class="signature-box">
-                    <p>Depok, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p>Bendahara</p>
+                    <p>Jambi, {{ $tanggalLaporan }}</p>
+                    <p>Petugas administrasi</p>
                     <div class="signature-line"></div>
-                    <p class="signature-name">________________________</p>
-                    <p class="signature-title">NIP. ________________________</p>
+                    <p>________________________</p>
+                    <p>NIP. ________________________</p>
                 </div>
             </div>
         </div>

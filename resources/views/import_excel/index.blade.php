@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -109,7 +110,7 @@
     }
     
     .info-box {
-        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        background: linear-gradient(135deg, #e5f4ec 0%, #cbe8da 100%);
         border: 1px solid rgba(59, 130, 246, 0.2);
         border-radius: 16px;
         padding: 1.5rem;
@@ -118,7 +119,7 @@
     
     .info-title {
         font-weight: 700;
-        color: #1e40af;
+        color: #15533b;
         margin-bottom: 1rem;
         font-size: 1.2rem;
     }
@@ -142,7 +143,7 @@
     .info-list .label {
         font-weight: 600;
         min-width: 180px;
-        color: #1e3a8a;
+        color: #103e2d;
     }
     
     .example-container {
@@ -161,7 +162,7 @@
     
     .example-header {
         font-weight: 600;
-        color: #3b82f6;
+        color: #1d6b4c;
         margin-bottom: 0.5rem;
         font-size: 1.1rem;
     }
@@ -181,6 +182,7 @@
         font-weight: 500;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -248,7 +250,7 @@
                 <li>
                     <span class="label">ID Tahun Ajaran:</span>
                     <span>
-                        @foreach(App\Models\TahunAjaran::all() as $tahun)
+                        @foreach(App\Models\TahunAjaran::validPeriods() as $tahun)
                             {{ $tahun->id }} = {{ $tahun->nama_tahun }}<br>
                         @endforeach
                     </span>

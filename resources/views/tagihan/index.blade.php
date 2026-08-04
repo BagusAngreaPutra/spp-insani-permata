@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -289,7 +290,7 @@
     }
 
     .btn-bayar {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, #25845d, #1d6b4c);
         color: white;
     }
 
@@ -402,6 +403,7 @@
         }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

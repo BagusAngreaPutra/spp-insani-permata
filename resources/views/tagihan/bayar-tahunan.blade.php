@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -156,6 +157,7 @@
         margin-bottom: 0.5rem;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -302,7 +304,7 @@
                             <td>{{ ucfirst($p->metode_bayar) }}</td>
                             <td>
                                 @if($p->bukti_bayar)
-                                    <a href="{{ asset('storage/'.$p->bukti_bayar) }}" target="_blank" class="text-blue-500 underline">Lihat</a>
+                                    <a href="{{ asset('storage/'.$p->bukti_bayar) }}" target="_blank" class="text-green-700 underline">Lihat</a>
                                 @else
                                     -
                                 @endif

@@ -19,7 +19,7 @@ class KenaikanKelasController extends Controller
     public function index()
     {
         $semuaSekolah = Sekolah::all();
-        $tahunAjaran = TahunAjaran::all();
+        $tahunAjaran = TahunAjaran::validPeriods();
 
         $sekolah = $semuaSekolah->first(); // default, bisa diganti logic-nya kalau perlu
         return view('kenaikan.index', compact('semuaSekolah', 'sekolah', 'tahunAjaran'));

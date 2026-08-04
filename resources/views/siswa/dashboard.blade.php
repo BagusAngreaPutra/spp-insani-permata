@@ -7,6 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{{ asset('css/table-sort.css') }}?v=20260804-5" rel="stylesheet">
+    <link href="{{ asset('css/permata-student-dashboard.css') }}?v=20260804-1" rel="stylesheet">
+    <script src="{{ asset('js/table-sort.js') }}?v=20260804-5" defer></script>
 </head>
 <body>
     @include('layouts.sidebar-siswa')
@@ -64,7 +67,16 @@
                                             <td>{{ \Carbon\Carbon::parse($bayar->tanggal_bayar)->translatedFormat('d M Y') }}</td>
                                             <td>{{ $bayar->tagihan->nama_tagihan ?? '-' }}</td>
                                             <td>Rp{{ number_format($bayar->jumlah_bayar, 0, ',', '.') }}</td>
-                                            <td><span class="badge bg-success-subtle text-success">{{ ucfirst($bayar->status) }}</span></td>
+                                            @php
+                                                $paymentStatus = strtolower(str_replace('_', ' ', trim($bayar->status ?? '')));
+                                                [$paymentStatusClass, $paymentStatusIcon] = match (true) {
+                                                    in_array($paymentStatus, ['belum jatuh tempo', 'sebagian', 'menunggu', 'tertunda', 'pending'], true) => ['bg-warning-subtle text-warning-emphasis border border-warning-subtle', 'fa-clock'],
+                                                    in_array($paymentStatus, ['belum lunas', 'belum bayar', 'gagal', 'dibatalkan', 'ditolak'], true) => ['bg-danger-subtle text-danger border border-danger-subtle', 'fa-circle-exclamation'],
+                                                    in_array($paymentStatus, ['proses', 'diproses', 'berjalan'], true) => ['bg-info-subtle text-info-emphasis border border-info-subtle', 'fa-arrows-rotate'],
+                                                    default => ['bg-success-subtle text-success border border-success-subtle', 'fa-circle-check'],
+                                                };
+                                            @endphp
+                                            <td><span class="badge {{ $paymentStatusClass }}"><i class="fas {{ $paymentStatusIcon }}" aria-hidden="true"></i> {{ ucfirst($paymentStatus ?: 'tercatat') }}</span></td>
                                         </tr>
                                     @empty
                                         <tr><td colspan="4" class="text-center">Belum ada pembayaran.</td></tr>
@@ -78,6 +90,6 @@
         </div>
     </div>
 
-    @include('layouts.design-system')
+    <script src="{{ asset('js/permata-print.js') }}?v=20260804-1"></script>
 </body>
 </html>

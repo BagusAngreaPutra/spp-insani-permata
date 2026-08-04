@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -146,7 +147,7 @@
     }
 
     .btn-secondary {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, #25845d, #1d6b4c);
         color: white;
         box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
     }
@@ -338,11 +339,12 @@
         }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area promotion-page">
         <!-- Success Alert -->
         @if(session('success'))
             <div class="alert-success">
@@ -370,33 +372,37 @@
                 Proses Kenaikan Kelas
             </h2>
 
-            <form action="{{ route('kenaikan.proses') }}" method="POST" id="kenaikankelas-form">
+            <form action="{{ route('kenaikan.proses') }}" method="POST" id="kenaikankelas-form" class="promotion-form">
                 @csrf
-                
-                <div class="form-group">
-                    <label for="sekolah_id" class="form-label">Pilih Sekolah</label>
-                    <select name="sekolah_id" id="sekolah_id" class="form-control" required>
-                        <option value="">-- Pilih Sekolah --</option>
-                        @foreach($semuaSekolah as $sekolah)
-                            <option value="{{ $sekolah->id }}">{{ $sekolah->nama_sekolah }}</option>
-                        @endforeach
-                    </select>
+
+                <div class="promotion-form-grid">
+                    <div class="form-group">
+                        <label for="sekolah_id" class="form-label">Pilih Sekolah</label>
+                        <select name="sekolah_id" id="sekolah_id" class="form-control" required>
+                            <option value="">-- Pilih Sekolah --</option>
+                            @foreach($semuaSekolah as $sekolah)
+                                <option value="{{ $sekolah->id }}">{{ $sekolah->nama_sekolah }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tahun_ajaran_id" class="form-label">Tahun Ajaran Baru</label>
+                        <select name="tahun_ajaran_id" id="tahun_ajaran_id" class="form-control" required>
+                            <option value="">-- Pilih Tahun Ajaran --</option>
+                            @foreach($tahunAjaran as $tahun)
+                                <option value="{{ $tahun->id }}">{{ $tahun->nama_tahun }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="tahun_ajaran_id" class="form-label">Tahun Ajaran Baru</label>
-                    <select name="tahun_ajaran_id" id="tahun_ajaran_id" class="form-control" required>
-                        <option value="">-- Pilih Tahun Ajaran --</option>
-                        @foreach($tahunAjaran as $tahun)
-                            <option value="{{ $tahun->id }}">{{ $tahun->nama_tahun }}</option>
-                        @endforeach
-                    </select>
+                <div class="promotion-form-actions">
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('Apakah Anda yakin ingin memproses kenaikan kelas?')">
+                        <i class="fas fa-arrow-up"></i>
+                        Proses Kenaikan Kelas
+                    </button>
                 </div>
-
-                <button type="submit" class="btn btn-primary" onclick="return confirm('Apakah Anda yakin ingin memproses kenaikan kelas?')">
-                    <i class="fas fa-arrow-up"></i>
-                    Proses Kenaikan Kelas
-                </button>
             </form>
         </div>
 

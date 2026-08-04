@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     /* ====== STYLE NORMAL ====== */
     .main-content {
@@ -309,11 +310,12 @@
         }
     }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area pi-report-document">
         <!-- Kop laporan untuk cetak -->
         <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; margin-bottom: 20px;">
@@ -331,7 +333,7 @@
         </div>
         <h3 class="print-title d-none d-print-block">LAPORAN DATA KENAIKAN KELAS</h3>
 
-        <div class="page-header">
+        <div class="page-header no-print">
             <h1 class="page-title">
                 <i class="fas fa-arrow-up"></i>
                 Laporan Kenaikan Kelas
@@ -351,7 +353,7 @@
                 <i class="fas fa-filter"></i> Filter Data
             </h3>
             
-            <form method="GET" action="{{ route('laporan.kenaikan') }}" id="filterForm">
+            <form method="GET" action="{{ route('laporan.kenaikan') }}" id="filterForm" class="report-filter-form pi-filter-form">
                 <div class="filter-grid">
                     <div class="form-group">
                         <label for="sekolah_id">
@@ -369,11 +371,25 @@
                         <label for="kelas_id">
                             <i class="fas fa-chalkboard"></i> Kelas
                         </label>
-                        <select name="kelas_id" id="kelas_id" class="form-control">
+                        <select name="kelas_id"
+                                id="kelas_id"
+                                class="form-control"
+                                data-class-filter-for="sekolah_id"
+                                data-all-label="Semua Kelas">
                             <option value="">Semua Kelas</option>
                             @foreach($daftarKelas as $k)
-                                <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
-                                    {{ $k->tingkat }} {{ $k->nama_kelas }}
+                                @php
+                                    $className = trim((string) $k->nama_kelas);
+                                    $classLabel = in_array($className, ['', '-', '–'], true)
+                                        ? 'Tingkat '.$k->tingkat
+                                        : 'Tingkat '.$k->tingkat.' · '.$className;
+                                @endphp
+                                <option value="{{ $k->id }}"
+                                        data-school-id="{{ $k->sekolah_id }}"
+                                        data-school-name="{{ $k->sekolah?->nama_sekolah }}"
+                                        data-class-label="{{ $classLabel }}"
+                                        {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
+                                    {{ $classLabel }}
                                 </option>
                             @endforeach
                         </select>
@@ -391,18 +407,15 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label style="visibility: hidden;">Aksi</label>
-                        <div style="display: flex; gap: 0.75rem; align-items: center;">
-                            <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
-                                <i class="fas fa-search"></i> Tampilkan Data
-                            </button>
-                            <a href="{{ route('laporan.kenaikan') }}" class="btn btn-secondary" 
-                               style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3); white-space: nowrap;">
-                                <i class="fas fa-redo"></i> Reset
-                            </a>
-                        </div>
-                    </div>
+                </div>
+
+                <div class="filter-actions report-filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Tampilkan Data
+                    </button>
+                    <a href="{{ route('laporan.kenaikan') }}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
                 </div>
             </form>
         </div>

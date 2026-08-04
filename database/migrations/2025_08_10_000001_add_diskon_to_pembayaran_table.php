@@ -13,6 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
+        if (Schema::hasColumn('pembayaran', 'diskon')) {
+            return;
+        }
+
         Schema::table('pembayaran', function (Blueprint $table) {
             $table->decimal('diskon', 15, 2)->default(0)->after('jumlah_bayar')->comment('Jumlah diskon yang diberikan');
         });
@@ -25,6 +29,10 @@ return new class extends Migration
      */
     public function down()
     {
+        if (!Schema::hasColumn('pembayaran', 'diskon')) {
+            return;
+        }
+
         Schema::table('pembayaran', function (Blueprint $table) {
             $table->dropColumn('diskon');
         });

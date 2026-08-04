@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -129,6 +130,7 @@
         border: 1px solid #d1d5db;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

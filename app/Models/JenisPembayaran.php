@@ -13,6 +13,7 @@ class JenisPembayaran extends Model
 
     protected $fillable = [
         'sekolah_id',
+        'tahun_ajaran_id',
         'nama_pembayaran',
         'tipe',
         'nominal',
@@ -23,6 +24,23 @@ class JenisPembayaran extends Model
     public function sekolah()
     {
         return $this->belongsTo(Sekolah::class, 'sekolah_id');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id');
+    }
+
+    /**
+     * Nama yang dipakai pada daftar dan dokumen tagihan.
+     */
+    public function getNamaDenganTahunAttribute(): string
+    {
+        $tahunAjaran = trim((string) ($this->tahunAjaran?->label ?? ''));
+
+        return $tahunAjaran !== ''
+            ? $this->nama_pembayaran . ' - Tahun Ajaran ' . $tahunAjaran
+            : $this->nama_pembayaran;
     }
 
     // Relasi many-to-many dengan siswa

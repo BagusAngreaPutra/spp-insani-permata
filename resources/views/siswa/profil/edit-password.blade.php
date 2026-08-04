@@ -28,7 +28,7 @@
             <input type="password" name="new_password_confirmation" class="w-full border rounded p-2" required>
         </div>
 
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
             Simpan Perubahan
         </button>
     </form>

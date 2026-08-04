@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,11 +11,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        $realDataPath = database_path('seeders/data/db_spp_real.sql');
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        if (! is_file($realDataPath)) {
+            $this->command?->warn(
+                'Seeder data nyata tidak disertakan dalam repository publik. '
+                .'Letakkan db_spp_real.sql di database/seeders/data untuk menjalankan impor lokal.'
+            );
+
+            return;
+        }
+
+        $this->call(DbSppSqlSeeder::class);
     }
 }

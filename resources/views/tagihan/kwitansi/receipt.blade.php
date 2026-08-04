@@ -26,6 +26,7 @@
     $spelledAmount = ucfirst(trim(terbilang((int) $paidTotal))) . ' rupiah';
 @endphp
 
+@push('page-styles')
 <style>
     .receipt-page,
     .receipt-page * {
@@ -969,6 +970,7 @@
         }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -991,7 +993,7 @@
                 </div>
             </header>
 
-            <article class="receipt-paper">
+            <article class="receipt-paper pi-print-document pi-receipt-document" data-receipt-document>
                 <header class="receipt-document-header">
                     <div class="receipt-brand">
                         <img src="{{ asset('images/logo.jpg') }}" alt="Logo Permata Insani">
@@ -1048,7 +1050,7 @@
                     </div>
 
                     <div class="receipt-table-wrap">
-                        <table class="receipt-table">
+                        <table class="receipt-table" data-sort-disabled="true" data-sortable="false">
                             <thead>
                                 <tr>
                                     <th class="receipt-table-number">No.</th>

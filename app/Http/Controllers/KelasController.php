@@ -51,7 +51,7 @@ class KelasController extends Controller
     public function create()
     {
         $sekolah = Sekolah::all();
-        $tahunAjaran = TahunAjaran::where('aktif', 1)->get();
+        $tahunAjaran = TahunAjaran::validPeriods()->where('aktif', true)->values();
 
         // buat array tingkat untuk ditampilkan di dropdown
         $tingkatOptions = range(1, 6);
@@ -92,7 +92,7 @@ class KelasController extends Controller
     public function edit(Kelas $kela)
     {
         $sekolah = Sekolah::all();
-        $tahunAjaran = TahunAjaran::all();
+        $tahunAjaran = TahunAjaran::validPeriods();
         $tingkatOptions = range(1, 6);
 
         return view('kelas.edit', compact('kela', 'sekolah', 'tahunAjaran', 'tingkatOptions'));

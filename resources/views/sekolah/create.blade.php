@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     /* Modern CSS Variables for consistent theming */
     :root {
@@ -20,8 +21,8 @@
         --error-text: #991b1b;
         --warning-bg: #fef3c7;
         --warning-text: #92400e;
-        --info-bg: #dbeafe;
-        --info-text: #1e40af;
+        --info-bg: #e5f4ec;
+        --info-text: #15533b;
         --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
         --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
         --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
@@ -267,7 +268,7 @@
     .badge-primary {
         background: var(--info-bg);
         color: var(--info-text);
-        border: 1px solid #93c5fd;
+        border: 1px solid #a7d8bd;
     }
 
     .preview-content {
@@ -328,7 +329,7 @@
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: linear-gradient(135deg, #25845d, #1d6b4c);
         color: white;
     }
 
@@ -495,14 +496,17 @@
         box-shadow: 0 15px 35px rgba(34, 197, 94, 0.15);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
-    <div class="content-area">
+    <div class="content-area school-form-page">
         <!-- Page Header -->
         <div class="page-header">
-            <div class="page-title">
-                <h2>Tambah sekolah</h2>
+            <div>
+                <p class="page-eyebrow">Master Data</p>
+                <h2 class="page-title"><i class="fas fa-school"></i> Tambah Sekolah</h2>
+                <p class="page-subtitle">Lengkapi identitas sekolah sekaligus susun data kelas dalam satu form.</p>
             </div>
             <div class="page-actions">
                 <a href="{{ route('sekolah.index') }}" class="btn btn-secondary">
@@ -514,19 +518,28 @@
         <!-- Form Card -->
         <div class="form-card">
             <div class="form-header">
-                <h3>Informasi sekolah</h3>
+                <div class="school-form-header-copy">
+                    <h3><i class="fas fa-building"></i> Informasi Sekolah</h3>
+                    <p>Identitas sekolah dan kelas akan disimpan bersamaan.</p>
+                </div>
             </div>
 
             <form action="{{ route('sekolah.store') }}" method="POST" class="school-form" id="schoolForm">
                 @csrf
 
                 <div class="form-section">
-                    <div class="section-header">
-                        <h4><i class="fas fa-info-circle"></i> Data Umum</h4>
+                    <div class="school-form-section-heading">
+                        <span class="school-form-section-icon school-form-section-icon--blue">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        </span>
+                        <div>
+                            <h4>Data Umum</h4>
+                            <p>Identitas utama yang membedakan setiap sekolah.</p>
+                        </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group col-md-8">
+                    <div class="school-form-grid school-form-grid--identity">
+                        <div class="form-group">
                             <label for="nama_sekolah" class="form-label required">
                                 <i class="fas fa-school"></i> Nama Sekolah
                             </label>
@@ -544,7 +557,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group col-md-4">
+                        <div class="form-group">
                             <label for="kode_sekolah" class="form-label required">
                                 <i class="fas fa-code"></i> Kode Sekolah
                             </label>
@@ -564,15 +577,35 @@
                             @enderror
                             <small class="form-text">Dipakai pada nomor kwitansi, maksimal 10 karakter.</small>
                         </div>
+
+                        <div class="form-group">
+                            <label for="durasi_pendidikan" class="form-label">
+                                <i class="fas fa-calendar-alt"></i> Durasi Pendidikan
+                            </label>
+                            <input type="number"
+                                   name="durasi_pendidikan"
+                                   id="durasi_pendidikan"
+                                   class="form-control @error('durasi_pendidikan') is-invalid @enderror"
+                                   value="{{ old('durasi_pendidikan') }}"
+                                   min="1"
+                                   max="12"
+                                   placeholder="Tahun">
+                            @error('durasi_pendidikan')
+                                <div class="invalid-feedback">
+                                    <i class="fas fa-exclamation-triangle"></i> {{ $message }}
+                                </div>
+                            @enderror
+                            <small class="form-text">Rentang 1 sampai 12 tahun.</small>
+                        </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group school-form-full-field">
                         <label for="alamat" class="form-label required">
                             <i class="fas fa-map-marker-alt"></i> Alamat Lengkap
                         </label>
-                        <textarea name="alamat" 
-                                  id="alamat" 
-                                  class="form-control @error('alamat') is-invalid @enderror" 
+                        <textarea name="alamat"
+                                  id="alamat"
+                                  class="form-control @error('alamat') is-invalid @enderror"
                                   rows="3"
                                   placeholder="Masukkan alamat lengkap sekolah"
                                   required>{{ old('alamat') }}</textarea>
@@ -582,33 +615,21 @@
                             </div>
                         @enderror
                     </div>
-                    <div class="form-group col-md-4">
-                        <label for="durasi_pendidikan" class="form-label">
-                            <i class="fas fa-calendar-alt"></i> Durasi Pendidikan (Tahun)
-                        </label>
-                        <input type="number" 
-                               name="durasi_pendidikan" 
-                               id="durasi_pendidikan" 
-                               class="form-control @error('durasi_pendidikan') is-invalid @enderror" 
-                               value="{{ old('durasi_pendidikan') }}"
-                               min="1"
-                               max="12"
-                               placeholder="6">
-                        @error('durasi_pendidikan')
-                            <div class="invalid-feedback">
-                                <i class="fas fa-exclamation-triangle"></i> {{ $message }}
-                            </div>
-                        @enderror
-                    </div>
                 </div>
 
                 <div class="form-section">
-                    <div class="section-header">
-                        <h4><i class="fas fa-address-book"></i> Kontak & Komunikasi</h4>
+                    <div class="school-form-section-heading">
+                        <span class="school-form-section-icon school-form-section-icon--purple">
+                            <i class="fas fa-address-book" aria-hidden="true"></i>
+                        </span>
+                        <div>
+                            <h4>Kontak & Komunikasi</h4>
+                            <p>Informasi kontak resmi yang dapat dihubungi.</p>
+                        </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
+                    <div class="school-form-grid school-form-grid--contact">
+                        <div class="form-group">
                             <label for="telepon" class="form-label">
                                 <i class="fas fa-phone"></i> Telepon
                             </label>
@@ -625,7 +646,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group col-md-6">
+                        <div class="form-group">
                             <label for="email" class="form-label">
                                 <i class="fas fa-envelope"></i> Email
                             </label>
@@ -644,14 +665,16 @@
                     </div>
                 </div>
 
+                @include('sekolah.partials.class-manager')
+
                 <!-- Action Buttons -->
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                        <i class="fas fa-save"></i> Simpan Sekolah
-                    </button>
-                    <a href="{{ route('sekolah.index') }}" class="btn btn-outline-secondary btn-lg">
+                    <a href="{{ route('sekolah.index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-times"></i> Batal
                     </a>
+                    <button type="submit" class="btn btn-success pi-tone-success" id="submitBtn">
+                        <i class="fas fa-save"></i> Simpan Sekolah & Kelas
+                    </button>
                 </div>
             </form>
         </div>
@@ -740,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Sekolah';
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Sekolah & Kelas';
 
             // Show error message
             const firstInvalidField = form.querySelector('.is-invalid');
@@ -756,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (submitBtn.classList.contains('loading')) {
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Sekolah';
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Sekolah & Kelas';
         }
     }, 10000); // 10 seconds timeout
 });

@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -109,6 +110,7 @@
         box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

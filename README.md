@@ -21,6 +21,22 @@ php artisan serve
 Buat database MySQL bernama `db_spp`, lalu sesuaikan kredensial database di
 `.env`. Data produksi dan bukti pembayaran tidak disertakan dalam repository.
 
+Jalankan migrasi struktur database dengan:
+
+```bash
+php artisan migrate
+```
+
+Untuk impor data nyata secara lokal, letakkan berkas privat bernama
+`db_spp_real.sql` di `database/seeders/data/`, lalu jalankan:
+
+```bash
+php artisan db:seed
+```
+
+Berkas SQL tersebut sengaja diabaikan Git karena mengandung data pribadi dan
+informasi autentikasi pengguna.
+
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>

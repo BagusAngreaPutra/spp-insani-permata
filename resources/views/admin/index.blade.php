@@ -2,6 +2,7 @@
 
 @section('content')
 
+@push('page-styles')
 <style>
 * {
     margin: 0;
@@ -600,6 +601,7 @@ body {
     }
 }
 </style>
+@endpush
 
 <!-- Include Sidebar -->
 @include('layouts.sidebar')
@@ -612,7 +614,7 @@ body {
   
 
     <!-- Content Area -->
-    <div class="content-area">
+    <div class="content-area admin-directory-page">
         <div class="content-container">
             <!-- Success Alert -->
             @if(session('success'))
@@ -623,7 +625,7 @@ body {
             <div class="page-header">
                 <h2 class="page-title">
                     <i class="fas fa-users-cog"></i>
-                    Guru & admin
+                    Guru & Admin
                 </h2>
                 <a href="{{ route('admin.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
@@ -632,8 +634,15 @@ body {
             </div>
 
             <!-- Table Container -->
-            <div class="table-container">
-                <table class="modern-table">
+            <div class="table-card admin-table-card">
+                <div class="table-header">
+                    <h3><i class="fas fa-user-shield"></i> Daftar Guru & Admin</h3>
+                    <span class="badge badge-secondary">
+                        {{ method_exists($admin, 'total') ? $admin->total() : $admin->count() }} pengguna
+                    </span>
+                </div>
+                <div class="table-responsive">
+                <table class="modern-table admin-table">
                     <thead>
                         <tr>
                             <th>No</th>
@@ -652,7 +661,12 @@ body {
                                 <span class="id-text">{{ $loop->iteration }}</span>
                             </td>
                             <td data-label="Nama Admin">
-                                <div class="admin-name">{{ $item->nama_admin }}</div>
+                                <div class="table-entity">
+                                    <span class="table-entity-icon" aria-hidden="true">
+                                        <i class="fas fa-user-shield"></i>
+                                    </span>
+                                    <div class="admin-name">{{ $item->nama_admin }}</div>
+                                </div>
                             </td>
                             <td data-label="Username">
                                 <div class="username-text">{{ $item->username }}</div>
@@ -703,6 +717,7 @@ body {
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

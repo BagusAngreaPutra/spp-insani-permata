@@ -10,14 +10,15 @@ return new class extends Migration {
         Schema::create('tagihan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('siswa_id')->constrained('siswa')->onDelete('cascade');
-            $table->foreignId('tahun_ajaran_id')->constrained('tahun_ajaran')->onDelete('cascade');
-            $table->enum('kategori', ['spp', 'lainnya']); // kategori tagihan
+            $table->foreignId('id_sekolah')->nullable()->constrained('sekolah')->nullOnDelete();
             $table->foreignId('jenis_pembayaran_id')->nullable()->constrained('jenis_pembayaran')->onDelete('set null');
-            $table->tinyInteger('bulan')->nullable(); // khusus untuk SPP
-            $table->decimal('nominal_tagihan', 12, 2)->default(0.00);
-            $table->enum('status', ['belum_lunas', 'lunas', 'angsuran'])->default('belum_lunas');
-            $table->date('jatuh_tempo')->nullable();
-            $table->text('keterangan')->nullable();
+            $table->foreignId('tahun_ajaran_id')->nullable()->constrained('tahun_ajaran')->nullOnDelete();
+            $table->string('nama_tagihan');
+            $table->decimal('nominal', 12, 2)->default(0);
+            $table->enum('tipe', ['sekali', 'bulanan', 'setahun', 'semester']);
+            $table->string('periode', 10)->nullable();
+            $table->date('tanggal_jatuh_tempo')->nullable();
+            $table->enum('status', ['belum', 'lunas'])->default('belum');
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     /* ====== STYLE NORMAL ====== */
     .main-content {
@@ -257,11 +258,12 @@
         }
     }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area pi-report-document">
         <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; margin-bottom: 20px; text-align: center; justify-content: center;">
                 <img src="{{ asset('images/logo.jpg') }}" onerror="this.style.display='none'" alt="Logo" style="width: 90px; height: 90px; margin-right: 20px; border-radius: 50%;">

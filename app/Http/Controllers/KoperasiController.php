@@ -174,6 +174,8 @@ class KoperasiController extends Controller
 
     private function validateData(Request $request, $id = null)
     {
+        $this->normalizeCurrencyFields($request, ['harga_beli', 'harga_jual']);
+
         $uniqueRule = 'unique:koperasi,kode_barang';
 
         if ($id) {

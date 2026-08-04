@@ -17,7 +17,7 @@ class SiswaController extends Controller
     public function index(Request $request)
     {
         $sekolah       = Sekolah::all();
-        $tahunAjaran   = TahunAjaran::all();
+        $tahunAjaran   = TahunAjaran::validPeriods();
 
         // Ambil input filter dari request
         $selectedSekolah     = $request->has('sekolah_id') ? $request->input('sekolah_id') : null;
@@ -25,10 +25,18 @@ class SiswaController extends Controller
         $selectedTahunAjaran = $request->input('tahun_ajaran_id');
         $search              = $request->input('search');
 
-        // Ambil kelas hanya jika sekolah dipilih
-        $kelas = collect(); // default kosong
-        if (!empty($selectedSekolah)) {
-            $kelas = \App\Models\Kelas::where('sekolah_id', $selectedSekolah)->get();
+        // Seluruh opsi dibawa ke halaman agar filter kelas dapat mengikuti
+        // pilihan sekolah tanpa request tambahan.
+        $kelas = Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
+
+        if ($selectedSekolah && $selectedKelas
+            && !$kelas->contains(fn ($item) => (string) $item->id === (string) $selectedKelas
+                && (string) $item->sekolah_id === (string) $selectedSekolah)) {
+            $selectedKelas = null;
         }
 
         // Query siswa dengan relasi
@@ -74,7 +82,7 @@ class SiswaController extends Controller
     {
         $kelas       = Kelas::all();
         $sekolah     = Sekolah::all();
-        $tahunAjaran = TahunAjaran::all();
+        $tahunAjaran = TahunAjaran::validPeriods();
 
         // 📌 Log aktivitas buka form create
         LogAktivitas::create([
@@ -90,6 +98,12 @@ class SiswaController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeCurrencyFields($request, [
+            'penghasilan_ayah',
+            'penghasilan_ibu',
+            'nominal_spp',
+        ]);
+
         $request->validate([
             'id_sekolah'      => 'required|exists:sekolah,id',
             'kelas_id'        => 'required|exists:kelas,id',
@@ -157,7 +171,7 @@ class SiswaController extends Controller
     {
         $kelas       = Kelas::all();
         $sekolah     = Sekolah::all();
-        $tahunAjaran = TahunAjaran::all();
+        $tahunAjaran = TahunAjaran::validPeriods();
 
         // 📌 Log aktivitas buka form edit
         LogAktivitas::create([
@@ -173,6 +187,12 @@ class SiswaController extends Controller
 
     public function update(Request $request, Siswa $siswa)
     {
+        $this->normalizeCurrencyFields($request, [
+            'penghasilan_ayah',
+            'penghasilan_ibu',
+            'nominal_spp',
+        ]);
+
         $request->validate([
             'id_sekolah'      => 'required|exists:sekolah,id',
             'kelas_id'        => 'required|exists:kelas,id',

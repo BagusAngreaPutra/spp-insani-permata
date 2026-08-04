@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasColumn('siswa', 'nominal_spp')) {
+            return;
+        }
+
         Schema::table('siswa', function (Blueprint $table) {
             $table->decimal('nominal_spp', 10, 2)->default(325000)->after('status');
         });
@@ -18,6 +22,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!Schema::hasColumn('siswa', 'nominal_spp')) {
+            return;
+        }
+
         Schema::table('siswa', function (Blueprint $table) {
             $table->dropColumn('nominal_spp');
         });

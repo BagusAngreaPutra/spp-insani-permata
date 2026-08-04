@@ -49,14 +49,11 @@
                     <details class="app-nav-group" {{ request()->routeIs('sekolah.*', 'tahun_ajaran.*', 'kelas.*', 'siswa.*', 'admin.*') ? 'open' : '' }} data-nav-item>
                         <summary><i class="fas fa-building-columns"></i><span>Data sekolah</span><i class="fas fa-chevron-down"></i></summary>
                         <div>
-                            @if($adminUser->hasPermission('sekolah.manage'))
-                                <a href="{{ route('sekolah.index') }}" class="{{ request()->routeIs('sekolah.*') ? 'is-active' : '' }}"><i class="fas fa-school"></i><span>Sekolah</span></a>
+                            @if($adminUser->hasAnyPermission(['sekolah.manage', 'kelas.manage']))
+                                <a href="{{ route('sekolah.index') }}" class="{{ request()->routeIs('sekolah.*', 'kelas.*') ? 'is-active' : '' }}"><i class="fas fa-school"></i><span>Sekolah & kelas</span></a>
                             @endif
                             @if($adminUser->hasPermission('tahun_ajaran.manage'))
                                 <a href="{{ route('tahun_ajaran.index') }}" class="{{ request()->routeIs('tahun_ajaran.*') ? 'is-active' : '' }}"><i class="fas fa-calendar-days"></i><span>Tahun ajaran</span></a>
-                            @endif
-                            @if($adminUser->hasPermission('kelas.manage'))
-                                <a href="{{ route('kelas.index') }}" class="{{ request()->routeIs('kelas.*') ? 'is-active' : '' }}"><i class="fas fa-chalkboard"></i><span>Kelas</span></a>
                             @endif
                             @if($adminUser->hasPermission('siswa.manage'))
                                 <a href="{{ route('siswa.index') }}" class="{{ request()->routeIs('siswa.*') ? 'is-active' : '' }}"><i class="fas fa-user-graduate"></i><span>Siswa</span></a>
@@ -142,8 +139,7 @@
                                 <summary><span>Data sekolah</span><i class="fas fa-chevron-down"></i></summary>
                                 <div>
                                     <a href="{{ route('laporan.siswa') }}" class="{{ request()->routeIs('laporan.siswa*') ? 'is-active' : '' }}"><i class="fas fa-user-graduate"></i><span>Siswa</span></a>
-                                    <a href="{{ route('laporan.kelas') }}" class="{{ request()->routeIs('laporan.kelas*') ? 'is-active' : '' }}"><i class="fas fa-chalkboard"></i><span>Kelas</span></a>
-                                    <a href="{{ route('laporan.sekolah') }}" class="{{ request()->routeIs('laporan.sekolah*') ? 'is-active' : '' }}"><i class="fas fa-school"></i><span>Sekolah</span></a>
+                                    <a href="{{ route('laporan.sekolah') }}" class="{{ request()->routeIs('laporan.sekolah*', 'laporan.kelas*') ? 'is-active' : '' }}"><i class="fas fa-school-flag"></i><span>Sekolah & kelas</span></a>
                                     <a href="{{ route('laporan.tahun_ajaran') }}" class="{{ request()->routeIs('laporan.tahun_ajaran*') ? 'is-active' : '' }}"><i class="fas fa-calendar-days"></i><span>Tahun ajaran</span></a>
                                 </div>
                             </details>

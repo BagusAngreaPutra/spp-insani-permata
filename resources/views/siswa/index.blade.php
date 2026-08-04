@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -115,7 +116,7 @@
     }
 
     .btn-detail {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: linear-gradient(135deg, #25845d, #1d6b4c);
         color: #fff;
         padding: 0.5rem 1rem;
         border-radius: 8px;
@@ -128,7 +129,7 @@
         gap: 0.375rem;
     }
     .btn-detail:hover {
-        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        background: linear-gradient(135deg, #1d6b4c, #103e2d);
         transform: translateY(-1px);
         color: #fff;
         text-decoration: none;
@@ -312,6 +313,7 @@
         box-shadow: 0 8px 16px rgba(107, 114, 128, 0.3);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -356,11 +358,24 @@
 
             <div class="form-group">
                 <label for="kelas_id">Pilih Kelas</label>
-                <select name="kelas_id" id="kelas_id">
+                <select name="kelas_id"
+                        id="kelas_id"
+                        data-class-filter-for="sekolah_id"
+                        data-all-label="Semua Kelas">
                     <option value="">Semua Kelas</option>
                     @foreach($kelas as $k)
-                        <option value="{{ $k->id }}" {{ (isset($selectedKelas) && $selectedKelas==$k->id) ? 'selected' : '' }}>
-                            Tingkat {{ $k->tingkat }} {{ $k->nama_kelas }}
+                        @php
+                            $className = trim((string) $k->nama_kelas);
+                            $classLabel = in_array($className, ['', '-', '–'], true)
+                                ? 'Tingkat '.$k->tingkat
+                                : 'Tingkat '.$k->tingkat.' · '.$className;
+                        @endphp
+                        <option value="{{ $k->id }}"
+                                data-school-id="{{ $k->sekolah_id }}"
+                                data-school-name="{{ $k->sekolah?->nama_sekolah }}"
+                                data-class-label="{{ $classLabel }}"
+                                {{ (isset($selectedKelas) && $selectedKelas==$k->id) ? 'selected' : '' }}>
+                            {{ $classLabel }}
                         </option>
                     @endforeach
                 </select>
@@ -465,37 +480,3 @@
     </div>
 </div>
 @endsection
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const sekolahSelect = document.getElementById('sekolah_id');
-    const kelasSelect = document.getElementById('kelas_id');
-
-    sekolahSelect.addEventListener('change', function () {
-        const sekolahId = this.value;
-        kelasSelect.innerHTML = '<option value="">Memuat data kelas...</option>';
-        kelasSelect.disabled = true;
-
-        if (sekolahId) {
-            fetch(`/get-kelas-by-sekolah/${sekolahId}`)
-                .then(response => response.json())
-                .then(data => {
-                    kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                    data.forEach(kelas => {
-                        const option = document.createElement('option');
-                        option.value = kelas.id;
-                        option.textContent = `Tingkat ${kelas.tingkat} ${kelas.nama_kelas}`;
-                        kelasSelect.appendChild(option);
-                    });
-                    kelasSelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    kelasSelect.innerHTML = '<option value="">Gagal memuat kelas</option>';
-                });
-        } else {
-            kelasSelect.innerHTML = '<option value="">Pilih Sekolah Dulu</option>';
-            kelasSelect.disabled = true;
-        }
-    });
-});
-</script>

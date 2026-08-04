@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -38,7 +39,7 @@
         gap:0.75rem;
     }
     .btn-export {
-        background:linear-gradient(135deg,#3b82f6,#2563eb);
+        background:linear-gradient(135deg,#25845d,#1d6b4c);
         color:#fff;
         padding:0.75rem 1.25rem;
         border-radius:12px;
@@ -53,6 +54,7 @@
         box-shadow:0 8px 20px rgba(59,130,246,0.4);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

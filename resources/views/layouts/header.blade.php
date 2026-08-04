@@ -4,12 +4,15 @@
     </button>
 
     <div class="app-topbar-title">
-        <span class="app-topbar-context">Sistem Pembayaran</span>
-        <strong>Permata Insani</strong>
+        <span class="app-topbar-context">Sistem Informasi</span>
+        <strong>Pembayaran SPP</strong>
     </div>
 
-    <span class="app-topbar-date">
-        <i class="far fa-calendar"></i>
-        {{ now()->translatedFormat('d M Y') }}
-    </span>
+    <div class="app-topbar-meta">
+        <span class="app-system-status"><i></i>Sistem aktif</span>
+        <span class="app-topbar-date">
+            <i class="far fa-calendar"></i>
+            {{ now()->translatedFormat('d M Y') }}
+        </span>
+    </div>
 </header>

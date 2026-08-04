@@ -17,7 +17,17 @@ class LaporanKoperasiController extends Controller
     {
         $tanggalLaporan = Carbon::now()->translatedFormat('d F Y');
         $daftarSekolah = Sekolah::orderBy('nama_sekolah')->get();
-        $daftarKelas = Kelas::with('sekolah')->orderBy('tingkat')->orderBy('nama_kelas')->get();
+        $daftarKelas = Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
+
+        if ($request->filled('sekolah_id') && $request->filled('kelas_id')
+            && !$daftarKelas->contains(fn ($item) => (string) $item->id === (string) $request->kelas_id
+                && (string) $item->sekolah_id === (string) $request->sekolah_id)) {
+            $request->merge(['kelas_id' => null]);
+        }
 
         $penjualan = $this->queryPenjualan($request)->latest('tanggal')->latest('id')->get();
         $totalPenjualan = $penjualan->sum('total');

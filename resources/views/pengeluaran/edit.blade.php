@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -114,6 +115,7 @@
         box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -147,7 +149,7 @@
                        value="{{ old('tanggal', $pengeluaran->tanggal) }}" required>
 
                 <label class="form-label">Jumlah</label>
-                <input type="number" step="0.01" name="jumlah" class="form-control"
+                <input type="number" step="1" min="0" name="jumlah" class="form-control" data-rupiah
                        value="{{ old('jumlah', $pengeluaran->jumlah) }}" required>
 
                 <label class="form-label">Keperluan</label>

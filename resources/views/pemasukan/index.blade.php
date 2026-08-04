@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px; /* sidebar width */
@@ -140,6 +141,7 @@
         margin-bottom: 1.5rem;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -156,7 +158,7 @@
                 <i class="fas fa-cash-register"></i> Pemasukan
             </h2>
             <a href="{{ route('pemasukan.create') }}" class="btn-primary">
-                + Tambah Pemasukan
+                Tambah Pemasukan
             </a>
         </div>
 

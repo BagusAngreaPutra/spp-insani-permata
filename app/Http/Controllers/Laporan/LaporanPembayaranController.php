@@ -19,7 +19,17 @@ class LaporanPembayaranController extends Controller
 
         // Ambil data sekolah untuk filter
         $daftarSekolah = Sekolah::all();
-        $daftarKelas = Kelas::all();
+        $daftarKelas = Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
+
+        if ($request->filled('sekolah_id') && $request->filled('kelas_id')
+            && !$daftarKelas->contains(fn ($item) => (string) $item->id === (string) $request->kelas_id
+                && (string) $item->sekolah_id === (string) $request->sekolah_id)) {
+            $request->merge(['kelas_id' => null]);
+        }
 
         // Query awal
         $query = Pembayaran::with(['siswa.kelas', 'siswa.sekolah']);

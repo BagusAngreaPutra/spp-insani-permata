@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -184,6 +185,7 @@
         border-bottom-color: rgba(34, 197, 94, 0.1);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -238,7 +240,7 @@
                 @if($tagihan->jenis_pembayaran_id === null)
                     SPP
                 @else
-                    {{ $tagihan->jenisPembayaran->nama_pembayaran ?? '-' }}
+                    {{ $tagihan->jenisPembayaran->nama_dengan_tahun ?? '-' }}
                 @endif
             </p>
 
@@ -381,7 +383,7 @@
                             @if($tagihan->jenis_pembayaran_id === null)
                                 SPP
                             @else
-                                {{ $tagihan->jenisPembayaran->nama_pembayaran ?? '-' }}
+                                {{ $tagihan->jenisPembayaran->nama_dengan_tahun ?? '-' }}
                             @endif
                         </td>
                         <td>Pembayaran Ke {{ $loop->iteration }}</td>

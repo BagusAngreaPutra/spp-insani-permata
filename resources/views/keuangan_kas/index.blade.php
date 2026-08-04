@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -85,36 +86,62 @@
         gap: 0.75rem;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
 
     <div class="content-area">
         <div class="page-header">
-            <h2 class="page-title">
-                <i class="fas fa-cash-register"></i> Keuangan Kas
-            </h2>
+            <div>
+                <span class="page-eyebrow">Ringkasan keuangan</span>
+                <h2 class="page-title">
+                    <i class="fas fa-cash-register"></i> Keuangan Kas
+                </h2>
+                <p class="page-subtitle">Pantau pemasukan, pengeluaran, dan saldo kas setiap unit sekolah.</p>
+            </div>
+            <div class="page-actions">
+                @if(Auth::user()->hasPermission('pemasukan.manage'))
+                    <a href="{{ route('pemasukan.create') }}" class="btn btn-success">
+                        <i class="fas fa-arrow-trend-up"></i> Catat Pemasukan
+                    </a>
+                @endif
+                @if(Auth::user()->hasPermission('pengeluaran.manage'))
+                    <a href="{{ route('pengeluaran.create') }}" class="btn btn-danger">
+                        <i class="fas fa-arrow-trend-down"></i> Catat Pengeluaran
+                    </a>
+                @endif
+            </div>
         </div>
 
         <div class="table-container">
             <table class="modern-table">
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Sekolah</th>
-                        <th>Total Pemasukan</th>
-                        <th>Total Pengeluaran</th>
-                        <th>Saldo Kas</th>
+                        <th><i class="fas fa-hashtag"></i> No</th>
+                        <th><i class="fas fa-school"></i> Sekolah</th>
+                        <th><i class="fas fa-arrow-trend-up"></i> Total Pemasukan</th>
+                        <th><i class="fas fa-arrow-trend-down"></i> Total Pengeluaran</th>
+                        <th><i class="fas fa-wallet"></i> Saldo Kas</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($data as $index => $row)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ $row['sekolah']->nama_sekolah }}</td>
-                            <td>Rp {{ number_format($row['total_pemasukan'], 0, ',', '.') }}</td>
-                            <td>Rp {{ number_format($row['total_pengeluaran'], 0, ',', '.') }}</td>
-                            <td><strong>Rp {{ number_format($row['saldo'], 0, ',', '.') }}</strong></td>
+                            <td>
+                                <span class="table-entity">
+                                    <span class="table-entity-icon"><i class="fas fa-school"></i></span>
+                                    <strong>{{ $row['sekolah']->nama_sekolah }}</strong>
+                                </span>
+                            </td>
+                            <td><span class="money-value is-income">Rp {{ number_format($row['total_pemasukan'], 0, ',', '.') }}</span></td>
+                            <td><span class="money-value is-expense">Rp {{ number_format($row['total_pengeluaran'], 0, ',', '.') }}</span></td>
+                            <td>
+                                <span class="money-value {{ $row['saldo'] > 0 ? 'is-positive' : ($row['saldo'] < 0 ? 'is-negative' : 'is-neutral') }}">
+                                    Rp {{ number_format($row['saldo'], 0, ',', '.') }}
+                                </span>
+                            </td>
                         </tr>
                     @endforeach
                     @if($data->isEmpty())

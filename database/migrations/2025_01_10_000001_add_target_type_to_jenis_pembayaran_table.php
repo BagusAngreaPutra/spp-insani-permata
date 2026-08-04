@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('jenis_pembayaran') || Schema::hasColumn('jenis_pembayaran', 'target_type')) {
+            return;
+        }
+
         Schema::table('jenis_pembayaran', function (Blueprint $table) {
             $table->enum('target_type', ['all', 'specific_students', 'specific_classes'])
                   ->default('all')
@@ -23,6 +27,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasColumn('jenis_pembayaran', 'target_type')) {
+            return;
+        }
+
         Schema::table('jenis_pembayaran', function (Blueprint $table) {
             $table->dropColumn('target_type');
         });

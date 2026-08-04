@@ -1,7 +1,9 @@
+
 @extends('layouts.app')
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -264,6 +266,7 @@
         100% { opacity:1; transform:translateY(0); }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -288,7 +291,7 @@
                 <i class="fas fa-money-check-alt"></i> Jenis pembayaran
             </h2>
             <a href="{{ route('jenis_pembayaran.create') }}" class="btn-primary">
-                + Tambah Jenis Pembayaran
+                Tambah Jenis Pembayaran
             </a>
         </div>
 
@@ -307,8 +310,8 @@
             </div>
 
             <div class="form-group">
-                <label for="search">Cari (Nama Pembayaran / Tipe)</label>
-                <input type="text" name="search" id="search" value="{{ $search }}" placeholder="Ketik kata kunci...">
+                <label for="search">Cari (Nama / Tipe / Tahun Ajaran)</label>
+                <input type="text" name="search" id="search" value="{{ $search }}" placeholder="Ketik nama, tipe, atau tahun ajaran...">
             </div>
 
             <button type="submit" class="filter-btn">
@@ -325,6 +328,7 @@
                     <tr>
                         <th>No</th>
                         <th>Nama Pembayaran</th>
+                        <th>Tahun Ajaran</th>
                         <th>Tipe</th>
                         <th>Nominal</th>
                         <th>Jatuh Tempo</th>
@@ -338,6 +342,7 @@
                         <tr>
                             <td>{{ $loop->iteration + ($jenis->currentPage() - 1) * $jenis->perPage() }}</td>
                             <td>{{ $item->nama_pembayaran }}</td>
+                            <td>{{ $item->tahunAjaran->label ?? '-' }}</td>
                             <td>{{ ucfirst($item->tipe) }}</td>
                             <td>Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
                             <td>
@@ -355,24 +360,24 @@
                                 @if(($item->target_type ?? 'all') == 'all')
                                     <span style="color: #22c55e; font-weight: 600;">Semua Siswa</span>
                                 @elseif(($item->target_type ?? 'all') == 'specific_students')
-                                    <span style="color: #3b82f6; font-weight: 600;">{{ $item->siswa->count() }} Siswa</span>
+                                    <span style="color: #1d6b4c; font-weight: 600;">{{ $item->siswa->count() }} Siswa</span>
                                 @elseif(($item->target_type ?? 'all') == 'specific_classes')
                                     <span style="color: #f59e0b; font-weight: 600;">{{ $item->kelas->count() }} Kelas</span>
                                 @endif
                             </td>
                             <td>{{ $item->sekolah->nama_sekolah ?? '-' }}</td>
                             <td class="flex gap-2">
-                                <a href="{{ route('jenis_pembayaran.edit', $item->id) }}" class="btn-edit">Edit</a>
+                                <a href="{{ route('jenis_pembayaran.edit', $item->id) }}" class="btn-edit"><i class="fas fa-pen"></i> Edit</a>
                                 <form action="{{ route('jenis_pembayaran.destroy', $item->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data ini?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn-delete">Hapus</button>
+                                    <button type="submit" class="btn-delete"><i class="fas fa-trash"></i> Hapus</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 @include('partials.admin-empty-state', [
                                     'icon' => 'fas fa-money-check-alt',
                                     'title' => 'Belum Ada Jenis Pembayaran',

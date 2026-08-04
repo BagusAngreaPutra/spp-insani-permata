@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +13,9 @@ class Tagihan extends Model
     
     protected $fillable = [
         'siswa_id',
-        'jenis_pembayaran_id', 
+        'id_sekolah',
+        'jenis_pembayaran_id',
+        'tahun_ajaran_id',
         'nama_tagihan',
         'nominal',
         'tipe',
@@ -37,6 +40,11 @@ class Tagihan extends Model
         return $this->belongsTo(JenisPembayaran::class);
     }
 
+    public function tahunAjaran(): BelongsTo
+    {
+        return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id');
+    }
+
     public function pembayaran(): HasMany
     {
         return $this->hasMany(Pembayaran::class);
@@ -51,9 +59,9 @@ class Tagihan extends Model
         }
         
         // Untuk jenis pembayaran lain, ambil dari relasi
-        return $this->jenisPembayaran ? 
-               $this->jenisPembayaran->nama_pembayaran : 
-               $this->nama_tagihan;
+        return $this->jenisPembayaran
+            ? $this->jenisPembayaran->nama_dengan_tahun
+            : $this->nama_tagihan;
     }
 
     // Accessor untuk total yang sudah dibayar
@@ -100,6 +108,18 @@ class Tagihan extends Model
     public function scopeLunas($query)
     {
         return $query->where('status', 'lunas');
+    }
+
+    public function isBelumJatuhTempo(): bool
+    {
+        if (!$this->tanggal_jatuh_tempo) {
+            return false;
+        }
+
+        $dueDate = Carbon::parse($this->tanggal_jatuh_tempo)->toDateString();
+        $todayInJambi = Carbon::today('Asia/Jakarta')->toDateString();
+
+        return $dueDate > $todayInJambi;
     }
 
     public function getSisaCicilanAttribute()

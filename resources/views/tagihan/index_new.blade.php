@@ -28,8 +28,10 @@
         (bool) $selectedSekolah => $selectedSekolah->nama_sekolah . ' · Semua kelas',
         default => 'Semua sekolah · Semua kelas',
     };
+    $selectedContext .= ' · ' . ($selectedTahunAjaran?->label ?? 'Semua tahun ajaran');
 @endphp
 
+@push('page-styles')
 <style>
     .billing-page {
         display: grid;
@@ -111,8 +113,8 @@
     .billing-button.is-primary,
     .billing-row-action.is-primary {
         color: #fff !important;
-        background: #2878f0 !important;
-        border-color: #2878f0 !important;
+        background: #1d6b4c !important;
+        border-color: #1d6b4c !important;
     }
 
     .billing-button:hover,
@@ -124,8 +126,8 @@
     .billing-button.is-primary:hover,
     .billing-row-action.is-primary:hover {
         color: #fff !important;
-        background: #1768dc !important;
-        border-color: #1768dc !important;
+        background: #15533b !important;
+        border-color: #15533b !important;
     }
 
     .billing-alert {
@@ -197,8 +199,8 @@
         width: 34px;
         height: 34px;
         margin-bottom: 15px;
-        color: #2878f0;
-        background: #eef5ff;
+        color: #1d6b4c;
+        background: #f1f9f5;
         border: 1px solid #dbe8fc;
         border-radius: 8px;
         font-size: 12px;
@@ -287,7 +289,7 @@
 
     .billing-scope-form {
         display: grid;
-        grid-template-columns: minmax(180px, 1fr) minmax(170px, 1fr) auto;
+        grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
         align-items: end;
         gap: 10px;
         padding: 15px 18px;
@@ -433,8 +435,8 @@
         flex: 0 0 31px;
         width: 31px;
         height: 31px;
-        color: #2878f0;
-        background: #eef5ff;
+        color: #1d6b4c;
+        background: #f1f9f5;
         border-radius: 7px;
         font-size: 10px;
         font-weight: 700;
@@ -518,6 +520,16 @@
 
     .billing-status.is-unpaid::before {
         background: #f04438;
+    }
+
+    .billing-status.is-upcoming {
+        color: #a15c07;
+        background: #fff7d6;
+        border: 1px solid #f4c84a;
+    }
+
+    .billing-status.is-upcoming::before {
+        background: #eaaa08;
     }
 
     .billing-money {
@@ -821,6 +833,7 @@
         }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -945,6 +958,18 @@
                             </select>
                         </div>
 
+                        <div class="billing-field">
+                            <label for="billingAcademicYear">Tahun ajaran</label>
+                            <select id="billingAcademicYear" name="tahun_ajaran">
+                                <option value="" {{ !$selectedTahunAjaran ? 'selected' : '' }}>Semua tahun ajaran</option>
+                                @foreach($academicYearData as $tahun)
+                                    <option value="{{ $tahun->id }}" {{ $selectedTahunAjaran?->id === $tahun->id ? 'selected' : '' }}>
+                                        {{ $tahun->label }}{{ $tahun->aktif ? ' · Aktif' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <button class="billing-button is-primary" type="submit">
                             <i class="fas fa-arrow-right" aria-hidden="true"></i>
                             <span>Tampilkan</span>
@@ -965,6 +990,7 @@
                         <div class="billing-status-filters" aria-label="Filter status tagihan">
                             <button class="billing-status-button is-active" type="button" data-billing-filter="all">Semua</button>
                             <button class="billing-status-button" type="button" data-billing-filter="open">Belum lunas</button>
+                            <button class="billing-status-button" type="button" data-billing-filter="belum_jatuh_tempo">Belum jatuh tempo</button>
                             <button class="billing-status-button" type="button" data-billing-filter="sebagian">Sebagian</button>
                             <button class="billing-status-button" type="button" data-billing-filter="lunas">Lunas</button>
                         </div>
@@ -987,15 +1013,17 @@
                                 @foreach($studentRows as $student)
                                     @php
                                         $statusLabel = match($student['status']) {
-                                            'lunas' => 'Lunas',
-                                            'sebagian' => 'Sebagian',
-                                            'belum' => 'Belum bayar',
+                                             'lunas' => 'Lunas',
+                                             'sebagian' => 'Sebagian',
+                                             'belum_jatuh_tempo' => 'Belum jatuh tempo',
+                                             'belum' => 'Belum bayar',
                                             default => 'Belum ada tagihan',
                                         };
                                         $statusClass = match($student['status']) {
-                                            'lunas' => 'is-paid',
-                                            'sebagian' => 'is-partial',
-                                            'belum' => 'is-unpaid',
+                                             'lunas' => 'is-paid',
+                                             'sebagian' => 'is-partial',
+                                             'belum_jatuh_tempo' => 'is-upcoming',
+                                             'belum' => 'is-unpaid',
                                             default => '',
                                         };
                                     @endphp
@@ -1038,9 +1066,10 @@
                                                         </button>
                                                     </form>
                                                 @elseif($canPay)
-                                                    <a class="billing-row-action {{ $student['sisa_bayar'] > 0 ? 'is-primary' : '' }}" href="{{ route('tagihan.proses.siswa', $student['id']) }}">
-                                                        <i class="fas {{ $student['sisa_bayar'] > 0 ? 'fa-credit-card' : 'fa-eye' }}"></i>
-                                                        <span>{{ $student['sisa_bayar'] > 0 ? 'Bayar' : 'Lihat detail' }}</span>
+                                                    @php($hasActualOutstanding = (float) ($student['sisa_aktual'] ?? $student['sisa_bayar']) > 0)
+                                                    <a class="billing-row-action {{ $hasActualOutstanding ? 'is-primary' : '' }}" href="{{ route('tagihan.proses.siswa', $student['id']) }}">
+                                                        <i class="fas {{ $hasActualOutstanding ? 'fa-credit-card' : 'fa-eye' }}"></i>
+                                                        <span>{{ $hasActualOutstanding ? 'Bayar' : 'Lihat detail' }}</span>
                                                     </a>
                                                 @endif
                                             </div>
@@ -1092,7 +1121,7 @@
                 <div class="modal-header">
                     <div>
                         <h2 class="modal-title" id="generateModalLabel">Buat tagihan semua siswa</h2>
-                        <p class="billing-panel-context">Sistem akan membuat tagihan berdasarkan data yang sudah tersedia.</p>
+                        <p class="billing-panel-context">Sistem hanya membuat tagihan dari jenis pembayaran yang sudah diatur.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
@@ -1100,8 +1129,8 @@
                     <p class="billing-modal-copy">Pastikan tiga data berikut sudah benar sebelum melanjutkan:</p>
                     <ul class="billing-checklist">
                         <li><i class="fas fa-circle-check"></i><span>Siswa sudah memiliki sekolah dan kelas.</span></li>
-                        <li><i class="fas fa-circle-check"></i><span>Nominal SPP siswa sudah sesuai.</span></li>
-                        <li><i class="fas fa-circle-check"></i><span>Jenis pembayaran dan target kelas sudah diatur.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>SPP sudah ditambahkan sebagai jenis pembayaran bulanan jika diperlukan.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>Nominal, frekuensi, dan target jenis pembayaran sudah diatur.</span></li>
                     </ul>
                     <div class="billing-modal-note">
                         <i class="fas fa-circle-info"></i>
@@ -1128,6 +1157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scopeForm = document.getElementById('billingScopeForm');
     const schoolSelect = document.getElementById('billingSchool');
     const classSelect = document.getElementById('billingClass');
+    const academicYearSelect = document.getElementById('billingAcademicYear');
     const searchInput = document.getElementById('billingStudentSearch');
     const clearSearch = document.getElementById('billingSearchClear');
     const rows = [...document.querySelectorAll('[data-student-row]')];
@@ -1142,6 +1172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     classSelect?.addEventListener('change', () => scopeForm?.submit());
+    academicYearSelect?.addEventListener('change', () => scopeForm?.submit());
 
     const filterRows = () => {
         const query = searchInput?.value.trim().toLocaleLowerCase('id-ID') ?? '';
@@ -1152,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const status = row.dataset.status;
             const matchesStatus = activeStatus === 'all'
                 || status === activeStatus
-                || (activeStatus === 'open' && ['belum', 'sebagian'].includes(status));
+                || (activeStatus === 'open' && ['belum', 'sebagian', 'belum_jatuh_tempo'].includes(status));
             const visible = matchesSearch && matchesStatus;
 
             row.hidden = !visible;

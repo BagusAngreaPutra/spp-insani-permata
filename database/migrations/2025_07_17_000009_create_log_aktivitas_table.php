@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('log_aktivitas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('admin_id')->constrained('admin')->cascadeOnDelete();
+            $table->enum('aktor_type', ['admin', 'siswa']);
+            $table->unsignedBigInteger('aktor_id');
             $table->text('aktivitas');
-            $table->string('ip_address')->nullable();
-            $table->string('halaman')->nullable();
-            $table->dateTime('waktu');
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
             $table->timestamps();
         });
     }

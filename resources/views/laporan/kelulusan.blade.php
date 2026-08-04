@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     /* ====== STYLE NORMAL ====== */
     .main-content {
@@ -328,11 +329,12 @@
     }
 
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area pi-report-document">
         {{-- KOP LAPORAN UNTUK CETAK --}}
         <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; margin-bottom: 20px;">
@@ -367,13 +369,12 @@
         
 
         {{-- Form Filter dan Search --}}
-        <form method="GET" action="{{ route('laporan.kelulusan') }}" class="no-print" style="margin-bottom:2rem;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; align-items:end;">
+        <form method="GET" action="{{ route('laporan.kelulusan') }}" class="filter-form pi-filter-form no-print">
+            <div class="filter-grid pi-filter-grid">
                 {{-- Filter Sekolah --}}
-                <div>
-                    <label for="sekolah_id" style="font-weight:600; color:#374151; font-size: 0.9rem;">Sekolah</label>
-                    <select name="sekolah_id" id="sekolah_id"
-                        style="width:100%; padding:0.6rem 0.75rem; border-radius:10px; border:1px solid #ccc;">
+                <div class="form-group pi-filter-field">
+                    <label for="sekolah_id">Sekolah</label>
+                    <select name="sekolah_id" id="sekolah_id" class="form-control">
                         <option value="">Semua Sekolah</option>
                         @foreach($semuaSekolah as $s)
                             <option value="{{ $s->id }}" {{ request('sekolah_id') == $s->id ? 'selected' : '' }}>
@@ -384,87 +385,54 @@
                 </div>
 
                 {{-- Filter Kelas --}}
-                <div>
-                    <label for="kelas_id" style="font-weight:600; color:#374151; font-size: 0.9rem;">Kelas</label>
-                    <select name="kelas_id" id="kelas_id"
-                        style="width:100%; padding:0.6rem 0.75rem; border-radius:10px; border:1px solid #ccc;">
+                <div class="form-group pi-filter-field">
+                    <label for="kelas_id">Kelas</label>
+                    <select name="kelas_id"
+                            id="kelas_id"
+                            class="form-control"
+                            data-class-filter-for="sekolah_id"
+                            data-all-label="Semua Kelas">
                         <option value="">Semua Kelas</option>
                         @foreach($semuaKelas as $k)
-                            <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
-                                {{ $k->tingkat }} {{ $k->nama_kelas }}
+                            @php
+                                $className = trim((string) $k->nama_kelas);
+                                $classLabel = in_array($className, ['', '-', '–'], true)
+                                    ? 'Tingkat '.$k->tingkat
+                                    : 'Tingkat '.$k->tingkat.' · '.$className;
+                            @endphp
+                            <option value="{{ $k->id }}"
+                                    data-school-id="{{ $k->sekolah_id }}"
+                                    data-school-name="{{ $k->sekolah?->nama_sekolah }}"
+                                    data-class-label="{{ $classLabel }}"
+                                    {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
+                                {{ $classLabel }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
                 {{-- Filter Tanggal Lulus --}}
-                <div>
-                    <label for="tanggal_lulus" style="font-weight:600; color:#374151; font-size: 0.9rem;">Tanggal Lulus</label>
-                    <input type="date" name="tanggal_lulus" id="tanggal_lulus" value="{{ request('tanggal_lulus') }}"
-                        style="width:100%; padding:0.6rem 0.75rem; border-radius:10px; border:1px solid #ccc;">
+                <div class="form-group pi-filter-field">
+                    <label for="tanggal_lulus">Tanggal Lulus</label>
+                    <input type="date" name="tanggal_lulus" id="tanggal_lulus" value="{{ request('tanggal_lulus') }}" class="form-control">
                 </div>
 
                 {{-- Search Nama Siswa --}}
-                <div>
-                    <label for="search" style="font-weight:600; color:#374151; font-size: 0.9rem;">Cari Nama</label>
+                <div class="form-group pi-filter-field">
+                    <label for="search">Cari Nama</label>
                     <input type="text" name="search" id="search" value="{{ request('search') }}"
-                        placeholder="Cari nama siswa..."
-                        style="width:100%; padding:0.6rem 0.75rem; border-radius:10px; border:1px solid #ccc;">
+                        placeholder="Cari nama siswa..." class="form-control">
                 </div>
 
                 {{-- Tombol Submit --}}
-                <div>
+                <div class="form-group pi-filter-action-group">
                     <label style="visibility:hidden;">Tampilkan</label>
-                    <button type="submit" class="btn-primary" style="width:100%;">🔍 Filter</button>
+                    <button type="submit" class="btn btn-primary pi-filter-control">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
                 </div>
             </div>
         </form>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const sekolahSelect = document.getElementById('sekolah_id');
-                const kelasSelect = document.getElementById('kelas_id');
-                const selectedKelasId = "{{ request('kelas_id') }}";
-
-                sekolahSelect.addEventListener('change', function () {
-                    const sekolahId = this.value;
-
-                    // Kosongkan dropdown kelas dulu
-                    kelasSelect.innerHTML = '<option value="">Memuat data...</option>';
-
-                    if (!sekolahId) {
-                        kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                        return;
-                    }
-
-                    // Fetch data kelas berdasarkan sekolah_id
-                    fetch(`/get-kelas-by-sekolah/${sekolahId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                            data.forEach(kelas => {
-                                const option = document.createElement('option');
-                                option.value = kelas.id;
-                                option.textContent = `${kelas.tingkat} ${kelas.nama_kelas}`;
-                                if (selectedKelasId == kelas.id) {
-                                    option.selected = true;
-                                }
-                                kelasSelect.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            kelasSelect.innerHTML = '<option value="">Gagal memuat kelas</option>';
-                            console.error('Gagal mengambil data kelas:', error);
-                        });
-                });
-
-                // Jalankan saat halaman dimuat jika sekolah sudah terpilih (untuk filter hasil pencarian sebelumnya)
-                if (sekolahSelect.value) {
-                    sekolahSelect.dispatchEvent(new Event('change'));
-                }
-            });
-        </script>
-
-
         <div class="table-container">
             <table class="modern-table">
                 <thead>

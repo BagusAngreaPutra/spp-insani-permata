@@ -20,3 +20,5 @@ yarn-error.log
 
 # Production database exports can contain personal and authentication data.
 /sql/db_spp.sql
+/db_spp.sql
+/database/seeders/data/*.sql

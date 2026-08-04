@@ -9,10 +9,14 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Sekolah;
 use App\Models\Kelas;
+use App\Models\TahunAjaran;
 use Illuminate\Support\Facades\Auth;
+use App\Services\TagihanPeriodReconciler;
 
 class TagihanController extends Controller
 {
+    private array $paymentTypeAcademicYearCache = [];
+
 
     public function index(Request $request)
     {
@@ -38,13 +42,25 @@ class TagihanController extends Controller
     public function sinkronisasiNama(Request $request)
     {
         $tagihan = Tagihan::whereNotNull('jenis_pembayaran_id')
-            ->with('jenisPembayaran')
+            ->with(['jenisPembayaran.tahunAjaran', 'siswa.tahunAjaran'])
             ->get();
 
         foreach ($tagihan as $t) {
             if ($t->jenisPembayaran) {
+                $tahunAwal = $this->getAcademicYearStartFromPeriod($t->periode);
+
+                if ($tahunAwal === null) {
+                    [$tahunAwal] = $this->getAcademicYearBounds($t->siswa, $t->jenisPembayaran);
+                }
+
+                $namaTagihan = $this->getBillName($t->jenisPembayaran, $tahunAwal, $tahunAwal + 1);
+
+                if (preg_match('/Semester\s*([12])/i', (string) $t->nama_tagihan, $semester)) {
+                    $namaTagihan .= ' - Semester ' . $semester[1];
+                }
+
                 $t->update([
-                    'nama_tagihan' => $t->jenisPembayaran->nama_pembayaran
+                    'nama_tagihan' => $namaTagihan,
                 ]);
             }
         }
@@ -99,6 +115,8 @@ class TagihanController extends Controller
 
     public function storePembayaran(Request $request, Tagihan $tagihan)
     {
+        $this->normalizeCurrencyFields($request, ['jumlah_bayar']);
+
         // ✅ Mode pembayaran bulanan
         if ($tagihan->tipe === 'bulanan' && $request->has('bulan')) {
             $errors = [];
@@ -506,9 +524,11 @@ class TagihanController extends Controller
      */
     public function indexGrouped(Request $request)
     {
+        $periodReconciler = app(TagihanPeriodReconciler::class);
         $sekolahData = Sekolah::query()
             ->orderBy('nama_sekolah')
             ->get();
+        $academicYearData = TahunAjaran::validPeriods();
 
         $selectedSekolah = $request->filled('sekolah')
             ? $sekolahData->firstWhere('id', $request->integer('sekolah'))
@@ -529,6 +549,9 @@ class TagihanController extends Controller
         $selectedKelas = $request->filled('kelas')
             ? $availableClasses->firstWhere('id', $request->integer('kelas'))
             : null;
+        $selectedTahunAjaran = $request->filled('tahun_ajaran')
+            ? $academicYearData->firstWhere('id', $request->integer('tahun_ajaran'))
+            : null;
 
         $studentRows = Siswa::query()
             ->when(
@@ -543,19 +566,28 @@ class TagihanController extends Controller
                 'sekolah',
                 'kelas',
                 'tagihan' => fn ($query) => $query
+                    ->when(
+                        $selectedTahunAjaran,
+                        fn ($tagihanQuery) => $tagihanQuery->where('tahun_ajaran_id', $selectedTahunAjaran->id)
+                    )
+                    ->with('jenisPembayaran.tahunAjaran')
                     ->withSum('pembayaran as total_dibayar', 'jumlah_bayar')
                     ->withSum('pembayaran as total_diskon', 'diskon'),
             ])
             ->orderBy('nama')
             ->get()
-            ->map(function (Siswa $siswa) {
-                $totalTagihan = $siswa->tagihan->count();
+            ->map(function (Siswa $siswa) use ($periodReconciler) {
+                $tagihanAktif = $siswa->tagihan
+                    ->filter(fn (Tagihan $tagihan) => $periodReconciler->belongsToConfiguredPeriod($tagihan));
+                $totalTagihan = $tagihanAktif->count();
                 $totalNominal = 0;
                 $totalDibayar = 0;
                 $totalDiskon = 0;
                 $sisaBayar = 0;
+                $sisaAktual = 0;
+                $sisaBelumJatuhTempo = 0;
 
-                foreach ($siswa->tagihan as $tagihan) {
+                foreach ($tagihanAktif as $tagihan) {
                     $nominal = (float) $tagihan->nominal;
                     $dibayar = (float) ($tagihan->total_dibayar ?? 0);
                     $diskon = (float) ($tagihan->total_diskon ?? 0);
@@ -563,13 +595,22 @@ class TagihanController extends Controller
                     $totalNominal += $nominal;
                     $totalDibayar += $dibayar;
                     $totalDiskon += $diskon;
-                    $sisaBayar += max(0, $nominal - ($dibayar + $diskon));
+                    $sisaTagihan = max(0, $nominal - ($dibayar + $diskon));
+                    $sisaAktual += $sisaTagihan;
+
+                    if ($tagihan->isBelumJatuhTempo()) {
+                        $sisaBelumJatuhTempo += $sisaTagihan;
+                    } else {
+                        $sisaBayar += $sisaTagihan;
+                    }
                 }
 
                 if ($totalTagihan === 0) {
                     $status = 'kosong';
-                } elseif ($sisaBayar <= 0) {
+                } elseif ($sisaAktual <= 0) {
                     $status = 'lunas';
+                } elseif ($sisaBayar <= 0 && $sisaBelumJatuhTempo > 0) {
+                    $status = 'belum_jatuh_tempo';
                 } elseif (($totalDibayar + $totalDiskon) > 0) {
                     $status = 'sebagian';
                 } else {
@@ -595,6 +636,7 @@ class TagihanController extends Controller
                     'total_dibayar' => $totalDibayar,
                     'total_diskon' => $totalDiskon,
                     'sisa_bayar' => $sisaBayar,
+                    'sisa_aktual' => $sisaAktual,
                     'status' => $status,
                 ];
             });
@@ -610,9 +652,11 @@ class TagihanController extends Controller
 
         return view('tagihan.index_new', compact(
             'sekolahData',
+            'academicYearData',
             'availableClasses',
             'selectedSekolah',
             'selectedKelas',
+            'selectedTahunAjaran',
             'studentRows',
             'workspaceSummary'
         ));
@@ -624,6 +668,7 @@ class TagihanController extends Controller
     public function getStudentsSummary(Request $request, $sekolahId, $kelasId)
     {
         $search = $request->get('search');
+        $periodReconciler = app(TagihanPeriodReconciler::class);
         
         $query = \App\Models\Siswa::where('kelas_id', $kelasId)
             ->where('id_sekolah', $sekolahId);
@@ -637,25 +682,44 @@ class TagihanController extends Controller
         }
         
         $students = $query->with(['tagihan' => function($q) {
-            $q->with('pembayaran');
+            $q->with(['pembayaran', 'jenisPembayaran.tahunAjaran']);
         }])
         ->get()
-        ->map(function($siswa) {
-            $totalTagihan = $siswa->tagihan->count();
-            $totalNominal = $siswa->tagihan->sum('nominal');
+        ->map(function($siswa) use ($periodReconciler) {
+            $tagihanAktif = $siswa->tagihan
+                ->filter(fn (Tagihan $tagihan) => $periodReconciler->belongsToConfiguredPeriod($tagihan));
+            $totalTagihan = $tagihanAktif->count();
+            $totalNominal = $tagihanAktif->sum('nominal');
             $totalDibayar = 0;
-            $totalDiskon = 0; // ✅ TAMBAHAN
+            $totalDiskon = 0;
             $sisaBayar = 0;
+            $sisaAktual = 0;
+            $sisaBelumJatuhTempo = 0;
 
             // ✅ PERBAIKAN: Calculate total paid and discount
-            foreach ($siswa->tagihan as $tagihan) {
+            foreach ($tagihanAktif as $tagihan) {
                 $totalBayarTagihan = $tagihan->pembayaran->sum('jumlah_bayar');
                 $totalDiskonTagihan = $tagihan->pembayaran->sum('diskon'); // ✅ TAMBAHAN
 
                 $totalDibayar += $totalBayarTagihan;
                 $totalDiskon += $totalDiskonTagihan;
-                $sisaBayar += max(0, $tagihan->nominal - ($totalBayarTagihan + $totalDiskonTagihan)); // ✅ PERBAIKAN
+                $sisaTagihan = max(0, $tagihan->nominal - ($totalBayarTagihan + $totalDiskonTagihan));
+                $sisaAktual += $sisaTagihan;
+
+                if ($tagihan->isBelumJatuhTempo()) {
+                    $sisaBelumJatuhTempo += $sisaTagihan;
+                } else {
+                    $sisaBayar += $sisaTagihan;
+                }
             }
+
+            $status = match (true) {
+                $totalTagihan === 0 => 'kosong',
+                $sisaAktual <= 0 => 'lunas',
+                $sisaBayar <= 0 && $sisaBelumJatuhTempo > 0 => 'belum_jatuh_tempo',
+                ($totalDibayar + $totalDiskon) > 0 => 'sebagian',
+                default => 'belum',
+            };
 
             return [
                 'id' => $siswa->id,
@@ -666,6 +730,8 @@ class TagihanController extends Controller
                 'total_dibayar' => number_format($totalDibayar, 0, ',', '.'),
                 'total_diskon' => number_format($totalDiskon, 0, ',', '.'), // ✅ TAMBAHAN
                 'sisa_bayar' => number_format($sisaBayar, 0, ',', '.'),
+                'sisa_aktual' => number_format($sisaAktual, 0, ',', '.'),
+                'status' => $status,
             ];
         });
 
@@ -680,13 +746,15 @@ class TagihanController extends Controller
     public function prosesSiswa(Request $request, $siswaId)
     {
         $siswa = \App\Models\Siswa::with(['kelas', 'sekolah', 'tahunAjaran'])->findOrFail($siswaId);
+        $periodReconciler = app(TagihanPeriodReconciler::class);
 
         // Get all tagihan for this student
         $tagihanData = \App\Models\Tagihan::where('siswa_id', $siswaId)
-            ->with(['jenisPembayaran', 'pembayaran'])
+            ->with(['jenisPembayaran.tahunAjaran', 'pembayaran'])
             ->orderBy('nama_tagihan')
             ->orderBy('periode')
-            ->get();
+            ->get()
+            ->filter(fn (Tagihan $tagihan) => $periodReconciler->belongsToConfiguredPeriod($tagihan));
 
         $tagihanList = [];
         $processedBulanan = []; // Untuk melacak ID jenis pembayaran bulanan yg sudah diproses
@@ -695,7 +763,7 @@ class TagihanController extends Controller
             // ✅ PERBAIKAN UTAMA: Hitung total bayar termasuk diskon
             $totalBayar = $tagihan->pembayaran->sum('jumlah_bayar');
             $totalDiskon = $tagihan->pembayaran->sum('diskon');
-            $sisaBayar = $tagihan->nominal - ($totalBayar + $totalDiskon);
+            $sisaBayar = max(0, $tagihan->nominal - ($totalBayar + $totalDiskon));
 
             // Logika untuk SPP dan tagihan bulanan lainnya
             if ($tagihan->tipe === 'bulanan') {
@@ -711,6 +779,7 @@ class TagihanController extends Controller
                     $namaTagihanGroup = is_null($tagihan->jenis_pembayaran_id)
                         ? 'SPP'
                         : ($tagihan->jenisPembayaran->nama_pembayaran ?? 'Tagihan Bulanan');
+                    $namaTagihanGroup .= ' - Tahun Ajaran ' . $academicYearLabel;
 
                     $tagihanBulanans = $tagihanData->where('tipe', 'bulanan')
                         ->where('jenis_pembayaran_id', $tagihan->jenis_pembayaran_id)
@@ -724,7 +793,15 @@ class TagihanController extends Controller
                     $bulanTagihan = $tagihanBulanans->map(function ($item) {
                         $totalBayarItem = $item->pembayaran->sum('jumlah_bayar');
                         $totalDiskonItem = $item->pembayaran->sum('diskon'); // ✅ TAMBAHAN
-                        $sisaBayarItem = $item->nominal - ($totalBayarItem + $totalDiskonItem); // ✅ PERBAIKAN
+                        $sisaBayarItem = max(0, $item->nominal - ($totalBayarItem + $totalDiskonItem)); // ✅ PERBAIKAN
+                        $belumJatuhTempo = $sisaBayarItem > 0 && $item->isBelumJatuhTempo();
+                        $sisaTerhitung = $belumJatuhTempo ? 0 : $sisaBayarItem;
+                        $status = match (true) {
+                            $sisaBayarItem <= 0 => 'lunas',
+                            $belumJatuhTempo => 'belum_jatuh_tempo',
+                            ($totalBayarItem + $totalDiskonItem) > 0 => 'sebagian',
+                            default => 'belum_lunas',
+                        };
 
                         // ✅ Convert ke bahasa Indonesia
                         $periodeBulan = \Carbon\Carbon::parse($item->periode . '-01');
@@ -739,10 +816,21 @@ class TagihanController extends Controller
                             'total_bayar' => $totalBayarItem,
                             'total_diskon' => $totalDiskonItem, // ✅ TAMBAHAN
                             'sisa_bayar' => $sisaBayarItem,
-                            'status' => $sisaBayarItem <= 0 ? 'lunas' : 'belum lunas',
+                            'sisa_terhitung' => $sisaTerhitung,
+                            'belum_jatuh_tempo' => $belumJatuhTempo,
+                            'status' => $status,
                             'tanggal_jatuh_tempo' => $item->tanggal_jatuh_tempo,
                         ];
                     })->sortBy(fn ($item) => $this->getAcademicMonthSortKey($item['periode']));
+
+                    $groupSisaAktual = $bulanTagihan->sum('sisa_bayar');
+                    $groupSisaTerhitung = $bulanTagihan->sum('sisa_terhitung');
+                    $groupStatus = match (true) {
+                        $groupSisaAktual <= 0 => 'lunas',
+                        $groupSisaTerhitung <= 0 => 'belum_jatuh_tempo',
+                        ($bulanTagihan->sum('total_bayar') + $bulanTagihan->sum('total_diskon')) > 0 => 'sebagian',
+                        default => 'belum_lunas',
+                    };
 
                     // Tambahkan grup ke daftar tagihan utama
                     $tagihanList[] = [
@@ -756,8 +844,9 @@ class TagihanController extends Controller
                         'nominal' => $tagihanBulanans->sum('nominal'),
                         'total_bayar' => $bulanTagihan->sum('total_bayar'),
                         'total_diskon' => $bulanTagihan->sum('total_diskon'), // ✅ TAMBAHAN
-                        'sisa_bayar' => $bulanTagihan->sum('sisa_bayar'),
-                        'status' => $bulanTagihan->sum('sisa_bayar') <= 0 ? 'lunas' : 'belum lunas',
+                        'sisa_bayar' => $groupSisaAktual,
+                        'sisa_terhitung' => $groupSisaTerhitung,
+                        'status' => $groupStatus,
                         'tanggal_jatuh_tempo' => null,
                         'bulan_tagihan' => $bulanTagihan->values()->all(), // ✅ Convert ke array terurut
                     ];
@@ -780,6 +869,15 @@ class TagihanController extends Controller
                     $periodeDisplay = 'Tahun ' . $tahun;
                 }
 
+                $belumJatuhTempo = $sisaBayar > 0 && $tagihan->isBelumJatuhTempo();
+                $sisaTerhitung = $belumJatuhTempo ? 0 : $sisaBayar;
+                $status = match (true) {
+                    $sisaBayar <= 0 => 'lunas',
+                    $belumJatuhTempo => 'belum_jatuh_tempo',
+                    ($totalBayar + $totalDiskon) > 0 => 'sebagian',
+                    default => 'belum_lunas',
+                };
+
                 // Untuk tagihan non-bulanan
                 $tagihanList[] = [
                     'id' => $tagihan->id,
@@ -791,7 +889,9 @@ class TagihanController extends Controller
                     'total_bayar' => $totalBayar,
                     'total_diskon' => $totalDiskon, // ✅ TAMBAHAN
                     'sisa_bayar' => $sisaBayar,
-                    'status' => $sisaBayar <= 0 ? 'lunas' : 'belum lunas',
+                    'sisa_terhitung' => $sisaTerhitung,
+                    'belum_jatuh_tempo' => $belumJatuhTempo,
+                    'status' => $status,
                     'tanggal_jatuh_tempo' => $tagihan->tanggal_jatuh_tempo,
                 ];
             }
@@ -821,8 +921,10 @@ class TagihanController extends Controller
             'total_nominal' => $billItems->sum('nominal'),
             'total_dibayar' => $billItems->sum('total_bayar'),
             'total_diskon' => $billItems->sum('total_diskon'),
-            'sisa_bayar' => $billItems->sum(fn ($item) => max(0, (float) $item['sisa_bayar'])),
+            'sisa_bayar' => $billItems->sum(fn ($item) => max(0, (float) ($item['sisa_terhitung'] ?? $item['sisa_bayar']))),
+            'sisa_aktual' => $billItems->sum(fn ($item) => max(0, (float) $item['sisa_bayar'])),
             'belum_lunas' => $billItems->filter(fn ($item) => (float) $item['sisa_bayar'] > 0)->count(),
+            'belum_jatuh_tempo' => $billItems->where('status', 'belum_jatuh_tempo')->count(),
         ];
 
         return view('tagihan.proses_siswa', compact('siswa', 'tagihanList', 'studentSummary'));
@@ -832,21 +934,16 @@ class TagihanController extends Controller
     /**
      * Resolve the July-June range from the student's academic-year label.
      */
-    private function getAcademicYearBounds(Siswa $siswa): array
+    private function getAcademicYearBounds(Siswa $siswa, ?JenisPembayaran $jenis = null): array
     {
-        $academicYearName = trim((string) ($siswa->tahunAjaran?->nama_tahun ?? ''));
+        $bounds = $jenis?->tahunAjaran?->periodBounds()
+            ?? $siswa->tahunAjaran?->periodBounds();
 
-        if (preg_match('/(\d{4})\D+(\d{4})/', $academicYearName, $matches)) {
-            $startYear = (int) $matches[1];
-            $endYear = (int) $matches[2];
-
-            if ($endYear > $startYear) {
-                return [$startYear, $endYear];
-            }
+        if ($bounds) {
+            return $bounds;
         }
 
-        $today = Carbon::today();
-        $startYear = $today->month >= 7 ? $today->year : $today->year - 1;
+        $startYear = \App\Models\TahunAjaran::currentStartYear();
 
         return [$startYear, $startYear + 1];
     }
@@ -854,15 +951,40 @@ class TagihanController extends Controller
     /**
      * Build the twelve monthly periods in school-year order: July through June.
      */
-    private function getAcademicYearMonths(Siswa $siswa): array
+    private function getAcademicYearMonths(Siswa $siswa, ?JenisPembayaran $jenis = null): array
     {
-        [$startYear] = $this->getAcademicYearBounds($siswa);
+        [$startYear] = $this->getAcademicYearBounds($siswa, $jenis);
         $firstMonth = Carbon::create($startYear, 7, 1)->startOfDay();
 
         return array_map(
             fn (int $offset) => $firstMonth->copy()->addMonths($offset),
             range(0, 11)
         );
+    }
+
+    private function getBillName(JenisPembayaran $jenis, int $tahunAwal, int $tahunAkhir): string
+    {
+        return $jenis->nama_pembayaran . ' - Tahun Ajaran ' . $tahunAwal . '/' . $tahunAkhir;
+    }
+
+    private function saveGeneratedTagihan(array $identity, array $attributes): Tagihan
+    {
+        $paymentTypeId = $identity['jenis_pembayaran_id'] ?? $attributes['jenis_pembayaran_id'] ?? null;
+        if ($paymentTypeId) {
+            $attributes['tahun_ajaran_id'] = $this->paymentTypeAcademicYearCache[$paymentTypeId]
+                ??= JenisPembayaran::whereKey($paymentTypeId)->value('tahun_ajaran_id');
+        }
+
+        $tagihan = Tagihan::firstOrNew($identity);
+
+        if ($tagihan->exists) {
+            unset($attributes['status']);
+        }
+
+        $tagihan->fill($attributes);
+        $tagihan->save();
+
+        return $tagihan;
     }
 
     /**
@@ -919,48 +1041,32 @@ class TagihanController extends Controller
 
 
     /**
-     * Auto-generate tagihan untuk siswa tertentu
+     * Generate tagihan dari jenis pembayaran untuk siswa tertentu.
      */
     private function autoGenerateTagihanForSiswa($siswaId)
     {
         $siswa = Siswa::with('tahunAjaran')->findOrFail($siswaId);
-        $periodeTahunAjaran = $this->getAcademicYearMonths($siswa);
-        [$tahunAwal] = $this->getAcademicYearBounds($siswa);
 
-        // Generate SPP untuk Juli sampai Juni pada tahun ajaran siswa.
-        foreach ($periodeTahunAjaran as $bulanTagihan) {
-            $periode = $bulanTagihan->format('Y-m');
-            $namaBulan = $bulanTagihan->format('F Y');
+        // SPP mengikuti alur jenis pembayaran bulanan dan tidak dibuat khusus.
 
-            Tagihan::updateOrCreate(
-                [
-                    'siswa_id' => $siswa->id,
-                    'periode' => $periode,
-                    'tipe' => 'bulanan',
-                    'jenis_pembayaran_id' => null,
-                ],
-                [
-                    'id_sekolah' => $siswa->id_sekolah,
-                    'nama_tagihan' => 'SPP - ' . $namaBulan,
-                    'nominal' => $siswa->nominal_spp ?? 150000,
-                    'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day(10),
-                    'status' => 'belum',
-                ]
-            );
-        }
-
-        // ✅ Generate dari jenis pembayaran yang eligible untuk siswa ini
-        $jenisPembayaran = JenisPembayaran::all();
+        // Generate dari jenis pembayaran yang eligible untuk siswa ini.
+        $jenisPembayaran = JenisPembayaran::with('tahunAjaran')->get();
+        $periodReconciler = app(TagihanPeriodReconciler::class);
         foreach ($jenisPembayaran as $jenis) {
+            $periodReconciler->reconcileForStudent($jenis, $siswa);
+
             if ($jenis->isStudentEligible($siswaId)) {
+                $periodeTahunAjaran = $this->getAcademicYearMonths($siswa, $jenis);
+                [$tahunAwal, $tahunAkhir] = $this->getAcademicYearBounds($siswa, $jenis);
+                $namaTagihan = $this->getBillName($jenis, $tahunAwal, $tahunAkhir);
 
                 if ($jenis->tipe === 'bulanan') {
+                    $tanggalJatuhTempo = Carbon::parse($jenis->jatuh_tempo)->day;
                     // Generate tagihan bulanan mengikuti Juli-Juni.
                     foreach ($periodeTahunAjaran as $bulanTagihan) {
                         $periode = $bulanTagihan->format('Y-m');
-                        $namaBulan = $bulanTagihan->format('F Y');
 
-                        Tagihan::updateOrCreate(
+                        $this->saveGeneratedTagihan(
                             [
                                 'siswa_id' => $siswa->id,
                                 'jenis_pembayaran_id' => $jenis->id,
@@ -968,10 +1074,10 @@ class TagihanController extends Controller
                             ],
                             [
                                 'id_sekolah' => $siswa->id_sekolah,
-                                'nama_tagihan' => $jenis->nama_pembayaran . ' - ' . $namaBulan,
+                                'nama_tagihan' => $namaTagihan,
                                 'nominal' => $jenis->nominal,
                                 'tipe' => $jenis->tipe,
-                                'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day(10),
+                                'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day($tanggalJatuhTempo),
                                 'status' => 'belum',
                             ]
                         );
@@ -980,8 +1086,9 @@ class TagihanController extends Controller
                 elseif ($jenis->tipe === 'semester') {
                     // ✅ Generate tagihan semester (2 semester)
                     $jatuhTempo = \Carbon\Carbon::parse($jenis->jatuh_tempo);
-                    $bulanPertama = $jatuhTempo->month;
-                    $bulanKedua = $bulanPertama + 6;
+                    $bulanPilihan = $jatuhTempo->month;
+                    $bulanPertama = $bulanPilihan >= 7 ? $bulanPilihan : $bulanPilihan + 6;
+                    $bulanKedua = (($bulanPertama + 5) % 12) + 1;
 
                     // Handle jika bulan kedua > 12 (lewat tahun)
                     if ($bulanKedua > 12) {
@@ -991,7 +1098,7 @@ class TagihanController extends Controller
                     // Semester 1
                     $tahunPeriodePertama = $bulanPertama >= 7 ? $tahunAwal : $tahunAwal + 1;
                     $periode1 = $tahunPeriodePertama . '-' . str_pad($bulanPertama, 2, '0', STR_PAD_LEFT);
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
@@ -999,7 +1106,7 @@ class TagihanController extends Controller
                         ],
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran . ' - Semester 1',
+                            'nama_tagihan' => $namaTagihan . ' - Semester 1',
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
                             'tanggal_jatuh_tempo' => \Carbon\Carbon::parse($periode1)->day(10),
@@ -1010,7 +1117,7 @@ class TagihanController extends Controller
                     // Semester 2
                     $tahunPeriodeKedua = $bulanKedua >= 7 ? $tahunAwal : $tahunAwal + 1;
                     $periode2 = $tahunPeriodeKedua . '-' . str_pad($bulanKedua, 2, '0', STR_PAD_LEFT);
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
@@ -1018,7 +1125,7 @@ class TagihanController extends Controller
                         ],
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran . ' - Semester 2',
+                            'nama_tagihan' => $namaTagihan . ' - Semester 2',
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
                             'tanggal_jatuh_tempo' => \Carbon\Carbon::parse($periode2)->day(10),
@@ -1028,7 +1135,7 @@ class TagihanController extends Controller
                 }
                 elseif ($jenis->tipe === 'setahun') {
                     // ✅ Generate tagihan tahunan (1x per tahun)
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
@@ -1036,7 +1143,7 @@ class TagihanController extends Controller
                         ],
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran . ' - Tahun Ajaran ' . $tahunAwal . '/' . ($tahunAwal + 1),
+                            'nama_tagihan' => $namaTagihan,
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
                             'tanggal_jatuh_tempo' => $jenis->jatuh_tempo,
@@ -1045,18 +1152,24 @@ class TagihanController extends Controller
                     );
                 }
                 elseif ($jenis->tipe === 'sekali') {
+                    if (Tagihan::where('siswa_id', $siswa->id)
+                        ->where('jenis_pembayaran_id', $jenis->id)
+                        ->whereHas('pembayaran')
+                        ->exists()) {
+                        continue;
+                    }
                     // ✅ Generate tagihan sekali bayar
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
                         ],
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran,
+                            'nama_tagihan' => $namaTagihan,
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
-                            'periode' => now()->format('Y-m'),
+                            'periode' => (string) $tahunAwal,
                             'tanggal_jatuh_tempo' => $jenis->jatuh_tempo,
                             'status' => 'belum',
                         ]
@@ -1071,6 +1184,12 @@ class TagihanController extends Controller
      */
     public function prosesMultiPembayaran(Request $request)
     {
+        $this->normalizeCurrencyFields($request, [
+            'pembayaran',
+            'original_amount',
+            'discount_amount',
+        ]);
+
         // ✅ VALIDASI INPUT
         $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
@@ -1160,7 +1279,8 @@ class TagihanController extends Controller
                     // ✅ VALIDASI DISKON SPP (hanya berlaku untuk pembayaran lunas)
                     if ($discountAmount > 0) {
                         // Cek apakah ini tagihan SPP
-                        $isSPP = is_null($tagihan->jenis_pembayaran_id);
+                        $isSPP = is_null($tagihan->jenis_pembayaran_id)
+                            || strcasecmp((string) $tagihan->jenisPembayaran?->nama_pembayaran, 'SPP') === 0;
 
                         if ($isSPP) {
                             // Validasi periode diskon (sampai tanggal 10)
@@ -1338,47 +1458,12 @@ class TagihanController extends Controller
 
 
     /**
-     * Auto-generate semua tagihan (SPP + Jenis Pembayaran)
+     * Generate semua tagihan dari jenis pembayaran yang dikonfigurasi.
      */
     private function autoGenerateAllTagihan()
     {
-        // ✅ 1. Generate Tagihan SPP (Bulanan)
-        $this->generateTagihanSPP();
-
-        // ✅ 2. Generate Tagihan dari Jenis Pembayaran
+        // Tidak ada lagi generator SPP khusus.
         $this->generateTagihanFromJenisPembayaran();
-    }
-
-    /**
-     * Generate tagihan SPP untuk semua siswa aktif
-     */
-    private function generateTagihanSPP()
-    {
-        $siswaAktif = Siswa::with('tahunAjaran')->where('status', 'aktif')->get();
-
-        foreach ($siswaAktif as $siswa) {
-            // Generate SPP dari Juli sampai Juni pada tahun ajaran siswa.
-            foreach ($this->getAcademicYearMonths($siswa) as $bulanTagihan) {
-                $periode = $bulanTagihan->format('Y-m');
-                $namaBulan = $bulanTagihan->format('F Y');
-
-                Tagihan::updateOrCreate(
-                    [
-                        'siswa_id' => $siswa->id,
-                        'periode' => $periode,
-                        'tipe' => 'bulanan',
-                        'jenis_pembayaran_id' => null, // ✅ NULL = SPP
-                    ],
-                    [
-                        'id_sekolah' => $siswa->id_sekolah,
-                        'nama_tagihan' => 'SPP - ' . $namaBulan,
-                        'nominal' => $siswa->nominal_spp ?? 150000, // Default atau dari siswa
-                        'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day(10),
-                        'status' => 'belum',
-                    ]
-                );
-            }
-        }
     }
 
     /**
@@ -1386,23 +1471,26 @@ class TagihanController extends Controller
      */
     private function generateTagihanFromJenisPembayaran()
     {
-        $jenisPembayaran = JenisPembayaran::all();
+        $jenisPembayaran = JenisPembayaran::with('tahunAjaran')->get();
+        $periodReconciler = app(TagihanPeriodReconciler::class);
 
         foreach ($jenisPembayaran as $jenis) {
+            $periodReconciler->reconcileJenis($jenis);
             $eligibleSiswa = $jenis->getEligibleSiswa();
 
             foreach ($eligibleSiswa as $siswa) {
                 $siswa->loadMissing('tahunAjaran');
-                $periodeTahunAjaran = $this->getAcademicYearMonths($siswa);
-                [$tahunAwal] = $this->getAcademicYearBounds($siswa);
+                $periodeTahunAjaran = $this->getAcademicYearMonths($siswa, $jenis);
+                [$tahunAwal, $tahunAkhir] = $this->getAcademicYearBounds($siswa, $jenis);
+                $namaTagihan = $this->getBillName($jenis, $tahunAwal, $tahunAkhir);
 
                 if ($jenis->tipe === 'bulanan') {
+                    $tanggalJatuhTempo = Carbon::parse($jenis->jatuh_tempo)->day;
                     // Generate untuk 12 bulan dalam urutan Juli-Juni.
                     foreach ($periodeTahunAjaran as $bulanTagihan) {
                         $periode = $bulanTagihan->format('Y-m');
-                        $namaBulan = $bulanTagihan->format('F Y');
 
-                        Tagihan::updateOrCreate(
+                        $this->saveGeneratedTagihan(
                             [
                                 'siswa_id' => $siswa->id,
                                 'jenis_pembayaran_id' => $jenis->id,
@@ -1410,10 +1498,10 @@ class TagihanController extends Controller
                             ],
                             [
                                 'id_sekolah' => $siswa->id_sekolah,
-                                'nama_tagihan' => $jenis->nama_pembayaran . ' - ' . $namaBulan,
+                                'nama_tagihan' => $namaTagihan,
                                 'nominal' => $jenis->nominal,
                                 'tipe' => $jenis->tipe,
-                                'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day(10),
+                                'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day($tanggalJatuhTempo),
                                 'status' => 'belum',
                             ]
                         );
@@ -1422,13 +1510,14 @@ class TagihanController extends Controller
                 elseif ($jenis->tipe === 'semester') {
                     // ✅ Generate untuk 2 semester
                     $jatuhTempo = \Carbon\Carbon::parse($jenis->jatuh_tempo);
-                    $bulanPertama = $jatuhTempo->month;
-                    $bulanKedua = $bulanPertama + 6;
+                    $bulanPilihan = $jatuhTempo->month;
+                    $bulanPertama = $bulanPilihan >= 7 ? $bulanPilihan : $bulanPilihan + 6;
+                    $bulanKedua = (($bulanPertama + 5) % 12) + 1;
 
                     // Semester 1
                     $tahunPeriodePertama = $bulanPertama >= 7 ? $tahunAwal : $tahunAwal + 1;
                     $periode1 = $tahunPeriodePertama . '-' . str_pad($bulanPertama, 2, '0', STR_PAD_LEFT);
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
@@ -1436,7 +1525,7 @@ class TagihanController extends Controller
                         ],
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran . ' - Semester 1',
+                            'nama_tagihan' => $namaTagihan . ' - Semester 1',
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
                             'tanggal_jatuh_tempo' => \Carbon\Carbon::parse($periode1)->day(10),
@@ -1450,7 +1539,7 @@ class TagihanController extends Controller
                     }
                     $tahunPeriodeKedua = $bulanKedua >= 7 ? $tahunAwal : $tahunAwal + 1;
                     $periode2 = $tahunPeriodeKedua . '-' . str_pad($bulanKedua, 2, '0', STR_PAD_LEFT);
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
@@ -1458,7 +1547,7 @@ class TagihanController extends Controller
                         ],
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran . ' - Semester 2',
+                            'nama_tagihan' => $namaTagihan . ' - Semester 2',
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
                             'tanggal_jatuh_tempo' => \Carbon\Carbon::parse($periode2)->day(10),
@@ -1468,7 +1557,7 @@ class TagihanController extends Controller
                 }
                 elseif ($jenis->tipe === 'setahun') {
                     // ✅ Generate tagihan tahunan (1x per tahun)
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
@@ -1477,7 +1566,7 @@ class TagihanController extends Controller
                         ],
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran . ' - Tahun Ajaran ' . $tahunAwal . '/' . ($tahunAwal + 1),
+                            'nama_tagihan' => $namaTagihan,
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
                             'tanggal_jatuh_tempo' => $jenis->jatuh_tempo,
@@ -1486,8 +1575,14 @@ class TagihanController extends Controller
                     );
                 }
                 else {
+                    if ($jenis->tipe === 'sekali' && Tagihan::where('siswa_id', $siswa->id)
+                        ->where('jenis_pembayaran_id', $jenis->id)
+                        ->whereHas('pembayaran')
+                        ->exists()) {
+                        continue;
+                    }
                     // Untuk 'sekali' dan tipe lainnya
-                    Tagihan::updateOrCreate(
+                    $this->saveGeneratedTagihan(
                         [
                             'siswa_id' => $siswa->id,
                             'jenis_pembayaran_id' => $jenis->id,
@@ -1496,7 +1591,7 @@ class TagihanController extends Controller
                         ] + ($jenis->tipe !== 'sekali' ? ['periode' => $tahunAwal] : []),
                         [
                             'id_sekolah' => $siswa->id_sekolah,
-                            'nama_tagihan' => $jenis->nama_pembayaran,
+                            'nama_tagihan' => $namaTagihan,
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
                             'tanggal_jatuh_tempo' => $jenis->jatuh_tempo,
@@ -1513,19 +1608,19 @@ class TagihanController extends Controller
      */
     public function generateTagihanManual(Request $request)
     {
-        // Jalankan proses generate tagihan
+        // Hanya jenis pembayaran yang sudah dibuat oleh admin.
         $this->autoGenerateAllTagihan();
         
         // Log aktivitas
         LogAktivitas::create([
             'aktor_type' => 'admin',
             'aktor_id'   => Auth::guard('web')->id(),
-            'aktivitas'  => 'Generate tagihan manual untuk semua siswa',
+            'aktivitas'  => 'Generate tagihan manual dari jenis pembayaran untuk semua siswa',
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
         
-        return redirect()->back()->with('success', '✅ Tagihan untuk semua siswa berhasil digenerate secara otomatis!');
+        return redirect()->back()->with('success', 'Tagihan dari jenis pembayaran berhasil dibuat untuk semua siswa.');
     }
 
     /**
@@ -1533,18 +1628,18 @@ class TagihanController extends Controller
      */
     public function generateTagihanManualSiswa(Request $request, $siswaId)
     {
-        // Jalankan proses generate tagihan untuk siswa tertentu
+        // Hanya jenis pembayaran yang sesuai untuk siswa ini.
         $this->autoGenerateTagihanForSiswa($siswaId);
         
         // Log aktivitas
         LogAktivitas::create([
             'aktor_type' => 'admin',
             'aktor_id'   => Auth::guard('web')->id(),
-            'aktivitas'  => 'Generate tagihan manual untuk siswa ID: ' . $siswaId,
+            'aktivitas'  => 'Generate tagihan manual dari jenis pembayaran untuk siswa ID: ' . $siswaId,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
         
-        return redirect()->back()->with('success', '✅ Tagihan untuk siswa berhasil digenerate!');
+        return redirect()->back()->with('success', 'Tagihan dari jenis pembayaran berhasil dibuat untuk siswa.');
     }
 }

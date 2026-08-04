@@ -4,8 +4,8 @@
     </button>
 
     <div class="app-topbar-title">
-        <span class="app-topbar-context">Portal Siswa</span>
-        <strong>Permata Insani</strong>
+        <span class="app-topbar-context">Permata Insani</span>
+        <strong>Portal Pembayaran Siswa</strong>
     </div>
 
     <div class="app-user">

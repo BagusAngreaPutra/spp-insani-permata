@@ -25,7 +25,7 @@ class LaporanKelasController extends Controller
 
         // 🔹 Ambil daftar sekolah dan tahun ajaran untuk dropdown filter
         $daftarSekolah = Sekolah::all();
-        $daftarTahun   = TahunAjaran::all();
+        $daftarTahun   = TahunAjaran::validPeriods();
 
         // 🔹 Base query
         $query = Kelas::with(['sekolah', 'tahunAjaran']);

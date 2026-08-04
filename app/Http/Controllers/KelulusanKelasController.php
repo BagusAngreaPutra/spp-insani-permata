@@ -19,7 +19,7 @@ class KelulusanKelasController extends Controller
     public function index(Request $request)
     {
         $sekolah = Sekolah::all();
-        $tahunAjaran = TahunAjaran::all();
+        $tahunAjaran = TahunAjaran::validPeriods();
 
         // Ambil input filter dari request
         $selectedSekolah = $request->input('sekolah_id');
@@ -27,10 +27,16 @@ class KelulusanKelasController extends Controller
         $selectedTahunAjaran = $request->input('tahun_ajaran_id');
         $search = $request->input('search');
 
-        // Ambil kelas hanya jika sekolah dipilih
-        $kelas = collect();
-        if (!empty($selectedSekolah)) {
-            $kelas = Kelas::where('sekolah_id', $selectedSekolah)->get();
+        $kelas = Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
+
+        if ($selectedSekolah && $selectedKelas
+            && !$kelas->contains(fn ($item) => (string) $item->id === (string) $selectedKelas
+                && (string) $item->sekolah_id === (string) $selectedSekolah)) {
+            $selectedKelas = null;
         }
 
         // Query siswa dengan relasi

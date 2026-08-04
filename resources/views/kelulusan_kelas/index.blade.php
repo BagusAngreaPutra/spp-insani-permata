@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -120,6 +121,7 @@
         box-shadow: 0 8px 20px rgba(59,130,246,0.4);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -151,7 +153,7 @@
                 {{-- Sekolah --}}
                 <div class="form-group">
                     <label for="sekolah_id">Sekolah</label>
-                    <select name="sekolah_id" id="sekolah_id" onchange="this.form.submit()">
+                    <select name="sekolah_id" id="sekolah_id" onchange="document.getElementById('kelas_id').value = ''; this.form.submit()">
                         <option value="">-- Pilih Sekolah --</option>
                         @foreach ($sekolah as $s)
                             <option value="{{ $s->id }}" {{ $selectedSekolah == $s->id ? 'selected' : '' }}>{{ $s->nama_sekolah }}</option>
@@ -162,10 +164,26 @@
                 {{-- Kelas --}}
                 <div class="form-group">
                     <label for="kelas_id">Kelas</label>
-                    <select name="kelas_id" id="kelas_id" onchange="this.form.submit()">
+                    <select name="kelas_id"
+                            id="kelas_id"
+                            data-class-filter-for="sekolah_id"
+                            data-all-label="Semua Kelas"
+                            onchange="this.form.submit()">
                         <option value="">-- Pilih Kelas --</option>
                         @foreach ($kelas as $k)
-                            <option value="{{ $k->id }}" {{ $selectedKelas == $k->id ? 'selected' : '' }}>Tingkat {{ $k->tingkat }} {{ $k->nama_kelas }}</option>
+                            @php
+                                $className = trim((string) $k->nama_kelas);
+                                $classLabel = in_array($className, ['', '-', '–'], true)
+                                    ? 'Tingkat '.$k->tingkat
+                                    : 'Tingkat '.$k->tingkat.' · '.$className;
+                            @endphp
+                            <option value="{{ $k->id }}"
+                                    data-school-id="{{ $k->sekolah_id }}"
+                                    data-school-name="{{ $k->sekolah?->nama_sekolah }}"
+                                    data-class-label="{{ $classLabel }}"
+                                    {{ $selectedKelas == $k->id ? 'selected' : '' }}>
+                                {{ $classLabel }}
+                            </option>
                         @endforeach
                     </select>
                 </div>

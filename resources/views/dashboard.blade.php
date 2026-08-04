@@ -20,6 +20,7 @@
     }
 @endphp
 
+@push('page-styles')
 <style>
     .overview-page {
         display: grid;
@@ -116,14 +117,14 @@
 
     .overview-action.is-primary {
         color: #fff;
-        background: #2878f0;
-        border-color: #2878f0;
+        background: #1d6b4c;
+        border-color: #1d6b4c;
     }
 
     .overview-action.is-primary:hover {
         color: #fff;
-        background: #1768dc;
-        border-color: #1768dc;
+        background: #15533b;
+        border-color: #15533b;
     }
 
     .overview-filter-panel {
@@ -197,7 +198,7 @@
     }
 
     .overview-stat[data-tone="balance"] .overview-stat-icon {
-        color: #2878f0;
+        color: #1d6b4c;
     }
 
     .overview-stat-label {
@@ -327,7 +328,7 @@
     }
 
     .overview-chart-legend .income {
-        background: #1849a9;
+        background: #15533b;
     }
 
     .overview-chart-legend .expense {
@@ -370,8 +371,8 @@
         place-items: center;
         width: 31px;
         height: 31px;
-        color: #2878f0;
-        background: #eef5ff;
+        color: #1d6b4c;
+        background: #f1f9f5;
         border-radius: 7px;
         font-size: 11px;
     }
@@ -408,7 +409,7 @@
     }
 
     .overview-money.is-balance {
-        color: #175cd3;
+        color: #1d6b4c;
         font-weight: 600;
     }
 
@@ -426,8 +427,8 @@
     }
 
     .overview-row-action:hover {
-        color: #2878f0;
-        border-color: #b2ccff;
+        color: #1d6b4c;
+        border-color: #a7d8bd;
     }
 
     .overview-table-footer {
@@ -552,6 +553,7 @@
         }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -773,12 +775,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 {
                     label: 'Pemasukan',
                     data: schoolData.map(item => item.pemasukan),
-                    borderColor: '#1849a9',
-                    backgroundColor: 'rgba(40, 120, 240, .10)',
+                    borderColor: '#15533b',
+                    backgroundColor: 'rgba(37, 132, 93, .10)',
                     borderWidth: 2,
                     pointRadius: 3,
                     pointHoverRadius: 5,
-                    pointBackgroundColor: '#1849a9',
+                    pointBackgroundColor: '#15533b',
                     fill: true,
                     tension: .34
                 },

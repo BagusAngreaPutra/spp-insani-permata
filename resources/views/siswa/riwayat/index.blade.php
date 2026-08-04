@@ -2,6 +2,7 @@
 @include('layouts.sidebar-siswa')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -173,6 +174,7 @@
         transform: translateY(-2px);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header-siswa')
@@ -217,11 +219,24 @@
                     
                     <div class="filter-group">
                         <label for="kelas_id"><i class="fas fa-users"></i> Kelas</label>
-                        <select id="kelas_id" name="kelas_id">
+                        <select id="kelas_id"
+                                name="kelas_id"
+                                data-class-filter-for="sekolah_id"
+                                data-all-label="Semua Kelas">
                             <option value="">Semua Kelas</option>
                             @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}" {{ (isset($kelasId) && $kelasId == $kelas->id) ? 'selected' : '' }}>
-                                    {{ $kelas->tingkat }} - {{ $kelas->nama_kelas }}
+                                @php
+                                    $className = trim((string) $kelas->nama_kelas);
+                                    $classLabel = in_array($className, ['', '-', '–'], true)
+                                        ? 'Tingkat '.$kelas->tingkat
+                                        : 'Tingkat '.$kelas->tingkat.' · '.$className;
+                                @endphp
+                                <option value="{{ $kelas->id }}"
+                                        data-school-id="{{ $kelas->sekolah_id }}"
+                                        data-school-name="{{ $kelas->sekolah?->nama_sekolah }}"
+                                        data-class-label="{{ $classLabel }}"
+                                        {{ (isset($kelasId) && $kelasId == $kelas->id) ? 'selected' : '' }}>
+                                    {{ $classLabel }}
                                 </option>
                             @endforeach
                         </select>

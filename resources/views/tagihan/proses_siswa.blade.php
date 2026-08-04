@@ -16,14 +16,24 @@
             ? 'Tingkat ' . $siswa->kelas->tingkat
             : 'Tingkat ' . $siswa->kelas->tingkat . ' · ' . $className);
     $studentInitial = strtoupper(substr($siswa->nama, 0, 1));
-    $defaultOpenGroup = collect($tagihanList)->search(
-        fn ($item) => $item['is_grouped'] && (float) $item['sisa_bayar'] > 0
+    $groupedTagihanList = collect($tagihanList)
+        ->filter(fn ($item) => $item['is_grouped'])
+        ->values();
+    $singleTagihanList = collect($tagihanList)
+        ->reject(fn ($item) => $item['is_grouped'])
+        ->values();
+    $singleOutstandingTotal = $singleTagihanList->sum(
+        fn ($item) => max(0, (float) ($item['sisa_terhitung'] ?? $item['sisa_bayar']))
+    );
+    $defaultOpenGroup = $groupedTagihanList->search(
+        fn ($item) => (float) ($item['sisa_terhitung'] ?? $item['sisa_bayar']) > 0
     );
     if ($defaultOpenGroup === false) {
-        $defaultOpenGroup = collect($tagihanList)->search(fn ($item) => $item['is_grouped']);
+        $defaultOpenGroup = $groupedTagihanList->isNotEmpty() ? 0 : false;
     }
 @endphp
 
+@push('page-styles')
 <style>
     .payment-page {
         display: grid;
@@ -116,8 +126,8 @@
 
     .payment-button.is-primary {
         color: #fff !important;
-        background: #2878f0 !important;
-        border-color: #2878f0 !important;
+        background: #1d6b4c !important;
+        border-color: #1d6b4c !important;
     }
 
     .payment-button:hover,
@@ -128,8 +138,8 @@
 
     .payment-button.is-primary:hover {
         color: #fff !important;
-        background: #1768dc !important;
-        border-color: #1768dc !important;
+        background: #15533b !important;
+        border-color: #15533b !important;
     }
 
     .payment-button:disabled {
@@ -179,8 +189,8 @@
         flex: 0 0 40px;
         width: 40px;
         height: 40px;
-        color: #2878f0;
-        background: #eef5ff;
+        color: #1d6b4c;
+        background: #f1f9f5;
         border-radius: 9px;
         font-size: 13px;
         font-weight: 700;
@@ -313,8 +323,8 @@
         place-items: center;
         width: 25px;
         height: 25px;
-        color: #2878f0;
-        background: #eef5ff;
+        color: #1d6b4c;
+        background: #f1f9f5;
         border-radius: 7px;
         font-size: 10px;
         font-weight: 700;
@@ -367,7 +377,7 @@
         height: 15px !important;
         margin: 0 !important;
         padding: 0 !important;
-        accent-color: #2878f0;
+        accent-color: #1d6b4c;
         cursor: pointer;
     }
 
@@ -378,39 +388,34 @@
 
     .payment-bill-list {
         display: grid;
-        gap: 10px;
-        padding: 12px;
-        background: #f9fafb;
+        gap: 12px;
+        padding: 14px;
+        background: #f6f8fc;
     }
 
     .payment-group,
-    .payment-single {
+    .payment-single-section {
         position: relative;
         overflow: hidden;
         background: #fff;
-        border: 1px solid #e4e7ec;
-        border-radius: 8px;
+        border: 1px solid #dfe5ee;
+        border-radius: 11px;
     }
 
     .payment-group {
-        border-color: #cbdaf5;
-        box-shadow: inset 3px 0 0 #2878f0;
+        box-shadow: 0 2px 8px rgba(34, 48, 74, .035);
     }
 
     .payment-group.is-open {
-        border-color: #a9c5f5;
-        box-shadow: inset 3px 0 0 #2878f0, 0 2px 7px rgba(40, 120, 240, .08);
-    }
-
-    .payment-single {
-        box-shadow: inset 3px 0 0 #d0d5dd;
+        border-color: #bdc9fb;
+        box-shadow: 0 7px 20px rgba(79, 70, 229, .075);
     }
 
     .payment-group-header {
         justify-content: space-between;
-        gap: 14px;
-        min-height: 58px;
-        padding: 10px 12px;
+        gap: 20px;
+        min-height: 68px;
+        padding: 12px 14px;
         background: #fcfdff;
     }
 
@@ -434,22 +439,22 @@
     }
 
     .payment-group-title:focus-visible {
-        outline: 2px solid rgba(40, 120, 240, .28);
+        outline: 2px solid rgba(37, 132, 93, .28);
         outline-offset: 2px;
     }
 
     .payment-group-toggle {
         display: grid;
         place-items: center;
-        flex: 0 0 28px;
-        width: 28px !important;
-        height: 28px !important;
+        flex: 0 0 32px;
+        width: 32px !important;
+        height: 32px !important;
         min-height: 0 !important;
         padding: 0 !important;
-        color: #2878f0 !important;
+        color: #1d6b4c !important;
         border: 1px solid #d6e4fb !important;
-        background: #eef5ff !important;
-        border-radius: 7px;
+        background: #f1f9f5 !important;
+        border-radius: 8px;
         font-size: 9px !important;
     }
 
@@ -473,8 +478,8 @@
     .payment-group-copy strong {
         overflow: hidden;
         color: #101828;
-        font-size: 10.5px;
-        font-weight: 650;
+        font-size: 11px;
+        font-weight: 700;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -513,8 +518,8 @@
     }
 
     .payment-row-kind.is-expandable {
-        color: #175cd3;
-        background: #eef5ff;
+        color: #1d6b4c;
+        background: #f1f9f5;
         border: 1px solid #d6e4fb;
     }
 
@@ -542,11 +547,12 @@
 
     .payment-group-meta {
         justify-content: flex-end;
-        gap: 18px;
+        flex: 0 0 auto;
+        gap: 12px;
     }
 
     .payment-group-amount {
-        min-width: 110px;
+        min-width: 118px;
         text-align: right;
     }
 
@@ -570,9 +576,11 @@
     }
 
     .payment-group-select {
+        justify-content: center;
         gap: 7px;
-        min-height: 30px;
-        padding: 0 9px;
+        min-width: 104px;
+        min-height: 34px;
+        padding: 0 10px;
         background: #f9fafb;
         border: 1px solid #e4e7ec;
         border-radius: 6px;
@@ -585,13 +593,22 @@
 
     .payment-bill-table {
         width: 100% !important;
-        min-width: 760px !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
         border-collapse: collapse !important;
     }
 
+    .payment-bill-table .payment-col-check { width: 5%; }
+    .payment-bill-table .payment-col-period { width: 19%; }
+    .payment-bill-table .payment-col-due { width: 16%; }
+    .payment-bill-table .payment-col-nominal { width: 13%; }
+    .payment-bill-table .payment-col-paid { width: 14%; }
+    .payment-bill-table .payment-col-remaining { width: 13%; }
+    .payment-bill-table .payment-col-status { width: 20%; }
+
     .payment-bill-table th {
-        height: 34px !important;
-        padding: 7px 10px !important;
+        height: 42px !important;
+        padding: 8px 12px !important;
         color: #667085 !important;
         background: #f9fafb !important;
         border-top: 1px solid #e4e7ec !important;
@@ -601,8 +618,8 @@
     }
 
     .payment-bill-table td {
-        height: 47px !important;
-        padding: 8px 10px !important;
+        height: 54px !important;
+        padding: 9px 12px !important;
         color: #344054 !important;
         background: #fff !important;
         border-bottom: 1px solid #eef0f3 !important;
@@ -618,8 +635,21 @@
     }
 
     .payment-bill-check-cell {
-        width: 37px;
         text-align: center !important;
+    }
+
+    .payment-bill-table :is(th, td):nth-child(4),
+    .payment-bill-table :is(th, td):nth-child(5),
+    .payment-bill-table :is(th, td):nth-child(6) {
+        text-align: right !important;
+    }
+
+    .payment-bill-table :is(th, td):nth-child(7) {
+        text-align: center !important;
+    }
+
+    .payment-bill-table td:nth-child(5) .payment-paid-cell {
+        margin-left: auto;
     }
 
     .payment-money {
@@ -663,17 +693,241 @@
         background: #12b76a;
     }
 
-    .payment-single {
-        display: grid;
-        grid-template-columns: 36px minmax(180px, 1.4fr) 100px 120px 120px 105px;
+    .payment-status.is-upcoming {
+        color: #a15c07;
+        background: #fff7d6;
+        border: 1px solid #f4c84a;
+    }
+
+    .payment-status.is-upcoming::before {
+        background: #eaaa08;
+    }
+
+    .payment-status.is-partial {
+        color: #b54708;
+        background: #fffaeb;
+    }
+
+    .payment-status.is-partial::before {
+        background: #f79009;
+    }
+
+    .payment-single-section {
+        box-shadow: 0 2px 8px rgba(34, 48, 74, .035);
+    }
+
+    .payment-single-section-title {
+        display: flex;
         align-items: center;
-        min-height: 58px;
+        justify-content: space-between;
+        min-height: 68px;
+        padding: 12px 14px;
+        background: #fff;
+        border-bottom: 1px solid #e5e9f0;
+    }
+
+    .payment-single-section-copy {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .payment-single-section-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        margin: 0;
+        color: #9a6848;
+        background: #fbf7f3;
+        border: 1px solid #eadfd5;
+        border-radius: 8px;
+        font-size: 9px;
+    }
+
+    .payment-single-section-copy > div > strong,
+    .payment-single-section-copy > div > span {
+        display: block;
+    }
+
+    .payment-single-section-copy > div > strong {
+        color: #101828;
+        font-size: 10.5px;
+        font-weight: 700;
+    }
+
+    .payment-single-section-copy > div > span {
+        margin-top: 2px;
+        color: #98a2b3;
+        font-size: 8.5px;
+    }
+
+    .payment-single-section-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .payment-single-section-balance {
+        min-width: 118px;
+        text-align: right;
+    }
+
+    .payment-single-section-balance span,
+    .payment-single-section-balance strong {
+        display: block;
+    }
+
+    .payment-single-section-balance span {
+        color: #98a2b3;
+        font-size: 8px;
+        font-weight: 650;
+        text-transform: uppercase;
+    }
+
+    .payment-single-section-balance strong {
+        margin-top: 2px;
+        color: #b42318;
+        font-size: 10.5px;
+        font-weight: 700;
+    }
+
+    .payment-single-count {
+        display: inline-flex;
+        align-items: center;
+        min-height: 23px;
+        padding: 0 8px;
+        color: #6d28d9;
+        background: #f3e8ff;
+        border: 1px solid #e4d1ff;
+        border-radius: 999px;
+        font-size: 8px;
+        font-weight: 700;
+    }
+
+    .payment-single-table {
+        overflow-x: auto;
+    }
+
+    .payment-single-grid {
+        display: grid;
+        grid-template-columns: 5% 19% 16% 13% 14% 13% 20%;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .payment-single-head {
+        min-height: 42px;
+        color: #667085;
+        background: #f7f8fc;
+        border-bottom: 1px solid #e4e8ef;
+        font-size: 8.5px;
+        font-weight: 650;
+        letter-spacing: .035em;
+        text-transform: uppercase;
+    }
+
+    .payment-single-head > span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
         padding: 8px 12px;
-        gap: 10px;
+    }
+
+    .payment-single-head > span:nth-child(n+4) {
+        justify-content: flex-end;
+    }
+
+    .payment-single-head > span:last-child {
+        justify-content: center;
+    }
+
+    .payment-column-icon {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 21px;
+        width: 21px;
+        height: 21px;
+        color: #4f46e5;
+        background: #e4e7ff;
+        border-radius: 6px;
+        font-size: 8px;
+    }
+
+    .payment-single-head > span:nth-child(2) .payment-column-icon {
+        color: #7c3aed;
+        background: #f0e5ff;
+    }
+
+    .payment-single-head > span:nth-child(3) .payment-column-icon {
+        color: #0891b2;
+        background: #dff8fc;
+    }
+
+    .payment-single-head > span:nth-child(4) .payment-column-icon {
+        color: #ea580c;
+        background: #fff0da;
+    }
+
+    .payment-single-head > span:nth-child(5) .payment-column-icon {
+        color: #db2777;
+        background: #ffe4f0;
+    }
+
+    .payment-single-head > span:nth-child(7) .payment-column-icon {
+        color: #7c3aed;
+        background: #f0e5ff;
     }
 
     .payment-single > div {
         min-width: 0;
+        padding: 9px 12px;
+    }
+
+    .payment-single-head > span:nth-child(n+4),
+    .payment-single > div:nth-child(n+4):not(:last-child) {
+        text-align: right;
+    }
+
+    .payment-single-head > span:last-child,
+    .payment-single > div:last-child {
+        text-align: center;
+    }
+
+    .payment-single {
+        min-height: 54px;
+        background: #fff;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .payment-single:last-child {
+        border-bottom: 0;
+    }
+
+    .payment-single:hover {
+        background: #fafbff;
+    }
+
+    .payment-single-check {
+        display: grid;
+        place-items: center;
+    }
+
+    .payment-single-nominal .payment-single-value strong {
+        color: #4338ca;
+        font-weight: 750;
+    }
+
+    .payment-single-paid .payment-paid-cell {
+        margin-left: auto;
+    }
+
+    .payment-single-paid .payment-money {
+        color: #047857;
+        font-weight: 700;
     }
 
     .payment-single-label {
@@ -812,8 +1066,8 @@
         flex: 0 0 30px;
         width: 30px;
         height: 30px;
-        color: #2878f0;
-        background: #eef5ff;
+        color: #1d6b4c;
+        background: #f1f9f5;
         border-radius: 7px;
         font-size: 10px;
     }
@@ -1076,12 +1330,8 @@
             gap: 10px;
         }
 
-        .payment-single {
-            grid-template-columns: 34px minmax(170px, 1fr) 90px 110px 110px;
-        }
-
-        .payment-single .payment-single-period {
-            display: none;
+        .payment-single-grid {
+            min-width: 0;
         }
     }
 
@@ -1141,6 +1391,23 @@
         .payment-group-header {
             align-items: flex-start;
             flex-direction: column;
+        }
+
+        .payment-single-section-title {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .payment-single-section-meta {
+            justify-content: space-between;
+            width: 100%;
+            padding-left: 41px;
+        }
+
+        .payment-single-section-balance {
+            min-width: 0;
+            text-align: left;
         }
 
         .payment-group-title {
@@ -1237,9 +1504,22 @@
             grid-column: 2;
         }
 
+        .payment-single-table {
+            overflow: visible;
+        }
+
+        .payment-single-head {
+            display: none;
+        }
+
+        .payment-single-grid,
+        .payment-single {
+            min-width: 0;
+        }
+
         .payment-single {
             grid-template-columns: 30px minmax(0, 1fr);
-            padding: 10px;
+            padding: 8px 8px 8px 0;
         }
 
         .payment-single > div:not(.payment-single-check):not(.payment-single-name) {
@@ -1261,7 +1541,7 @@
         }
 
         .payment-single-check {
-            grid-row: 1 / span 5;
+            grid-row: 1 / span 6;
             align-self: stretch;
             display: grid;
             place-items: center;
@@ -1321,6 +1601,7 @@
         }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -1336,7 +1617,7 @@
 
             <header class="payment-heading">
                 <div>
-                    <p class="payment-eyebrow">Tagihan · Proses pembayaran</p>
+                    <p class="payment-eyebrow"><i class="fas fa-receipt" aria-hidden="true"></i>Tagihan · Proses pembayaran</p>
                     <h1 class="payment-title" data-page-title>{{ $siswa->nama }}</h1>
                     <p class="payment-subtitle">Pilih satu atau beberapa tagihan, lalu atur jumlah pembayarannya.</p>
                 </div>
@@ -1365,11 +1646,11 @@
                 </div>
                 <div class="payment-student-details">
                     <div class="payment-student-detail">
-                        <span>Kelas</span>
+                        <span><i class="fas fa-chalkboard" aria-hidden="true"></i>Kelas</span>
                         <strong>{{ $classLabel }}</strong>
                     </div>
                     <div class="payment-student-detail">
-                        <span>Sekolah</span>
+                        <span><i class="fas fa-school" aria-hidden="true"></i>Sekolah</span>
                         <strong>{{ $siswa->sekolah?->nama_sekolah ?? '-' }}</strong>
                     </div>
                 </div>
@@ -1377,19 +1658,19 @@
 
             <section class="payment-stats" aria-label="Ringkasan tagihan siswa">
                 <article class="payment-stat">
-                    <span>Total tagihan</span>
+                    <span class="payment-stat-label"><i class="fas fa-file-invoice payment-stat-icon" aria-hidden="true"></i>Total tagihan</span>
                     <strong>{{ number_format($studentSummary['total_tagihan'], 0, ',', '.') }}</strong>
                 </article>
                 <article class="payment-stat">
-                    <span>Total nominal</span>
+                    <span class="payment-stat-label"><i class="fas fa-coins payment-stat-icon" aria-hidden="true"></i>Total nominal</span>
                     <strong>{{ $formatRupiah($studentSummary['total_nominal']) }}</strong>
                 </article>
                 <article class="payment-stat is-success">
-                    <span>Sudah dibayar</span>
+                    <span class="payment-stat-label"><i class="fas fa-circle-check payment-stat-icon" aria-hidden="true"></i>Sudah dibayar</span>
                     <strong>{{ $formatRupiah($studentSummary['total_dibayar']) }}</strong>
                 </article>
                 <article class="payment-stat is-danger">
-                    <span>Sisa tagihan</span>
+                    <span class="payment-stat-label"><i class="fas fa-hourglass-half payment-stat-icon" aria-hidden="true"></i>Sisa tagihan</span>
                     <strong>{{ $formatRupiah($studentSummary['sisa_bayar']) }}</strong>
                 </article>
             </section>
@@ -1411,7 +1692,7 @@
                             <input class="payment-check" id="selectAllBills" type="checkbox">
                             <span>Pilih semua tagihan belum lunas</span>
                         </label>
-                        <span class="payment-selection-hint">Tagihan lunas tidak dapat dipilih kembali.</span>
+                        <span class="payment-selection-hint"><i class="fas fa-lock" aria-hidden="true"></i>Tagihan lunas tidak dapat dipilih kembali.</span>
                     </div>
 
                     <div class="payment-summary-bar">
@@ -1437,8 +1718,7 @@
                     </div>
 
                     <div class="payment-bill-list">
-                        @foreach($tagihanList as $tagihan)
-                            @if($tagihan['is_grouped'])
+                        @foreach($groupedTagihanList as $tagihan)
                                 @php
                                     $groupId = 'payment-group-' . $loop->index;
                                     $groupOpen = $loop->index === $defaultOpenGroup;
@@ -1476,7 +1756,7 @@
                                         <div class="payment-group-meta">
                                             <span class="payment-group-amount">
                                                 <span>Sisa</span>
-                                                <strong>{{ $formatRupiah(max(0, $tagihan['sisa_bayar'])) }}</strong>
+                                                <strong>{{ $formatRupiah(max(0, $tagihan['sisa_terhitung'] ?? $tagihan['sisa_bayar'])) }}</strong>
                                             </span>
                                             @if($outstandingMonths->isNotEmpty())
                                                 <label class="payment-group-select">
@@ -1491,6 +1771,15 @@
 
                                     <div class="payment-group-body" id="{{ $groupId }}" {{ $groupOpen ? '' : 'hidden' }}>
                                         <table class="payment-bill-table">
+                                            <colgroup>
+                                                <col class="payment-col-check">
+                                                <col class="payment-col-period">
+                                                <col class="payment-col-due">
+                                                <col class="payment-col-nominal">
+                                                <col class="payment-col-paid">
+                                                <col class="payment-col-remaining">
+                                                <col class="payment-col-status">
+                                            </colgroup>
                                             <thead>
                                                 <tr>
                                                     <th></th>
@@ -1506,6 +1795,18 @@
                                                 @foreach($tagihan['bulan_tagihan'] as $bulan)
                                                     @php
                                                         $monthOutstanding = (float) $bulan['sisa_bayar'] > 0;
+                                                        $monthDueOutstanding = (float) ($bulan['sisa_terhitung'] ?? $bulan['sisa_bayar']) > 0;
+                                                        $monthNominal = (float) $bulan['nominal'];
+                                                        $monthPaid = (float) $bulan['total_bayar'];
+                                                        [$monthStatusLabel, $monthStatusClass] = match($bulan['status']) {
+                                                            'lunas' => ['Lunas', 'is-paid'],
+                                                            'belum_jatuh_tempo' => ['Belum jatuh tempo', 'is-upcoming'],
+                                                            'sebagian' => ['Sebagian', 'is-partial'],
+                                                            default => ['Belum lunas', ''],
+                                                        };
+                                                        $paymentProgress = $monthNominal > 0
+                                                            ? min(100, (int) round(($monthPaid / $monthNominal) * 100))
+                                                            : 0;
                                                         $dueDate = $bulan['tanggal_jatuh_tempo']
                                                             ? \Carbon\Carbon::parse($bulan['tanggal_jatuh_tempo'])
                                                             : null;
@@ -1530,10 +1831,17 @@
                                                         <td data-label="Periode">{{ $bulan['periode_display'] ?? $bulan['periode'] }}</td>
                                                         <td data-label="Jatuh tempo">{{ $dueDate?->translatedFormat('d M Y') ?? '-' }}</td>
                                                         <td data-label="Nominal"><span class="payment-money">{{ $formatRupiah($bulan['nominal']) }}</span></td>
-                                                        <td data-label="Dibayar"><span class="payment-money">{{ $formatRupiah($bulan['total_bayar']) }}</span></td>
-                                                        <td data-label="Sisa"><span class="payment-money {{ $monthOutstanding ? 'is-remaining' : '' }}">{{ $formatRupiah(max(0, $bulan['sisa_bayar'])) }}</span></td>
+                                                        <td data-label="Dibayar">
+                                                            <span class="payment-paid-cell">
+                                                                <span class="payment-money">{{ $formatRupiah($bulan['total_bayar']) }}</span>
+                                                                <span class="pi-progress {{ $paymentProgress >= 100 ? 'is-success' : '' }}" role="progressbar" aria-label="Pembayaran {{ $paymentProgress }} persen" aria-valuenow="{{ $paymentProgress }}" aria-valuemin="0" aria-valuemax="100">
+                                                                    <i style="width: {{ $paymentProgress }}%"></i>
+                                                                </span>
+                                                            </span>
+                                                        </td>
+                                                        <td data-label="Sisa"><span class="payment-money {{ $monthDueOutstanding ? 'is-remaining' : '' }}">{{ $formatRupiah(max(0, $bulan['sisa_terhitung'] ?? $bulan['sisa_bayar'])) }}</span></td>
                                                         <td data-label="Status">
-                                                            <span class="payment-status {{ $monthOutstanding ? '' : 'is-paid' }}">{{ $monthOutstanding ? 'Belum lunas' : 'Lunas' }}</span>
+                                                            <span class="payment-status {{ $monthStatusClass }}">{{ $monthStatusLabel }}</span>
                                                         </td>
                                                     </tr>
                                                 @endforeach
@@ -1541,11 +1849,53 @@
                                         </table>
                                     </div>
                                 </article>
-                            @else
+                        @endforeach
+
+                        @if($singleTagihanList->isNotEmpty())
+                            <section class="payment-single-section" aria-labelledby="singleBillSectionTitle">
+                                <header class="payment-single-section-title">
+                                    <div class="payment-single-section-copy">
+                                        <span class="payment-single-section-icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
+                                        <div>
+                                            <strong id="singleBillSectionTitle">Tagihan satuan</strong>
+                                            <span>Tagihan sekali bayar tanpa rincian bulanan</span>
+                                        </div>
+                                    </div>
+                                    <div class="payment-single-section-meta">
+                                        <span class="payment-single-section-balance">
+                                            <span>Sisa</span>
+                                            <strong>{{ $formatRupiah($singleOutstandingTotal) }}</strong>
+                                        </span>
+                                        <span class="payment-single-count">{{ $singleTagihanList->count() }} tagihan</span>
+                                    </div>
+                                </header>
+                                <div class="payment-single-table">
+                                    <div class="payment-single-head payment-single-grid" aria-hidden="true">
+                                        <span></span>
+                                        <span><i class="fas fa-file-invoice payment-column-icon"></i>Tagihan</span>
+                                        <span><i class="fas fa-calendar-days payment-column-icon"></i>Periode</span>
+                                        <span><i class="fas fa-coins payment-column-icon"></i>Nominal</span>
+                                        <span><i class="fas fa-wallet payment-column-icon"></i>Dibayar</span>
+                                        <span><i class="fas fa-layer-group payment-column-icon"></i>Sisa</span>
+                                        <span><i class="fas fa-signal payment-column-icon"></i>Status</span>
+                                    </div>
+                                    @foreach($singleTagihanList as $tagihan)
                                 @php
                                     $billOutstanding = (float) $tagihan['sisa_bayar'] > 0;
+                                    $billDueOutstanding = (float) ($tagihan['sisa_terhitung'] ?? $tagihan['sisa_bayar']) > 0;
+                                    $billNominal = (float) $tagihan['nominal'];
+                                    $billPaid = max(0, $billNominal - (float) $tagihan['sisa_bayar']);
+                                    [$billStatusLabel, $billStatusClass] = match($tagihan['status']) {
+                                        'lunas' => ['Lunas', 'is-paid'],
+                                        'belum_jatuh_tempo' => ['Belum jatuh tempo', 'is-upcoming'],
+                                        'sebagian' => ['Sebagian', 'is-partial'],
+                                        default => ['Belum lunas', ''],
+                                    };
+                                    $billProgress = $billNominal > 0
+                                        ? min(100, (int) round(($billPaid / $billNominal) * 100))
+                                        : 0;
                                 @endphp
-                                <article class="payment-single">
+                                <article class="payment-single payment-single-grid">
                                     <div class="payment-single-check">
                                         @if($billOutstanding)
                                             <input
@@ -1575,21 +1925,32 @@
                                         <span class="payment-single-label">Periode</span>
                                         <div class="payment-single-value"><strong>{{ $tagihan['periode'] ?? '-' }}</strong></div>
                                     </div>
-                                    <div>
+                                    <div class="payment-single-nominal">
                                         <span class="payment-single-label">Nominal</span>
                                         <div class="payment-single-value"><strong>{{ $formatRupiah($tagihan['nominal']) }}</strong></div>
                                     </div>
+                                    <div class="payment-single-paid">
+                                        <span class="payment-single-label">Dibayar</span>
+                                        <span class="payment-paid-cell">
+                                            <span class="payment-money">{{ $formatRupiah($billPaid) }}</span>
+                                            <span class="pi-progress {{ $billProgress >= 100 ? 'is-success' : '' }}" role="progressbar" aria-label="Pembayaran {{ $billProgress }} persen" aria-valuenow="{{ $billProgress }}" aria-valuemin="0" aria-valuemax="100">
+                                                <i style="width: {{ $billProgress }}%"></i>
+                                            </span>
+                                        </span>
+                                    </div>
                                     <div>
                                         <span class="payment-single-label">Sisa</span>
-                                        <div class="payment-single-value"><strong class="payment-money {{ $billOutstanding ? 'is-remaining' : '' }}">{{ $formatRupiah(max(0, $tagihan['sisa_bayar'])) }}</strong></div>
+                                        <div class="payment-single-value"><strong class="payment-money {{ $billDueOutstanding ? 'is-remaining' : '' }}">{{ $formatRupiah(max(0, $tagihan['sisa_terhitung'] ?? $tagihan['sisa_bayar'])) }}</strong></div>
                                     </div>
                                     <div>
                                         <span class="payment-single-label">Status</span>
-                                        <span class="payment-status {{ $billOutstanding ? '' : 'is-paid' }}">{{ $billOutstanding ? 'Belum lunas' : 'Lunas' }}</span>
+                                        <span class="payment-status {{ $billStatusClass }}">{{ $billStatusLabel }}</span>
                                     </div>
                                 </article>
-                            @endif
-                        @endforeach
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endif
                     </div>
 
                 @else
@@ -1679,13 +2040,13 @@
                 </div>
                 <div class="modal-body">
                     <ul class="payment-modal-list">
-                        <li><i class="fas fa-circle-check"></i><span>Membuat SPP untuk tahun berjalan.</span></li>
-                        <li><i class="fas fa-circle-check"></i><span>Membuat jenis pembayaran yang sesuai sekolah dan kelas.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>Membuat tagihan dari jenis pembayaran yang sesuai sekolah dan kelas.</span></li>
+                        <li><i class="fas fa-circle-check"></i><span>SPP hanya dibuat jika sudah tercatat sebagai jenis pembayaran bulanan.</span></li>
                         <li><i class="fas fa-circle-check"></i><span>Tagihan yang sudah ada tidak akan digandakan.</span></li>
                     </ul>
                     <div class="payment-modal-note">
                         <i class="fas fa-circle-info"></i>
-                        <span>Pastikan nominal SPP dan penempatan kelas siswa sudah benar.</span>
+                        <span>Pastikan nominal, target pembayaran, dan penempatan kelas siswa sudah benar.</span>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1789,9 +2150,14 @@ document.addEventListener('DOMContentLoaded', () => {
         row.querySelector('[data-has-discount]').value = 'false';
     };
 
+    const paymentAmount = (input) => {
+        const value = input?.value ?? 0;
+        return Number(window.PermataRupiah ? window.PermataRupiah.raw(value) : String(value).replace(/[^0-9]/g, '')) || 0;
+    };
+
     const validateAmount = (input) => {
         const max = Number(input.dataset.maxAmount || 0);
-        const value = Number(input.value || 0);
+        const value = paymentAmount(input);
         const error = input.closest('[data-payment-row]').querySelector('[data-payment-error]');
         const invalid = value < 0 || value > max;
 
@@ -1806,7 +2172,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateCashTotal = () => {
         const total = [...document.querySelectorAll('.payment-amount-input')]
-            .reduce((sum, input) => sum + Number(input.value || 0), 0);
+            .reduce((sum, input) => sum + paymentAmount(input), 0);
         const output = document.getElementById('paymentCashTotal');
         if (output) output.textContent = currency(total);
     };
@@ -1833,10 +2199,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const deadline = new Date(periodDate.getFullYear(), periodDate.getMonth(), 10);
         const discount = Math.min(25000, original);
         const discountedAmount = Math.max(0, original - discount);
-        const amount = Number(input.value || 0);
+        const amount = paymentAmount(input);
 
         if (paidAt <= deadline && (amount === original || amount === discountedAmount)) {
             input.value = discountedAmount;
+            window.PermataRupiah?.refresh(input);
             row.querySelector('[data-discount-amount]').value = discount;
             row.querySelector('[data-has-discount]').value = 'true';
             info.classList.add('is-visible');
@@ -1873,7 +2240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="payment-selected-actions">
                         <div class="payment-amount-field">
                             <label for="payment-amount-${id}">Jumlah bayar</label>
-                            <input id="payment-amount-${id}" class="payment-amount-input" type="number" name="pembayaran[${id}]" value="${amount}" min="0" max="${amount}" data-max-amount="${amount}" required>
+                            <input id="payment-amount-${id}" class="payment-amount-input" type="number" name="pembayaran[${id}]" value="${amount}" min="0" max="${amount}" data-max-amount="${amount}" data-rupiah required>
                             <span class="payment-input-error" data-payment-error></span>
                         </div>
                         <button class="payment-quick-button" type="button" data-pay-full>
@@ -1897,7 +2264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = button.closest('[data-payment-row]');
                 const input = row.querySelector('.payment-amount-input');
                 input.value = row.dataset.originalAmount;
-                recalculateRowDiscount(row);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
             });
         });
 
@@ -1920,7 +2287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     paymentForm?.addEventListener('submit', (event) => {
         const inputs = [...paymentForm.querySelectorAll('.payment-amount-input')];
         const valid = inputs.every(validateAmount);
-        const total = inputs.reduce((sum, input) => sum + Number(input.value || 0), 0);
+        const total = inputs.reduce((sum, input) => sum + paymentAmount(input), 0);
 
         if (!valid || total <= 0) {
             event.preventDefault();

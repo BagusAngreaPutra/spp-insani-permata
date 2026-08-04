@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     /* ===== STYLE NORMAL ===== */
     .main-content {
@@ -262,11 +263,12 @@
         }
     }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area pi-report-document">
         <!-- Kop laporan untuk cetak -->
         <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; margin-bottom: 20px; text-align: center; justify-content: center;">
@@ -285,7 +287,7 @@
         <h3 class="print-title d-none d-print-block">LAPORAN DATA SISWA</h3>
 
         <!-- Page Header -->
-        <div class="page-header">
+        <div class="page-header no-print">
             <h1 class="page-title">
                 <i class="fas fa-users"></i>
                 Laporan siswa
@@ -316,11 +318,25 @@
 
             <div class="form-group">
                 <label for="kelas_id">Kelas:</label>
-                <select name="kelas_id" id="kelas_id" class="form-control">
+                <select name="kelas_id"
+                        id="kelas_id"
+                        class="form-control"
+                        data-class-filter-for="sekolah_id"
+                        data-all-label="Semua Kelas">
                     <option value="">Semua Kelas</option>
                     @foreach($daftarKelas as $kelas)
-                        <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>
-                            {{ $kelas->tingkat }} {{ $kelas->nama_kelas }}
+                        @php
+                            $className = trim((string) $kelas->nama_kelas);
+                            $classLabel = in_array($className, ['', '-', '–'], true)
+                                ? 'Tingkat '.$kelas->tingkat
+                                : 'Tingkat '.$kelas->tingkat.' · '.$className;
+                        @endphp
+                        <option value="{{ $kelas->id }}"
+                                data-school-id="{{ $kelas->sekolah_id }}"
+                                data-school-name="{{ $kelas->sekolah?->nama_sekolah }}"
+                                data-class-label="{{ $classLabel }}"
+                                {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>
+                            {{ $classLabel }}
                         </option>
                     @endforeach
                 </select>

@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -478,11 +479,12 @@
     }
 }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area pi-report-document">
         <!-- Kop laporan untuk cetak -->
         <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; margin-bottom: 20px;">

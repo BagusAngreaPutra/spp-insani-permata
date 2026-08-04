@@ -1,0 +1,4440 @@
+@charset "UTF-8";
+
+/* Design system */
+:root {
+        --pi-bg: #f7f8fa;
+        --pi-surface: #ffffff;
+        --pi-surface-soft: #f9fafb;
+        --pi-text: #101828;
+        --pi-muted: #667085;
+        --pi-quiet: #98a2b3;
+        --pi-line: #e4e7ec;
+        --pi-blue: #1d6b4c;
+        --pi-blue-hover: #15533b;
+        --pi-blue-soft: #f1f9f5;
+        --pi-green: #25845d;
+        --pi-red: #e5484d;
+        --pi-amber: #e59a16;
+        --pi-radius: 10px;
+        --pi-sidebar: 226px;
+        --bs-primary: #1d6b4c;
+        --bs-primary-rgb: 29, 107, 76;
+        --bs-link-color: #1d6b4c;
+        --bs-link-color-rgb: 29, 107, 76;
+        --bs-link-hover-color: #15533b;
+        --bs-link-hover-color-rgb: 21, 83, 59;
+        --bs-focus-ring-color: rgba(37, 132, 93, .2);
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        max-width: 100%;
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0 !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-bg) !important;
+        font-family: "Inter", system-ui, sans-serif !important;
+        font-size: 13px !important;
+        line-height: 1.5 !important;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Application shell */
+    .app-sidebar {
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        z-index: 1000 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: var(--pi-sidebar) !important;
+        height: 100vh !important;
+        padding: 14px 11px 10px !important;
+        overflow: hidden !important;
+        color: var(--pi-text) !important;
+        background: #fbfcfd !important;
+        border-right: 1px solid var(--pi-line) !important;
+        box-shadow: none !important;
+    }
+
+    .app-sidebar-head {
+        flex: 0 0 auto !important;
+    }
+
+    .app-brand {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 42px !important;
+        padding: 0 7px !important;
+        color: var(--pi-text) !important;
+        text-decoration: none !important;
+    }
+
+    .app-brand img {
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 50% !important;
+        object-fit: cover !important;
+    }
+
+    .app-brand span,
+    .app-brand strong,
+    .app-brand small {
+        display: block !important;
+    }
+
+    .app-brand strong {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        letter-spacing: -.02em !important;
+    }
+
+    .app-brand small {
+        margin-top: 2px !important;
+        color: var(--pi-muted) !important;
+        font-size: 10px !important;
+        font-weight: 500 !important;
+    }
+
+    .app-nav-search {
+        position: relative !important;
+        display: block !important;
+        margin: 15px 2px 4px !important;
+    }
+
+    .app-nav-search > i {
+        position: absolute !important;
+        top: 50% !important;
+        left: 11px !important;
+        z-index: 1 !important;
+        color: var(--pi-quiet) !important;
+        font-size: 11px !important;
+        transform: translateY(-50%) !important;
+        pointer-events: none !important;
+    }
+
+    .app-nav-search input {
+        width: 100% !important;
+        height: 35px !important;
+        margin: 0 !important;
+        padding: 0 34px 0 31px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: 7px !important;
+        outline: none !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+        font-size: 11px !important;
+    }
+
+    .app-nav-search input:focus {
+        border-color: #8cc9aa !important;
+        box-shadow: 0 0 0 3px rgba(37, 132, 93, .08) !important;
+    }
+
+    .app-nav-search input::placeholder {
+        color: var(--pi-quiet) !important;
+    }
+
+    .app-nav-search kbd {
+        position: absolute !important;
+        top: 50% !important;
+        right: 9px !important;
+        display: grid !important;
+        place-items: center !important;
+        width: 17px !important;
+        height: 17px !important;
+        padding: 0 !important;
+        color: var(--pi-quiet) !important;
+        background: #f2f4f7 !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: 4px !important;
+        font-family: inherit !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+        transform: translateY(-50%) !important;
+        pointer-events: none !important;
+    }
+
+    .app-nav-scroll {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        margin-top: 3px !important;
+        padding: 0 2px 8px 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        scrollbar-color: #d0d5dd transparent !important;
+        scrollbar-width: thin !important;
+    }
+
+    .app-nav-scroll::-webkit-scrollbar {
+        width: 4px !important;
+    }
+
+    .app-nav-scroll::-webkit-scrollbar-thumb {
+        background: #d0d5dd !important;
+        border-radius: 999px !important;
+    }
+
+    .app-nav-label {
+        margin: 16px 9px 6px !important;
+        color: var(--pi-quiet) !important;
+        font-size: 9px !important;
+        font-weight: 650 !important;
+        letter-spacing: .06em !important;
+        text-transform: uppercase !important;
+    }
+
+    .app-nav {
+        display: grid !important;
+        gap: 2px !important;
+    }
+
+    .app-nav-link,
+    .app-nav-group > summary {
+        display: grid !important;
+        grid-template-columns: 20px 1fr auto !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-height: 36px !important;
+        margin: 0 !important;
+        padding: 0 10px !important;
+        color: #475467 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 7px !important;
+        font-size: 11.5px !important;
+        font-weight: 500 !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+    }
+
+    .app-nav-link i,
+    .app-nav-group > summary i {
+        width: 18px !important;
+        color: #667085 !important;
+        font-size: 13px !important;
+        text-align: center !important;
+    }
+
+    .app-nav-link:hover,
+    .app-nav-link.is-active,
+    .app-nav-group > summary:hover {
+        color: var(--pi-blue) !important;
+        background: var(--pi-blue-soft) !important;
+    }
+
+    .app-nav-link.is-active {
+        font-weight: 650 !important;
+        box-shadow: inset 2px 0 var(--pi-blue) !important;
+    }
+
+    .app-nav-link.is-active i {
+        color: var(--pi-blue) !important;
+    }
+
+    .app-nav-group {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    .app-nav-group > summary {
+        list-style: none !important;
+    }
+
+    .app-nav-group > summary::-webkit-details-marker {
+        display: none !important;
+    }
+
+    .app-nav-group > summary .fa-chevron-down {
+        width: auto !important;
+        font-size: 9px !important;
+        transition: transform .15s ease !important;
+    }
+
+    .app-nav-group[open] > summary .fa-chevron-down {
+        transform: rotate(180deg) !important;
+    }
+
+    .app-nav-group[open] > summary {
+        color: var(--pi-blue) !important;
+    }
+
+    .app-nav-group[open] > summary > i:first-child {
+        color: var(--pi-blue) !important;
+    }
+
+    .app-nav-group > div {
+        display: grid !important;
+        gap: 2px !important;
+        padding: 2px 0 6px 36px !important;
+    }
+
+    .app-nav-group > div a {
+        display: grid !important;
+        grid-template-columns: 14px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 7px !important;
+        min-height: 28px !important;
+        padding: 6px 8px !important;
+        overflow: hidden !important;
+        color: var(--pi-muted) !important;
+        border-radius: 6px !important;
+        font-size: 11px !important;
+        line-height: 1.35 !important;
+        text-decoration: none !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .app-nav-group > div a > i {
+        width: 14px !important;
+        color: var(--pi-quiet) !important;
+        font-size: 9px !important;
+        text-align: center !important;
+    }
+
+    .app-nav-group > div a > span {
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .app-nav-group > div a:hover,
+    .app-nav-group > div a.is-active {
+        color: var(--pi-blue) !important;
+        background: var(--pi-blue-soft) !important;
+    }
+
+    .app-nav-group > div a:hover > i,
+    .app-nav-group > div a.is-active > i {
+        color: var(--pi-blue) !important;
+    }
+
+    .app-report-group > .app-report-panel {
+        gap: 1px !important;
+        padding: 3px 0 6px 35px !important;
+    }
+
+    .app-nav-subgroup {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    .app-nav-subgroup > summary {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        align-items: center !important;
+        min-height: 29px !important;
+        padding: 5px 8px !important;
+        color: var(--pi-muted) !important;
+        border-radius: 6px !important;
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        line-height: 1.3 !important;
+        list-style: none !important;
+        cursor: pointer !important;
+    }
+
+    .app-nav-subgroup > summary::-webkit-details-marker {
+        display: none !important;
+    }
+
+    .app-nav-subgroup > summary:hover {
+        color: var(--pi-text) !important;
+        background: #f0f2f5 !important;
+    }
+
+    .app-nav-subgroup > summary i {
+        width: auto !important;
+        color: var(--pi-quiet) !important;
+        font-size: 8px !important;
+        transition: transform .15s ease !important;
+    }
+
+    .app-nav-subgroup[open] > summary i {
+        transform: rotate(180deg) !important;
+    }
+
+    .app-nav-subgroup > div {
+        display: grid !important;
+        gap: 1px !important;
+        padding: 0 0 3px 7px !important;
+    }
+
+    .app-nav-subgroup > div a {
+        min-height: 26px !important;
+        padding: 5px 7px !important;
+        font-size: 10px !important;
+    }
+
+    .app-nav-empty {
+        margin: 20px 8px !important;
+        color: var(--pi-quiet) !important;
+        font-size: 10px !important;
+        text-align: center !important;
+    }
+
+    .app-sidebar-footer {
+        flex: 0 0 auto !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 5px !important;
+        padding: 10px 3px 0 !important;
+        border-top: 1px solid var(--pi-line) !important;
+    }
+
+    .app-profile-card {
+        display: grid !important;
+        grid-template-columns: 32px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+        padding: 5px !important;
+        color: var(--pi-text) !important;
+        border-radius: 7px !important;
+        text-decoration: none !important;
+    }
+
+    .app-profile-card:hover,
+    .app-profile-card.is-active {
+        background: #f0f2f5 !important;
+    }
+
+    .app-profile-copy {
+        min-width: 0 !important;
+    }
+
+    .app-profile-copy strong,
+    .app-profile-copy small {
+        display: block !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .app-profile-copy strong {
+        font-size: 10.5px !important;
+        font-weight: 650 !important;
+    }
+
+    .app-profile-copy small {
+        margin-top: 1px !important;
+        color: var(--pi-quiet) !important;
+        font-size: 9px !important;
+    }
+
+    .app-sidebar-footer form {
+        margin: 0 !important;
+    }
+
+    .app-sidebar-logout {
+        display: grid !important;
+        place-items: center !important;
+        width: 30px !important;
+        height: 30px !important;
+        padding: 0 !important;
+        color: var(--pi-muted) !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-size: 11px !important;
+        cursor: pointer !important;
+    }
+
+    .app-sidebar-logout:hover {
+        color: var(--pi-red) !important;
+        background: #fff1f1 !important;
+    }
+
+    .sidebar-overlay-bg {
+        display: none;
+    }
+
+    body:has(.app-sidebar) .main-content {
+        width: calc(100% - var(--pi-sidebar)) !important;
+        max-width: calc(100% - var(--pi-sidebar)) !important;
+        min-height: 100vh !important;
+        margin: 0 0 0 var(--pi-sidebar) !important;
+        padding: 0 !important;
+        background: var(--pi-bg) !important;
+    }
+
+    .app-topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        min-height: 68px !important;
+        padding: 0 28px !important;
+        overflow: visible !important;
+        color: var(--pi-text) !important;
+        background: rgba(255, 255, 255, .96) !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--pi-line) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: blur(10px) !important;
+    }
+
+    .app-topbar-title span,
+    .app-topbar-title strong {
+        display: block !important;
+    }
+
+    .app-topbar-context {
+        margin-bottom: 2px !important;
+        color: var(--pi-quiet) !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+        letter-spacing: .05em !important;
+        text-transform: uppercase !important;
+    }
+
+    .app-topbar-title strong {
+        font-size: 13px !important;
+        font-weight: 650 !important;
+    }
+
+    .app-topbar-date {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        color: var(--pi-muted) !important;
+        font-size: 10px !important;
+        font-weight: 500 !important;
+    }
+
+    .app-topbar-date i {
+        color: var(--pi-quiet) !important;
+        font-size: 11px !important;
+    }
+
+    .app-user {
+        display: flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+    }
+
+    .app-user-avatar {
+        display: grid !important;
+        place-items: center !important;
+        width: 32px !important;
+        height: 32px !important;
+        color: var(--pi-blue) !important;
+        background: var(--pi-blue-soft) !important;
+        border-radius: 50% !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+    }
+
+    .app-user-copy strong,
+    .app-user-copy small {
+        display: block !important;
+    }
+
+    .app-user-copy strong {
+        max-width: 160px !important;
+        overflow: hidden !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .app-user-copy small {
+        margin-top: 1px !important;
+        color: var(--pi-muted) !important;
+        font-size: 9px !important;
+    }
+
+    .app-icon-button,
+    .app-mobile-trigger {
+        display: grid !important;
+        place-items: center !important;
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        color: var(--pi-muted) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+    }
+
+    .app-mobile-trigger {
+        display: none !important;
+    }
+
+    /* Content rhythm */
+    body:has(.app-sidebar) .content-area,
+    body:has(.app-sidebar) .dashboard-content {
+        width: 100% !important;
+        max-width: 1500px !important;
+        margin: 0 auto !important;
+        padding: 26px 28px 42px !important;
+        background: transparent !important;
+    }
+
+    .content-container {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    .dashboard-header,
+    .page-header {
+        margin: 0 0 18px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .page-title,
+    .dashboard-title,
+    .section-title {
+        color: var(--pi-text) !important;
+        font-family: "Inter", system-ui, sans-serif !important;
+        letter-spacing: -.025em !important;
+    }
+
+    .page-title,
+    .dashboard-title,
+    main h1 {
+        margin: 0 0 6px !important;
+        font-size: clamp(22px, 2.4vw, 28px) !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+    }
+
+    .dashboard-title i,
+    .page-title i,
+    .section-title i,
+    .filter-title i,
+    .chart-title i {
+        display: none !important;
+    }
+
+    .dashboard-subtitle,
+    .page-subtitle,
+    .welcome-description,
+    .summary-card-description,
+    .workflow-subtitle,
+    .school-cell-subtitle {
+        color: var(--pi-muted) !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Surfaces */
+    .card,
+    .dashboard-card,
+    .stat-card,
+    .summary-card,
+    .chart-card,
+    .filter-section,
+    .admin-workflow,
+    .schools-table-card,
+    .table-container,
+    .students-table-container,
+    .form-container,
+    .content-card,
+    .detail-card,
+    .profile-card,
+    .info-card,
+    .report-card {
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+    }
+
+    .card:hover,
+    .stat-card:hover,
+    .summary-card:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .stat-card::before,
+    .summary-card::before,
+    .card::before,
+    .header-decoration,
+    .header-glass {
+        display: none !important;
+    }
+
+    .summary-cards,
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        margin: 20px 0 !important;
+    }
+
+    .summary-card,
+    .stat-card {
+        min-height: 130px !important;
+        padding: 18px !important;
+    }
+
+    .summary-card-header,
+    .stat-header {
+        margin: 0 0 16px !important;
+    }
+
+    .summary-card-title,
+    .stat-label {
+        color: var(--pi-muted) !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+    }
+
+    .summary-card-value,
+    .stat-value {
+        color: var(--pi-text) !important;
+        font-size: clamp(20px, 2.2vw, 28px) !important;
+        font-weight: 650 !important;
+        letter-spacing: -.04em !important;
+    }
+
+    .summary-card-icon,
+    .stat-icon {
+        display: grid !important;
+        place-items: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        color: var(--pi-blue) !important;
+        background: var(--pi-blue-soft) !important;
+        border-radius: 7px !important;
+        font-size: 13px !important;
+    }
+
+    .charts-section {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        margin: 12px 0 24px !important;
+    }
+
+    /* Dashboard keeps only information needed for daily decisions. */
+    .dashboard-content .admin-workflow,
+    .content-area .admin-workflow {
+        display: none !important;
+    }
+
+    .dashboard-content .charts-section .chart-card:nth-child(n+2),
+    .content-area .charts-section .chart-card:nth-child(n+2) {
+        display: none !important;
+    }
+
+    .dashboard-content .charts-section,
+    .content-area .charts-section {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .dashboard-card {
+        margin-top: 14px !important;
+        overflow: hidden !important;
+    }
+
+    .dashboard-card .card-content {
+        padding: 18px !important;
+    }
+
+    .chart-card {
+        padding: 18px !important;
+    }
+
+    .chart-title,
+    .section-title,
+    .filter-title,
+    .workflow-title {
+        margin: 0 0 14px !important;
+        color: var(--pi-text) !important;
+        font-size: 14px !important;
+        font-weight: 650 !important;
+    }
+
+    /* Filters and forms */
+    .filter-section,
+    .admin-workflow {
+        margin: 18px 0 !important;
+        padding: 18px !important;
+    }
+
+    .filter-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+        gap: 12px !important;
+    }
+
+    label,
+    .form-label,
+    .filter-label {
+        display: block;
+        margin: 0 0 6px !important;
+        color: #344054 !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea,
+    .form-control,
+    .form-select,
+    .filter-input {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 40px !important;
+        padding: 8px 11px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+        font-size: 12px !important;
+    }
+
+    textarea {
+        min-height: 90px !important;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus,
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--pi-blue) !important;
+        outline: 3px solid rgba(37, 132, 93, .12) !important;
+        box-shadow: none !important;
+    }
+
+    /* Buttons */
+    .btn,
+    .btn-filter,
+    .btn-reset,
+    .btn-primary,
+    .btn-secondary,
+    .action-btn,
+    button[type="submit"]:not(.app-icon-button) {
+        min-height: 36px !important;
+        padding: 7px 13px !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        text-decoration: none !important;
+        transition: background .15s ease, border-color .15s ease !important;
+    }
+
+    .btn-primary,
+    .btn-filter,
+    button[type="submit"]:not(.btn-danger):not(.app-icon-button) {
+        color: #fff !important;
+        background: var(--pi-blue) !important;
+        border: 1px solid var(--pi-blue) !important;
+    }
+
+    .btn-primary:hover,
+    .btn-filter:hover,
+    button[type="submit"]:not(.btn-danger):not(.app-icon-button):hover {
+        background: var(--pi-blue-hover) !important;
+        border-color: var(--pi-blue-hover) !important;
+        transform: none !important;
+    }
+
+    .btn-secondary,
+    .btn-reset,
+    .btn-light,
+    .btn-outline-primary {
+        color: #344054 !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid #d0d5dd !important;
+    }
+
+    .btn-danger,
+    .btn-outline-danger {
+        color: var(--pi-red) !important;
+        background: #fff5f5 !important;
+        border-color: #fecaca !important;
+    }
+
+    /* Tables */
+    .table-responsive,
+    .table-container,
+    .students-table-container,
+    .schools-table-wrap {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }
+
+    table,
+    .table,
+    .schools-table {
+        width: 100% !important;
+        margin: 0 !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border-collapse: collapse !important;
+        font-size: 11px !important;
+    }
+
+    thead,
+    .table thead {
+        background: var(--pi-surface-soft) !important;
+    }
+
+    th,
+    .table th {
+        padding: 10px 12px !important;
+        color: var(--pi-muted) !important;
+        background: var(--pi-surface-soft) !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--pi-line) !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        letter-spacing: .025em !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+    }
+
+    td,
+    .table td {
+        padding: 11px 12px !important;
+        vertical-align: middle !important;
+        color: #344054 !important;
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        border-bottom: 1px solid #eef0f3 !important;
+    }
+
+    tbody tr:hover td {
+        background: #fbfcfe !important;
+    }
+
+    .badge,
+    [class*="status-"] {
+        border-radius: 999px !important;
+        box-shadow: none !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+    }
+
+    .empty-state {
+        padding: 44px 20px !important;
+        color: var(--pi-muted) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        text-align: center !important;
+    }
+
+    /* Remove noisy repeated copy on information-dense pages */
+    .workflow-step-text,
+    .summary-card-description,
+    .school-cell-subtitle {
+        display: none !important;
+    }
+
+    @media (max-width: 980px) {
+        .summary-cards,
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        .charts-section {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .app-sidebar {
+            width: min(82vw, 280px) !important;
+            transform: translateX(-102%) !important;
+            transition: transform .18s ease !important;
+        }
+
+        .app-sidebar.is-open {
+            transform: translateX(0) !important;
+        }
+
+        .sidebar-overlay-bg {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 990 !important;
+            display: block !important;
+            visibility: hidden !important;
+            background: rgba(16, 24, 40, .32) !important;
+            opacity: 0 !important;
+            transition: .18s ease !important;
+        }
+
+        .sidebar-overlay-bg.is-active {
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        body:has(.app-sidebar) .main-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden !important;
+        }
+
+        .app-topbar {
+            min-height: 62px !important;
+            padding: 0 16px !important;
+        }
+
+        .app-mobile-trigger {
+            display: grid !important;
+            margin-right: 10px !important;
+        }
+
+        .app-topbar-title {
+            margin-right: auto !important;
+        }
+
+        .app-topbar-date {
+            display: none !important;
+        }
+
+        .app-user-copy {
+            display: none !important;
+        }
+
+        body:has(.app-sidebar) .content-area,
+        body:has(.app-sidebar) .dashboard-content {
+            padding: 20px 15px 32px !important;
+        }
+
+        .summary-cards,
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        table {
+            min-width: 680px !important;
+        }
+    }
+
+    @media print {
+        html,
+        body,
+        main {
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
+        .app-sidebar,
+        .app-topbar,
+        .sidebar-overlay-bg {
+            display: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body:has(.app-sidebar) .content-area,
+        body:has(.app-sidebar) .dashboard-content,
+        body:has(.app-sidebar) .receipt-page,
+        body:has(.app-sidebar) .receipt-paper {
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+    }
+
+    /*
+     * Legacy page normalization
+     * These selectors intentionally outrank the page-level styles that came
+     * from the hosted version of the application.
+     */
+    body:has(.app-sidebar) .main-content .content-area .page-header,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 14px !important;
+        margin: 0 0 18px !important;
+        padding: 0 !important;
+        color: var(--pi-text) !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .content-area .page-title,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-title,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-title,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-title {
+        margin: 0 !important;
+        color: var(--pi-text) !important;
+        background: none !important;
+        background-clip: border-box !important;
+        font-size: clamp(22px, 2.3vw, 28px) !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+        -webkit-background-clip: border-box !important;
+        -webkit-text-fill-color: currentColor !important;
+        text-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .content-area .page-title::after,
+    body:has(.app-sidebar) .main-content .content-area .page-title::before,
+    body:has(.app-sidebar) .main-content .content-area .section-title::after,
+    body:has(.app-sidebar) .main-content .content-area .section-title::before {
+        display: none !important;
+    }
+
+    /* Filters */
+    body:has(.app-sidebar) .main-content .filter-card,
+    body:has(.app-sidebar) .main-content .filter-container,
+    body:has(.app-sidebar) .main-content form.filter-form {
+        display: block !important;
+        margin: 0 0 18px !important;
+        padding: 16px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .filter-container > h3,
+    body:has(.app-sidebar) .main-content .filter-card > h3 {
+        margin: 0 0 14px !important;
+        color: var(--pi-text) !important;
+        font-size: 13px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .filter-container > h3 i,
+    body:has(.app-sidebar) .main-content .filter-card > h3 i,
+    body:has(.app-sidebar) .main-content .filter-label i,
+    body:has(.app-sidebar) .main-content label i {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .filter-row,
+    body:has(.app-sidebar) .main-content .filter-form {
+        gap: 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .filter-row {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+        align-items: end !important;
+        margin: 0 0 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .filter-row:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .filter-card > form.filter-form {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .content-area > form.filter-form {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(150px, 1fr)) auto auto !important;
+        align-items: end !important;
+    }
+
+    body:has(.app-sidebar) .main-content .filter-actions,
+    body:has(.app-sidebar) .main-content .filter-buttons,
+    body:has(.app-sidebar) .main-content .header-actions {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    /* Consistent actions, including custom buttons from old pages */
+    body:has(.app-sidebar) .main-content :is(
+        .btn-primary,
+        .filter-btn,
+        .btn-apply,
+        .btn-generate,
+        .btn-process
+    ) {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        min-height: 36px !important;
+        padding: 7px 12px !important;
+        color: #fff !important;
+        background: var(--pi-blue) !important;
+        border: 1px solid var(--pi-blue) !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .reset-btn,
+        .btn-reset,
+        .btn-detail,
+        .btn-edit,
+        .details-toggle,
+        .print-btn
+    ) {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        min-height: 32px !important;
+        padding: 6px 9px !important;
+        color: #344054 !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .btn-delete,
+    body:has(.app-sidebar) .main-content .btn-danger {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        min-height: 32px !important;
+        padding: 6px 9px !important;
+        color: #b42318 !important;
+        background: #fff5f5 !important;
+        border: 1px solid #fecaca !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .btn-warning {
+        color: #344054 !important;
+        background: var(--pi-surface) !important;
+        border-color: #d0d5dd !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .btn-primary,
+        .filter-btn,
+        .btn-apply,
+        .btn-generate,
+        .btn-process,
+        .reset-btn,
+        .btn-reset,
+        .btn-detail,
+        .btn-edit,
+        .details-toggle,
+        .btn-delete,
+        .print-btn
+    )::before,
+    body:has(.app-sidebar) .main-content :is(
+        .btn-primary,
+        .filter-btn,
+        .btn-apply,
+        .btn-generate,
+        .btn-process,
+        .reset-btn,
+        .btn-reset,
+        .btn-detail,
+        .btn-edit,
+        .details-toggle,
+        .btn-delete,
+        .print-btn
+    )::after {
+        display: none !important;
+    }
+
+    /* Data and metric surfaces */
+    body:has(.app-sidebar) .main-content .table-card,
+    body:has(.app-sidebar) .main-content .subtotal-section {
+        margin: 0 0 18px !important;
+        overflow: hidden !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .table-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        min-height: 50px !important;
+        padding: 0 16px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--pi-line) !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .table-header h3,
+    body:has(.app-sidebar) .main-content .table-title {
+        margin: 0 !important;
+        color: var(--pi-text) !important;
+        font-size: 14px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .table-header h3 i,
+    body:has(.app-sidebar) .main-content .table-title i {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        margin: 0 0 18px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .stats-grid .stat-card {
+        min-height: 96px !important;
+        padding: 15px !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .stats-grid .stat-number {
+        color: var(--pi-text) !important;
+        font-size: 24px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .stats-grid .stat-icon {
+        color: var(--pi-blue) !important;
+        background: var(--pi-blue-soft) !important;
+    }
+
+    body:has(.app-sidebar) .main-content .student-count .count-number {
+        color: var(--pi-text) !important;
+        font-size: 16px !important;
+        font-weight: 650 !important;
+    }
+
+    /* Grouped billing */
+    body:has(.app-sidebar) .main-content .school-section,
+    body:has(.app-sidebar) .main-content .class-item {
+        margin: 0 0 10px !important;
+        overflow: hidden !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .school-header,
+    body:has(.app-sidebar) .main-content .class-header {
+        min-height: 58px !important;
+        padding: 14px 16px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .school-header h3,
+    body:has(.app-sidebar) .main-content .class-header h4 {
+        margin: 0 !important;
+        color: var(--pi-text) !important;
+        font-size: 14px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .school-header i,
+    body:has(.app-sidebar) .main-content .class-header i {
+        color: var(--pi-muted) !important;
+    }
+
+    body:has(.app-sidebar) .main-content .school-content,
+    body:has(.app-sidebar) .main-content .students-table-container {
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        border-top: 1px solid var(--pi-line) !important;
+        box-shadow: none !important;
+    }
+
+    /* Transaction history cards become compact neutral rows */
+    body:has(.app-sidebar) .main-content .transactions-list {
+        display: grid !important;
+        gap: 8px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card {
+        margin: 0 !important;
+        overflow: hidden !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card .card-header {
+        min-height: 0 !important;
+        padding: 13px 15px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card .student-name {
+        color: var(--pi-text) !important;
+        font-size: 13px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card .source-badge {
+        width: fit-content !important;
+        margin: 5px 0 !important;
+        padding: 3px 7px !important;
+        color: var(--pi-blue) !important;
+        background: var(--pi-blue-soft) !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        font-size: 9px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card .transaction-date,
+    body:has(.app-sidebar) .main-content .transaction-card .detail-item {
+        color: var(--pi-muted) !important;
+        font-size: 10px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card .detail-item i,
+    body:has(.app-sidebar) .main-content .transaction-card .transaction-date i {
+        color: var(--pi-quiet) !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card .total-amount {
+        padding: 0 !important;
+        color: var(--pi-text) !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        font-size: 16px !important;
+        font-weight: 650 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .transaction-card .card-body {
+        padding: 14px !important;
+        background: var(--pi-surface-soft) !important;
+        border-top: 1px solid var(--pi-line) !important;
+    }
+
+    /* Report subtotal */
+    body:has(.app-sidebar) .main-content .subtotal-section {
+        padding: 16px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .subtotal-title {
+        margin: 0 0 12px !important;
+        color: var(--pi-text) !important;
+        font-size: 13px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .subtotal-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .subtotal-item {
+        min-height: 78px !important;
+        padding: 13px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface-soft) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .subtotal-label {
+        color: var(--pi-muted) !important;
+        font-size: 10px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .subtotal-value {
+        margin-top: 6px !important;
+        color: var(--pi-text) !important;
+        font-size: 17px !important;
+        font-weight: 650 !important;
+    }
+
+    /* Empty states and badges */
+    body:has(.app-sidebar) .main-content .empty-state i {
+        color: var(--pi-quiet) !important;
+        background: transparent !important;
+    }
+
+    body:has(.app-sidebar) .main-content .empty-state h3,
+    body:has(.app-sidebar) .main-content .empty-state h4 {
+        color: var(--pi-text) !important;
+        font-size: 14px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .empty-state p {
+        max-width: 520px !important;
+        margin: 6px auto 15px !important;
+        color: var(--pi-muted) !important;
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge-success, .bg-success, .status-success) {
+        color: #067647 !important;
+        background: #ecfdf3 !important;
+        border-color: #abefc6 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge-info, .bg-info) {
+        color: #1d6b4c !important;
+        background: var(--pi-blue-soft) !important;
+        border-color: #a7d8bd !important;
+    }
+
+    /* Modals */
+    body:has(.app-sidebar) .modal-content {
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 18px 48px rgba(16, 24, 40, .14) !important;
+    }
+
+    body:has(.app-sidebar) .modal-header,
+    body:has(.app-sidebar) .modal-footer {
+        padding: 14px 16px !important;
+        background: var(--pi-surface) !important;
+        border-color: var(--pi-line) !important;
+    }
+
+    body:has(.app-sidebar) .modal-body {
+        padding: 16px !important;
+    }
+
+    body:has(.app-sidebar) .modal-title {
+        color: var(--pi-text) !important;
+        font-size: 14px !important;
+        font-weight: 650 !important;
+    }
+
+    /* Forms: one compact visual language across old and new screens */
+    body:has(.app-sidebar) .main-content .page-header :is(h1, h2),
+    body:has(.app-sidebar) .main-content .page-title :is(h1, h2),
+    body:has(.app-sidebar) .main-content > :is(h1, h2),
+    body:has(.app-sidebar) .content-area > :is(h1, h2) {
+        margin: 0 !important;
+        color: var(--pi-text) !important;
+        background: none !important;
+        background-clip: border-box !important;
+        -webkit-background-clip: border-box !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .page-header :is(h1, h2) > i,
+    body:has(.app-sidebar) .main-content .page-title :is(h1, h2) > i {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .cards-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        margin: 0 0 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-card, .import-card) {
+        margin: 0 0 12px !important;
+        padding: 18px !important;
+        overflow: visible !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-card, .import-card):hover {
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-card:has(> .form-header) {
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-header {
+        margin: 0 !important;
+        padding: 15px 18px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--pi-line) !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-header h3,
+    body:has(.app-sidebar) .main-content .form-card > h3,
+    body:has(.app-sidebar) .main-content .section-header h4 {
+        margin: 0 !important;
+        padding: 0 !important;
+        color: var(--pi-text) !important;
+        background: none !important;
+        border: 0 !important;
+        font-size: 13px !important;
+        font-weight: 650 !important;
+        line-height: 1.4 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-header h3, .form-card > h3, .section-header h4) > i {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-header p {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-card > h3 {
+        margin-bottom: 16px !important;
+        padding-bottom: 11px !important;
+        border-bottom: 1px solid var(--pi-line) !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-section {
+        margin: 0 !important;
+        padding: 18px !important;
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        border-bottom: 1px solid var(--pi-line) !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-section:last-of-type {
+        border-bottom: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .section-header {
+        margin: 0 0 14px !important;
+        padding: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-grid, .form-row) {
+        gap: 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-row {
+        margin: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-group {
+        min-width: 0 !important;
+        margin: 0 0 14px !important;
+        padding: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-group:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-grid, .form-row) > .form-group {
+        margin-bottom: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-label, label) > i {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-text, .text-muted) {
+        margin-top: 5px !important;
+        color: var(--pi-muted) !important;
+        font-size: 10px !important;
+        line-height: 1.45 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .input-group {
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-actions, .action-buttons) {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 15px 18px !important;
+        background: var(--pi-surface) !important;
+        border: 0 !important;
+        border-top: 1px solid var(--pi-line) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        text-align: left !important;
+    }
+
+    body:has(.app-sidebar) .main-content form > .action-buttons {
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-actions, .action-buttons) .btn {
+        margin: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-default, .btn-success) {
+        min-height: 36px !important;
+        margin: 0 !important;
+        padding: 7px 12px !important;
+        color: #344054 !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid #d0d5dd !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .btn-default.active {
+        color: var(--pi-blue) !important;
+        background: var(--pi-blue-soft) !important;
+        border-color: #a7d8bd !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.target-type-container, .spp-container, .radio-group) {
+        padding: 12px !important;
+        background: var(--pi-surface-soft) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .radio-group {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 18px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content input[type="file"] {
+        width: 100% !important;
+        max-width: 560px !important;
+        padding: 7px !important;
+    }
+
+    /* Import keeps the primary task visible; technical references are optional. */
+    body:has(.app-sidebar) .main-content .import-card {
+        max-width: 640px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-guide,
+    body:has(.app-sidebar) .main-content .import-reference {
+        max-width: 760px !important;
+        margin: 12px 0 0 !important;
+        padding: 16px 18px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-radius: var(--pi-radius) !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-guide h3 {
+        margin: 0 0 9px !important;
+        font-size: 13px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-guide ol {
+        margin: 0 !important;
+        padding-left: 18px !important;
+        color: var(--pi-muted) !important;
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-guide li + li {
+        margin-top: 4px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-reference summary {
+        color: #344054 !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-reference-content {
+        margin-top: 14px !important;
+        padding-top: 14px !important;
+        border-top: 1px solid var(--pi-line) !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-reference .info-title {
+        margin: 0 0 8px !important;
+        color: var(--pi-text) !important;
+        font-size: 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-reference .info-list li {
+        display: grid !important;
+        grid-template-columns: 130px 1fr !important;
+        gap: 12px !important;
+        padding: 9px 0 !important;
+        color: var(--pi-muted) !important;
+        border-color: var(--pi-line) !important;
+        font-size: 10px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-reference .info-list .label {
+        min-width: 0 !important;
+        color: #344054 !important;
+        font-weight: 600 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .import-example {
+        display: none !important;
+    }
+
+    /* Academic workflows and report group headings */
+    body:has(.app-sidebar) .main-content .form-container > h2 {
+        margin: 0 0 20px !important;
+        color: var(--pi-text) !important;
+        background: none !important;
+        background-clip: border-box !important;
+        -webkit-background-clip: border-box !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 24px !important;
+        font-weight: 700 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .form-container > h2 > i {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .content-area:has(> .page-header) > .form-container > h2 {
+        margin-bottom: 16px !important;
+        font-size: 14px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .school-name-header {
+        margin: 12px 0 0 !important;
+        padding: 11px 13px !important;
+        color: var(--pi-text) !important;
+        background: var(--pi-surface-soft) !important;
+        border: 1px solid var(--pi-line) !important;
+        border-bottom: 0 !important;
+        border-radius: 8px 8px 0 0 !important;
+        box-shadow: none !important;
+        font-size: 11px !important;
+        font-weight: 650 !important;
+    }
+
+    body:has(.app-sidebar) .main-content form.graduation-filter {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(140px, 1fr)) auto !important;
+        align-items: end !important;
+        gap: 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content form.graduation-filter .form-group {
+        margin: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .empty-state > i {
+        color: var(--pi-quiet) !important;
+    }
+
+    @media (max-width: 980px) {
+        body:has(.app-sidebar) .main-content .stats-grid,
+        body:has(.app-sidebar) .main-content .subtotal-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        body:has(.app-sidebar) .main-content .content-area > form.filter-form {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        body:has(.app-sidebar) .main-content .cards-container {
+            grid-template-columns: 1fr !important;
+        }
+
+        body:has(.app-sidebar) .main-content form.graduation-filter {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (max-width: 600px) {
+        body:has(.app-sidebar) .main-content .stats-grid,
+        body:has(.app-sidebar) .main-content .subtotal-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        body:has(.app-sidebar) .main-content .page-header {
+            align-items: flex-start !important;
+            flex-direction: column !important;
+        }
+
+        body:has(.app-sidebar) .main-content .content-area > form.filter-form {
+            grid-template-columns: 1fr !important;
+        }
+
+        body:has(.app-sidebar) .main-content .filter-row {
+            grid-template-columns: 1fr !important;
+        }
+
+        body:has(.app-sidebar) .main-content .filter-actions {
+            align-items: stretch !important;
+            width: 100% !important;
+        }
+
+        body:has(.app-sidebar) .main-content .input-group {
+            align-items: stretch !important;
+            flex-direction: column !important;
+        }
+
+        body:has(.app-sidebar) .main-content .input-group > :is(.btn, button) {
+            width: 100% !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(.form-grid.two-columns, .form-grid.three-columns) {
+            grid-template-columns: 1fr !important;
+        }
+
+        body:has(.app-sidebar) .main-content .form-row {
+            flex-direction: column !important;
+        }
+
+        body:has(.app-sidebar) .main-content .form-row > [class*="col-md-"] {
+            flex: 1 1 auto !important;
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content form.graduation-filter {
+            grid-template-columns: 1fr !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(.form-actions, .action-buttons) {
+            align-items: stretch !important;
+            flex-direction: column !important;
+        }
+    }
+
+    /*
+     * Dashboard visual language
+     * Mirrors the clean record cards, table rows and toolbars from the
+     * interface references in resources/assets.
+     */
+    body:has(.app-sidebar) {
+        background: #f8faf9 !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar {
+        width: 238px !important;
+        padding: 17px 13px 12px !important;
+        background: #fbfcfc !important;
+        border-right-color: #e1e8e4 !important;
+    }
+
+    body:has(.app-sidebar) .main-content {
+        width: calc(100% - 238px) !important;
+        margin-left: 238px !important;
+    }
+
+    body:has(.app-sidebar) .app-topbar {
+        min-height: 68px !important;
+        padding: 0 30px !important;
+        background: rgba(255, 255, 255, .96) !important;
+        border-bottom: 1px solid #e1e8e4 !important;
+        backdrop-filter: blur(12px) !important;
+    }
+
+    body:has(.app-sidebar) :is(.content-area, .dashboard-content) {
+        padding: 30px 32px 48px !important;
+    }
+
+    body:has(.app-sidebar) :is(.page-title, .dashboard-title, .overview-title) {
+        color: #12241c !important;
+        font-size: clamp(25px, 2.5vw, 32px) !important;
+        font-weight: 700 !important;
+        letter-spacing: -.045em !important;
+    }
+
+    body:has(.app-sidebar) :is(.page-subtitle, .dashboard-subtitle, .overview-subtitle) {
+        margin-top: 7px !important;
+        color: #66756e !important;
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-link,
+    body:has(.app-sidebar) .app-nav-group > summary {
+        min-height: 38px !important;
+        border-radius: 7px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-link.is-active {
+        color: #15533b !important;
+        background: #eaf6f0 !important;
+        box-shadow: inset 3px 0 #25845d !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-link.is-active i {
+        color: #1d6b4c !important;
+    }
+
+    /* Structured application cards */
+    body:has(.app-sidebar) .main-content :is(
+        .card,
+        .dashboard-card,
+        .summary-card,
+        .stat-card,
+        .chart-card,
+        .content-card,
+        .detail-card,
+        .profile-card,
+        .info-card,
+        .report-card,
+        .overview-panel,
+        .overview-stat,
+        .filter-card,
+        .filter-section,
+        .form-container,
+        .table-container,
+        .schools-table-card,
+        .students-table-container
+    ) {
+        overflow: hidden !important;
+        background: #fff !important;
+        border: 1px solid #e1e8e4 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .035) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .card:hover,
+        .dashboard-card:hover,
+        .summary-card:hover,
+        .stat-card:hover,
+        .content-card:hover,
+        .overview-stat:hover
+    ) {
+        border-color: #d5e2db !important;
+        box-shadow: 0 5px 16px rgba(16, 52, 37, .055) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .card-header,
+        .table-header,
+        .overview-panel-header,
+        .modal-header,
+        .section-header
+    ) {
+        min-height: 55px !important;
+        padding: 14px 18px !important;
+        color: #17211d !important;
+        background: #fff !important;
+        border: 0 !important;
+        border-bottom: 1px solid #e1e8e4 !important;
+        border-radius: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .card-header h2,
+        .card-header h3,
+        .table-header h2,
+        .table-header h3,
+        .overview-panel-title,
+        .section-title
+    ) {
+        margin: 0 !important;
+        color: #17211d !important;
+        font-size: 14px !important;
+        font-weight: 650 !important;
+        letter-spacing: -.02em !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.card-body, .card-content, .content-card-body) {
+        padding: 18px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.card-footer, .overview-table-footer) {
+        min-height: 42px !important;
+        padding: 10px 18px !important;
+        color: #66756e !important;
+        background: #fafcfb !important;
+        border: 0 !important;
+        border-top: 1px solid #e1e8e4 !important;
+    }
+
+    /* Metric cards use the reference header/value/footer rhythm. */
+    body:has(.app-sidebar) .main-content :is(.summary-cards, .stats-grid, .overview-stats) {
+        gap: 14px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.summary-card, .stat-card, .overview-stat) {
+        min-height: 148px !important;
+        padding: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.summary-card-header, .stat-header, .overview-stat-main) {
+        min-height: 108px !important;
+        margin: 0 !important;
+        padding: 17px 18px 14px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.summary-card-icon, .stat-icon, .overview-stat-icon) {
+        width: 36px !important;
+        height: 36px !important;
+        color: #25845d !important;
+        background: #fff !important;
+        border: 1px solid #dfe8e3 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 1px 3px rgba(16, 52, 37, .045) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.summary-card-value, .stat-value, .overview-stat-value) {
+        color: #111c17 !important;
+        font-size: clamp(21px, 2.1vw, 27px) !important;
+        font-weight: 650 !important;
+        letter-spacing: -.04em !important;
+    }
+
+    body:has(.app-sidebar) .main-content .stat-card > .btn-outline-primary {
+        width: calc(100% + 36px) !important;
+        min-height: 40px !important;
+        justify-content: flex-start !important;
+        margin: 15px -18px -18px !important;
+        padding: 10px 18px !important;
+        color: #1d6b4c !important;
+        background: #fafcfb !important;
+        border: 0 !important;
+        border-top: 1px solid #e1e8e4 !important;
+        border-radius: 0 !important;
+    }
+
+    /* Toolbar/filter panels */
+    body:has(.app-sidebar) .main-content :is(
+        .filter-card,
+        .filter-section,
+        .filter-container,
+        .overview-filter-panel
+    ) {
+        margin-bottom: 18px !important;
+        padding: 16px 18px !important;
+        background: #fff !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .filter-form,
+        .filter-grid,
+        .filter-row,
+        .overview-filter-form
+    ) {
+        gap: 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        input:not([type="checkbox"]):not([type="radio"]),
+        select,
+        textarea,
+        .form-control,
+        .form-select,
+        .filter-input
+    ) {
+        min-height: 42px !important;
+        color: #1d2923 !important;
+        background: #fff !important;
+        border-color: #d5ddd9 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .02) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn, button, .action-btn, .overview-action) {
+        border-radius: 8px !important;
+    }
+
+    /* Record-style tables from the supplied interface references. */
+    body:has(.app-sidebar) .main-content :is(
+        .table-responsive,
+        .overview-table-wrap,
+        .schools-table-wrap,
+        .students-table-container
+    ) {
+        padding: 5px 10px 10px !important;
+        background: #fff !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 8px !important;
+        background: transparent !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) thead {
+        background: transparent !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) thead th {
+        height: 42px !important;
+        padding: 10px 12px !important;
+        color: #66756e !important;
+        background: #f7faf8 !important;
+        border-top: 1px solid #dfe7e3 !important;
+        border-bottom: 1px solid #dfe7e3 !important;
+        font-size: 9px !important;
+        font-weight: 650 !important;
+        letter-spacing: .03em !important;
+        text-transform: uppercase !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) thead th:first-child {
+        border-left: 1px solid #dfe7e3 !important;
+        border-radius: 8px 0 0 8px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) thead th:last-child {
+        border-right: 1px solid #dfe7e3 !important;
+        border-radius: 0 8px 8px 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody td {
+        height: 52px !important;
+        padding: 10px 12px !important;
+        color: #34483e !important;
+        background: #fff !important;
+        border-top: 1px solid #e3e9e6 !important;
+        border-bottom: 1px solid #e3e9e6 !important;
+        font-size: 10.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody td:first-child {
+        border-left: 1px solid #e3e9e6 !important;
+        border-radius: 8px 0 0 8px !important;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .025) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody td:last-child {
+        border-right: 1px solid #e3e9e6 !important;
+        border-radius: 0 8px 8px 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody tr:hover td {
+        background: #f8fcfa !important;
+        border-color: #cfe2d8 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge, [class*="status-"]:not(th):not(td)) {
+        min-height: 22px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 4px 7px !important;
+        border-radius: 5px !important;
+        font-size: 8px !important;
+        font-weight: 650 !important;
+    }
+
+    /* Pagination as compact outlined controls. */
+    body:has(.app-sidebar) .main-content :is(.pagination, nav[aria-label="Pagination Navigation"] > div:last-child) {
+        gap: 5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .page-link {
+        min-width: 32px !important;
+        height: 32px !important;
+        display: grid !important;
+        place-items: center !important;
+        padding: 0 8px !important;
+        color: #475b51 !important;
+        background: #fff !important;
+        border: 1px solid #d9e2dd !important;
+        border-radius: 7px !important;
+        font-size: 9px !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .page-item.active .page-link {
+        color: #fff !important;
+        background: #1d6b4c !important;
+        border-color: #1d6b4c !important;
+    }
+
+    /* Dialogs use the same panel language. */
+    body:has(.app-sidebar) .modal-content {
+        overflow: hidden !important;
+        border: 1px solid #dce5e0 !important;
+        border-radius: 13px !important;
+        box-shadow: 0 24px 65px rgba(11, 47, 34, .17) !important;
+    }
+
+    body:has(.app-sidebar) .modal-footer {
+        padding: 13px 18px !important;
+        background: #fafcfb !important;
+        border-top: 1px solid #e1e8e4 !important;
+    }
+
+    @media (max-width: 760px) {
+        body:has(.app-sidebar) .app-sidebar {
+            width: min(84vw, 286px) !important;
+        }
+
+        body:has(.app-sidebar) .main-content {
+            width: 100% !important;
+            margin-left: 0 !important;
+        }
+
+        body:has(.app-sidebar) .app-topbar {
+            padding: 0 16px !important;
+        }
+
+        body:has(.app-sidebar) :is(.content-area, .dashboard-content) {
+            padding: 22px 15px 36px !important;
+        }
+    }
+
+    @media print {
+        body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) {
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) :is(th, td) {
+            border: 1px solid #d0d5dd !important;
+            border-radius: 0 !important;
+        }
+    }
+
+    /* ================================================================
+       Permata UI — bold minimal refresh
+       A dark institutional shell, spacious canvas and vivid data cards.
+       ================================================================ */
+    :root {
+        --pi-bg: #f3f7f5;
+        --pi-surface-soft: #f7faf8;
+        --pi-text: #10231b;
+        --pi-muted: #64736c;
+        --pi-quiet: #8a9992;
+        --pi-line: #dce7e1;
+        --pi-blue: #087a50;
+        --pi-blue-hover: #05623f;
+        --pi-blue-soft: #e8f7ef;
+        --pi-green: #10a66b;
+        --pi-radius: 14px;
+        --pi-sidebar: 260px;
+    }
+
+    body {
+        font-family: "Manrope", system-ui, sans-serif !important;
+    }
+
+    body:has(.app-sidebar) {
+        background:
+            radial-gradient(circle at 84% 4%, rgba(16, 166, 107, .075), transparent 25rem),
+            #f3f7f5 !important;
+    }
+
+    /* Dark premium navigation creates the strongest visual change. */
+    body:has(.app-sidebar) .app-sidebar {
+        width: var(--pi-sidebar) !important;
+        padding: 18px 14px 14px !important;
+        color: #fff !important;
+        background:
+            radial-gradient(circle at 15% -8%, rgba(63, 211, 144, .24), transparent 18rem),
+            linear-gradient(165deg, #123d30 0%, #0a2c22 58%, #071f18 100%) !important;
+        border-right: 0 !important;
+        box-shadow: 12px 0 35px rgba(7, 40, 29, .11) !important;
+    }
+
+    body:has(.app-sidebar) .app-brand {
+        min-height: 58px !important;
+        gap: 12px !important;
+        padding: 4px 8px 10px !important;
+        color: #fff !important;
+    }
+
+    body:has(.app-sidebar) .app-brand img {
+        width: 42px !important;
+        height: 42px !important;
+        padding: 3px !important;
+        background: #fff !important;
+        border: 1px solid rgba(255, 255, 255, .55) !important;
+        box-shadow: 0 7px 18px rgba(0, 0, 0, .2) !important;
+    }
+
+    body:has(.app-sidebar) .app-brand strong {
+        color: #fff !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        letter-spacing: -.025em !important;
+    }
+
+    body:has(.app-sidebar) .app-brand small {
+        color: rgba(224, 247, 236, .63) !important;
+        font-size: 9px !important;
+        letter-spacing: .025em !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search {
+        margin: 14px 2px 7px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search input {
+        height: 39px !important;
+        color: #fff !important;
+        background: rgba(255, 255, 255, .075) !important;
+        border-color: rgba(255, 255, 255, .12) !important;
+        border-radius: 10px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search input::placeholder,
+    body:has(.app-sidebar) .app-nav-search > i {
+        color: rgba(225, 242, 234, .55) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search input:focus {
+        background: rgba(255, 255, 255, .12) !important;
+        border-color: rgba(111, 231, 171, .58) !important;
+        box-shadow: 0 0 0 3px rgba(86, 218, 153, .12) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search kbd {
+        color: rgba(255, 255, 255, .55) !important;
+        background: rgba(255, 255, 255, .08) !important;
+        border-color: rgba(255, 255, 255, .12) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-scroll {
+        scrollbar-color: rgba(255, 255, 255, .18) transparent !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-scroll::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, .18) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-label {
+        margin: 19px 10px 7px !important;
+        color: rgba(205, 231, 219, .48) !important;
+        font-size: 8px !important;
+        font-weight: 800 !important;
+        letter-spacing: .13em !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link, .app-nav-group > summary) {
+        min-height: 41px !important;
+        padding-inline: 11px !important;
+        color: rgba(231, 245, 238, .72) !important;
+        border-radius: 10px !important;
+        font-size: 11px !important;
+        transition: color .18s ease, background .18s ease, transform .18s ease !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link, .app-nav-group > summary) > i {
+        color: rgba(204, 231, 218, .58) !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link:hover, .app-nav-group > summary:hover) {
+        color: #fff !important;
+        background: rgba(255, 255, 255, .075) !important;
+        transform: translateX(2px) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-link.is-active {
+        color: #fff !important;
+        background: linear-gradient(100deg, rgba(25, 184, 116, .95), rgba(18, 137, 90, .9)) !important;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .16), inset 0 1px rgba(255, 255, 255, .16) !important;
+        transform: translateX(0) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-link.is-active i,
+    body:has(.app-sidebar) .app-nav-group[open] > summary,
+    body:has(.app-sidebar) .app-nav-group[open] > summary > i:first-child {
+        color: #fff !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a,
+    body:has(.app-sidebar) .app-nav-subgroup > summary {
+        color: rgba(218, 238, 228, .61) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a > i,
+    body:has(.app-sidebar) .app-nav-subgroup > summary i {
+        color: rgba(192, 224, 209, .43) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a:hover,
+    body:has(.app-sidebar) .app-nav-group > div a.is-active,
+    body:has(.app-sidebar) .app-nav-subgroup > summary:hover {
+        color: #79e2ad !important;
+        background: rgba(255, 255, 255, .07) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a:hover > i,
+    body:has(.app-sidebar) .app-nav-group > div a.is-active > i {
+        color: #58d697 !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar-footer {
+        padding: 12px 4px 0 !important;
+        border-top-color: rgba(255, 255, 255, .11) !important;
+    }
+
+    body:has(.app-sidebar) .app-profile-card {
+        color: #fff !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-profile-card:hover, .app-profile-card.is-active) {
+        background: rgba(255, 255, 255, .08) !important;
+    }
+
+    body:has(.app-sidebar) .app-user-avatar {
+        color: #06412a !important;
+        background: linear-gradient(145deg, #a9f0cc, #55d695) !important;
+        box-shadow: 0 5px 14px rgba(0, 0, 0, .16) !important;
+    }
+
+    body:has(.app-sidebar) .app-profile-copy strong {
+        color: #fff !important;
+    }
+
+    body:has(.app-sidebar) .app-profile-copy small {
+        color: rgba(214, 238, 227, .55) !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar-logout {
+        color: rgba(228, 243, 236, .7) !important;
+        background: rgba(255, 255, 255, .07) !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar-logout:hover {
+        color: #fff !important;
+        background: #d84d52 !important;
+    }
+
+    /* Spacious application canvas and elevated top bar. */
+    body:has(.app-sidebar) .main-content {
+        width: calc(100% - var(--pi-sidebar)) !important;
+        max-width: calc(100% - var(--pi-sidebar)) !important;
+        margin-left: var(--pi-sidebar) !important;
+        background: transparent !important;
+    }
+
+    body:has(.app-sidebar) .app-topbar {
+        min-height: 74px !important;
+        padding: 0 34px !important;
+        background: rgba(248, 251, 249, .86) !important;
+        border-bottom-color: rgba(201, 218, 209, .72) !important;
+        box-shadow: 0 7px 22px rgba(29, 72, 53, .035) !important;
+        backdrop-filter: blur(18px) !important;
+    }
+
+    body:has(.app-sidebar) .app-topbar-context {
+        margin-bottom: 3px !important;
+        color: #16875a !important;
+        font-size: 8px !important;
+        font-weight: 800 !important;
+        letter-spacing: .13em !important;
+    }
+
+    body:has(.app-sidebar) .app-topbar-title strong {
+        color: #14271f !important;
+        font-size: 14px !important;
+        font-weight: 800 !important;
+        letter-spacing: -.02em !important;
+    }
+
+    .app-topbar-meta {
+        display: flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+    }
+
+    .app-system-status,
+    body:has(.app-sidebar) .app-topbar-date {
+        display: inline-flex !important;
+        align-items: center !important;
+        min-height: 34px !important;
+        gap: 7px !important;
+        padding: 7px 11px !important;
+        color: #50635a !important;
+        background: rgba(255, 255, 255, .76) !important;
+        border: 1px solid #dce7e1 !important;
+        border-radius: 999px !important;
+        box-shadow: 0 2px 8px rgba(23, 69, 49, .035) !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+    }
+
+    .app-system-status i {
+        width: 7px !important;
+        height: 7px !important;
+        background: #16b873 !important;
+        border: 2px solid #ccf6df !important;
+        border-radius: 50% !important;
+        box-sizing: content-box !important;
+    }
+
+    body:has(.app-sidebar) :is(.content-area, .dashboard-content) {
+        width: min(100%, 1580px) !important;
+        margin-inline: auto !important;
+        padding: 34px 38px 58px !important;
+    }
+
+    /* Distinctive green page hero; also works with legacy page headers. */
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) {
+        position: relative !important;
+        isolation: isolate !important;
+        overflow: hidden !important;
+        align-items: center !important;
+        min-height: 126px !important;
+        margin: 0 0 22px !important;
+        padding: 25px 28px !important;
+        color: #fff !important;
+        background:
+            radial-gradient(circle at 88% 20%, rgba(116, 235, 173, .28), transparent 13rem),
+            linear-gradient(118deg, #0d3c2c 0%, #096b47 70%, #0a8154 100%) !important;
+        border: 1px solid rgba(255, 255, 255, .08) !important;
+        border-radius: 19px !important;
+        box-shadow: 0 18px 38px rgba(8, 73, 48, .16) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header)::after {
+        position: absolute !important;
+        z-index: -1 !important;
+        top: -62px !important;
+        right: 9% !important;
+        width: 180px !important;
+        height: 180px !important;
+        border: 34px solid rgba(255, 255, 255, .055) !important;
+        border-radius: 50% !important;
+        content: "" !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(h1, h2, .page-title, .dashboard-title, .overview-title) {
+        color: #fff !important;
+        font-size: clamp(25px, 2.5vw, 34px) !important;
+        font-weight: 800 !important;
+        letter-spacing: -.045em !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(.overview-eyebrow, .page-subtitle, .dashboard-subtitle, .overview-subtitle, p) {
+        color: rgba(228, 249, 238, .72) !important;
+    }
+
+    body:has(.app-sidebar) .overview-eyebrow {
+        margin-bottom: 5px !important;
+        font-size: 8px !important;
+        font-weight: 800 !important;
+        letter-spacing: .16em !important;
+        text-transform: uppercase !important;
+    }
+
+    body:has(.app-sidebar) .overview-update {
+        color: rgba(238, 252, 245, .78) !important;
+    }
+
+    body:has(.app-sidebar) .overview-update :is(i, .fa-circle-check) {
+        color: #85e8b5 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(.btn, button, .overview-action) {
+        color: #fff !important;
+        background: rgba(255, 255, 255, .1) !important;
+        border-color: rgba(255, 255, 255, .22) !important;
+        box-shadow: none !important;
+        backdrop-filter: blur(7px) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(.btn-primary, .btn-success, .overview-action.is-primary) {
+        color: #0a5135 !important;
+        background: #fff !important;
+        border-color: #fff !important;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .14) !important;
+    }
+
+    /* Bold metric cards remain simple but are now instantly scannable. */
+    body:has(.app-sidebar) .main-content :is(.overview-stats, .summary-cards, .stats-grid) {
+        gap: 16px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-stat, .summary-card, .stats-grid .stat-card) {
+        position: relative !important;
+        overflow: hidden !important;
+        border: 0 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 10px 28px rgba(29, 72, 53, .085), 0 0 0 1px rgba(205, 220, 212, .8) !important;
+        transition: transform .22s ease, box-shadow .22s ease !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-stat, .summary-card, .stats-grid .stat-card)::before {
+        display: block !important;
+        position: absolute !important;
+        inset: 0 0 auto !important;
+        width: 100% !important;
+        height: 4px !important;
+        background: #10a66b !important;
+        border-radius: 0 !important;
+        content: "" !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-stat, .summary-card, .stats-grid .stat-card):hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 18px 38px rgba(29, 72, 53, .13), 0 0 0 1px rgba(167, 201, 183, .9) !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="expense"]::before {
+        background: #f19a3e !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="balance"]::before {
+        background: linear-gradient(90deg, #0b6244, #10a66b) !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat-main {
+        min-height: 146px !important;
+        padding: 23px 22px 18px !important;
+        background: radial-gradient(circle at 100% 0, rgba(22, 180, 113, .075), transparent 10rem) !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="expense"] .overview-stat-main {
+        background: radial-gradient(circle at 100% 0, rgba(241, 154, 62, .09), transparent 10rem) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-stat-icon, .summary-card-icon, .stat-icon) {
+        width: 40px !important;
+        height: 40px !important;
+        margin-bottom: 18px !important;
+        color: #087a50 !important;
+        background: #e6f8ef !important;
+        border: 0 !important;
+        border-radius: 11px !important;
+        box-shadow: inset 0 0 0 1px rgba(12, 143, 91, .1) !important;
+        font-size: 14px !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="expense"] .overview-stat-icon {
+        color: #c96c18 !important;
+        background: #fff2e4 !important;
+        box-shadow: inset 0 0 0 1px rgba(220, 119, 30, .1) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-stat-label, .summary-card-title, .stat-label) {
+        color: #6a7a72 !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        letter-spacing: .015em !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-stat-value, .summary-card-value, .stat-value, .stat-number) {
+        color: #10231b !important;
+        font-size: clamp(24px, 2.2vw, 31px) !important;
+        font-weight: 800 !important;
+        letter-spacing: -.055em !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat-footer {
+        min-height: 42px !important;
+        padding: 10px 22px !important;
+        color: #6a7972 !important;
+        background: #f9fbfa !important;
+        border-top-color: #e7eeea !important;
+    }
+
+    /* Panels, forms and tables share one crisp elevated surface. */
+    body:has(.app-sidebar) .main-content :is(
+        .overview-panel, .card, .dashboard-card, .chart-card, .content-card,
+        .detail-card, .profile-card, .info-card, .report-card, .filter-card,
+        .filter-section, .form-container, .table-container, .schools-table-card,
+        .students-table-container, .import-card
+    ) {
+        border-color: #dce7e1 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 10px 28px rgba(30, 73, 54, .065) !important;
+    }
+
+    body:has(.app-sidebar) .overview-page {
+        gap: 20px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .overview-page, .overview-heading, .overview-heading-tools,
+        .overview-actions, .overview-stats, .overview-stat, .overview-panel
+    ) {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-panel-header, .card-header, .table-header, .form-header) {
+        min-height: 64px !important;
+        padding: 16px 21px !important;
+        background: linear-gradient(180deg, #fff, #fbfdfc) !important;
+        border-bottom-color: #e4ece8 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-panel-title, .card-header h2, .card-header h3, .table-title, .table-header h3) {
+        color: #173026 !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+    }
+
+    body:has(.app-sidebar) .overview-chart-meta {
+        padding: 22px 22px 0 !important;
+    }
+
+    body:has(.app-sidebar) .overview-chart-total strong {
+        color: #123126 !important;
+        font-weight: 800 !important;
+    }
+
+    body:has(.app-sidebar) .overview-chart {
+        height: 320px !important;
+        padding: 12px 20px 18px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn, button, .action-btn, .overview-action) {
+        min-height: 39px !important;
+        padding: 9px 14px !important;
+        border-radius: 10px !important;
+        font-size: 10px !important;
+        font-weight: 800 !important;
+        letter-spacing: -.005em !important;
+        transition: transform .16s ease, box-shadow .16s ease, background .16s ease !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-primary, .btn-success, .overview-action.is-primary) {
+        color: #fff !important;
+        background: linear-gradient(135deg, #0a8c5b, #087149) !important;
+        border-color: #087149 !important;
+        box-shadow: 0 7px 16px rgba(8, 113, 73, .18) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-primary, .btn-success, .overview-action.is-primary):hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 10px 22px rgba(8, 113, 73, .25) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(input, select, textarea, .form-control, .form-select) {
+        min-height: 41px !important;
+        border-color: #d8e3dd !important;
+        border-radius: 10px !important;
+        background-color: #fbfdfc !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(input, select, textarea, .form-control, .form-select):focus {
+        background-color: #fff !important;
+        border-color: #50b889 !important;
+        box-shadow: 0 0 0 4px rgba(16, 166, 107, .1) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) {
+        border-spacing: 0 9px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) thead th {
+        height: 42px !important;
+        padding: 11px 15px !important;
+        color: #607169 !important;
+        background: #edf4f0 !important;
+        border-color: #dce7e1 !important;
+        font-size: 8px !important;
+        font-weight: 800 !important;
+        letter-spacing: .075em !important;
+        text-transform: uppercase !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody td {
+        height: 56px !important;
+        padding: 11px 15px !important;
+        background: #fff !important;
+        border-color: #e1e9e5 !important;
+        box-shadow: 0 4px 12px rgba(32, 73, 55, .028) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody td:first-child {
+        border-radius: 11px 0 0 11px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody td:last-child {
+        border-radius: 0 11px 11px 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) tbody tr:hover td {
+        background: #f1fbf6 !important;
+        border-color: #b9ddca !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge, [class*="status-"]) {
+        min-height: 24px !important;
+        padding: 5px 9px !important;
+        border-radius: 999px !important;
+        font-weight: 800 !important;
+    }
+
+    body:has(.app-sidebar) .overview-school-icon {
+        width: 36px !important;
+        height: 36px !important;
+        color: #087a50 !important;
+        background: #e9f8f0 !important;
+        border-radius: 10px !important;
+    }
+
+    body:has(.app-sidebar) .modal-content {
+        border: 0 !important;
+        border-radius: 18px !important;
+        box-shadow: 0 30px 80px rgba(4, 43, 29, .28) !important;
+    }
+
+    /* Legacy pages use more specific selectors; keep their hero identical. */
+    body:has(.app-sidebar) .main-content .content-area .page-header,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header {
+        position: relative !important;
+        isolation: isolate !important;
+        overflow: hidden !important;
+        align-items: center !important;
+        min-height: 126px !important;
+        margin: 0 0 22px !important;
+        padding: 25px 28px !important;
+        color: #fff !important;
+        background:
+            radial-gradient(circle at 88% 20%, rgba(116, 235, 173, .28), transparent 13rem),
+            linear-gradient(118deg, #0d3c2c 0%, #096b47 70%, #0a8154 100%) !important;
+        border: 1px solid rgba(255, 255, 255, .08) !important;
+        border-radius: 19px !important;
+        box-shadow: 0 18px 38px rgba(8, 73, 48, .16) !important;
+    }
+
+    body:has(.app-sidebar) .main-content .content-area .page-header::after,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header::after,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header::after,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header::after {
+        position: absolute !important;
+        z-index: -1 !important;
+        top: -62px !important;
+        right: 9% !important;
+        display: block !important;
+        width: 180px !important;
+        height: 180px !important;
+        border: 34px solid rgba(255, 255, 255, .055) !important;
+        border-radius: 50% !important;
+        content: "" !important;
+    }
+
+    body:has(.app-sidebar) .main-content .content-area .page-header .page-title,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header .page-title,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header .dashboard-title,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header .dashboard-title {
+        color: #fff !important;
+        background: none !important;
+        font-size: clamp(25px, 2.5vw, 34px) !important;
+        font-weight: 800 !important;
+        letter-spacing: -.045em !important;
+        -webkit-background-clip: border-box !important;
+        background-clip: border-box !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    body:has(.app-sidebar) .main-content .content-area .page-header .page-title i,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header .page-title i,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header .dashboard-title i,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header .dashboard-title i {
+        color: #91e9ba !important;
+    }
+
+    body:has(.app-sidebar) .main-content .content-area .page-header :is(.btn-primary, .btn-success),
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header :is(.btn-primary, .btn-success),
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header :is(.btn-primary, .btn-success),
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header :is(.btn-primary, .btn-success) {
+        color: #0a5135 !important;
+        background: #fff !important;
+        border-color: #fff !important;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .14) !important;
+    }
+
+    @media (max-width: 900px) {
+        .app-system-status {
+            display: none !important;
+        }
+
+        body:has(.app-sidebar) :is(.content-area, .dashboard-content) {
+            padding: 26px 22px 44px !important;
+        }
+    }
+
+    @media (max-width: 760px) {
+        body:has(.app-sidebar) .app-sidebar {
+            width: min(86vw, 300px) !important;
+        }
+
+        body:has(.app-sidebar) .main-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+        }
+
+        body:has(.app-sidebar) .app-topbar {
+            min-height: 66px !important;
+            padding: 0 15px !important;
+        }
+
+        body:has(.app-sidebar) .app-topbar-date {
+            display: none !important;
+        }
+
+        body:has(.app-sidebar) :is(.content-area, .dashboard-content) {
+            padding: 18px 14px 34px !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) {
+            align-items: flex-start !important;
+            min-height: 0 !important;
+            padding: 22px 20px !important;
+            border-radius: 16px !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(h1, h2, .page-title, .dashboard-title, .overview-title) {
+            font-size: 25px !important;
+        }
+
+        body:has(.app-sidebar) .overview-chart {
+            height: 270px !important;
+            padding-inline: 8px !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        body:has(.app-sidebar) * {
+            transition-duration: .001ms !important;
+        }
+    }
+
+    @media print {
+        body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) {
+            color: #000 !important;
+            background: #fff !important;
+            border: 0 !important;
+            box-shadow: none !important;
+        }
+    }
+
+    /* ================================================================
+       White workspace refinement
+       Colour is reserved for actions, categories, icons and statuses.
+       ================================================================ */
+    body:has(.app-sidebar) {
+        background: #f6f8f7 !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar {
+        color: #17271f !important;
+        background: #fff !important;
+        border-right: 1px solid #e1e8e4 !important;
+        box-shadow: 5px 0 22px rgba(20, 55, 40, .035) !important;
+    }
+
+    body:has(.app-sidebar) .app-brand {
+        color: #13271e !important;
+    }
+
+    body:has(.app-sidebar) .app-brand img {
+        width: 40px !important;
+        height: 40px !important;
+        padding: 2px !important;
+        background: #fff !important;
+        border-color: #d9e6df !important;
+        box-shadow: 0 4px 12px rgba(21, 83, 59, .09) !important;
+    }
+
+    body:has(.app-sidebar) .app-brand strong {
+        color: #13271e !important;
+    }
+
+    body:has(.app-sidebar) .app-brand small {
+        color: #829088 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search input {
+        color: #22352b !important;
+        background: #f8faf9 !important;
+        border-color: #dce5e0 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search input::placeholder,
+    body:has(.app-sidebar) .app-nav-search > i {
+        color: #96a29c !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search input:focus {
+        background: #fff !important;
+        border-color: #72bd96 !important;
+        box-shadow: 0 0 0 3px rgba(16, 166, 107, .09) !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search kbd {
+        color: #87958e !important;
+        background: #fff !important;
+        border-color: #dde6e1 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-scroll {
+        scrollbar-color: #dce4e0 transparent !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-scroll::-webkit-scrollbar-thumb {
+        background: #dce4e0 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-label {
+        color: #9aa69f !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link, .app-nav-group > summary) {
+        color: #54635b !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link, .app-nav-group > summary) > i {
+        color: #8b9891 !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link:hover, .app-nav-group > summary:hover) {
+        color: #185f42 !important;
+        background: #f2f8f5 !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-link.is-active {
+        color: #11603f !important;
+        background: #e9f7ef !important;
+        box-shadow: inset 3px 0 #10a66b !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-link.is-active i {
+        color: #0b9b62 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group[open] > summary {
+        color: #253a30 !important;
+        background: #fafcfb !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group[open] > summary > i:first-child {
+        color: #7b5cc7 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a,
+    body:has(.app-sidebar) .app-nav-subgroup > summary {
+        color: #718078 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a > i,
+    body:has(.app-sidebar) .app-nav-subgroup > summary i {
+        color: #9aa69f !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a:hover,
+    body:has(.app-sidebar) .app-nav-group > div a.is-active,
+    body:has(.app-sidebar) .app-nav-subgroup > summary:hover {
+        color: #126644 !important;
+        background: #edf8f2 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a:hover > i,
+    body:has(.app-sidebar) .app-nav-group > div a.is-active > i {
+        color: #0b9b62 !important;
+    }
+
+    /* Category colour: compact accents similar to the asset references. */
+    body:has(.app-sidebar) .app-nav > :nth-child(1) > i:first-child {
+        color: #0ba76a !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > :nth-child(2) > i:first-child {
+        color: #4c7df0 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > :nth-child(3) > :is(i:first-child, summary > i:first-child) {
+        color: #865bd4 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > :nth-child(4) > :is(i:first-child, summary > i:first-child) {
+        color: #ed8b32 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > :nth-child(5) > :is(i:first-child, summary > i:first-child) {
+        color: #18a69b !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > details:nth-child(1) > summary > i:first-child {
+        color: #4c7df0 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > details:nth-child(3) > summary > i:first-child {
+        color: #865bd4 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > details:nth-child(4) > summary > i:first-child {
+        color: #ed8b32 !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > details:nth-child(5) > summary > i:first-child {
+        color: #18a69b !important;
+    }
+
+    body:has(.app-sidebar) .app-nav > details:nth-child(6) > summary > i:first-child {
+        color: #c05da5 !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar-footer {
+        border-top-color: #e4eae7 !important;
+    }
+
+    body:has(.app-sidebar) .app-profile-card {
+        color: #17271f !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-profile-card:hover, .app-profile-card.is-active) {
+        background: #f3f8f5 !important;
+    }
+
+    body:has(.app-sidebar) .app-user-avatar {
+        color: #087149 !important;
+        background: #e4f8ee !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .app-profile-copy strong {
+        color: #17271f !important;
+    }
+
+    body:has(.app-sidebar) .app-profile-copy small {
+        color: #8a9790 !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar-logout {
+        color: #68776f !important;
+        background: #f5f8f6 !important;
+        border: 1px solid #e4eae7 !important;
+    }
+
+    body:has(.app-sidebar) .app-sidebar-logout:hover {
+        color: #d23d45 !important;
+        background: #fff1f2 !important;
+        border-color: #ffd5d8 !important;
+    }
+
+    body:has(.app-sidebar) .app-topbar {
+        background: rgba(255, 255, 255, .94) !important;
+        border-bottom-color: #e3e9e6 !important;
+        box-shadow: 0 3px 15px rgba(28, 60, 46, .025) !important;
+    }
+
+    .app-system-status,
+    body:has(.app-sidebar) .app-topbar-date {
+        background: #fff !important;
+        border-color: #e0e8e4 !important;
+        box-shadow: none !important;
+    }
+
+    /* Page headings return to clean white space—no large colour fields. */
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header),
+    body:has(.app-sidebar) .main-content .content-area .page-header,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header {
+        overflow: visible !important;
+        min-height: 0 !important;
+        margin: 0 0 24px !important;
+        padding: 3px 0 !important;
+        color: #12271d !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header)::after,
+    body:has(.app-sidebar) .main-content .content-area .page-header::after,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header::after,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header::after,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header::after {
+        display: none !important;
+        content: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(h1, h2, .page-title, .dashboard-title, .overview-title),
+    body:has(.app-sidebar) .main-content .content-area .page-header .page-title,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header .page-title,
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header .dashboard-title,
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header .dashboard-title {
+        color: #12271d !important;
+        background: none !important;
+        font-size: clamp(25px, 2.5vw, 32px) !important;
+        font-weight: 800 !important;
+        -webkit-background-clip: border-box !important;
+        background-clip: border-box !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(.overview-eyebrow, .page-subtitle, .dashboard-subtitle, .overview-subtitle, p) {
+        color: #718078 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(.page-title, .dashboard-title, h1, h2) > i,
+    body:has(.app-sidebar) .main-content .content-area .page-header .page-title i,
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header .page-title i {
+        color: #0b9b62 !important;
+    }
+
+    body:has(.app-sidebar) .overview-update {
+        color: #6d7c74 !important;
+    }
+
+    body:has(.app-sidebar) .overview-update :is(i, .fa-circle-check) {
+        color: #10a66b !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(.btn, button, .overview-action) {
+        color: #43544b !important;
+        background: #fff !important;
+        border-color: #d7e2dc !important;
+        box-shadow: 0 2px 7px rgba(22, 61, 43, .04) !important;
+        backdrop-filter: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header) :is(.btn-primary, .btn-success, .overview-action.is-primary),
+    body:has(.app-sidebar) .main-content .content-area .page-header :is(.btn-primary, .btn-success),
+    body:has(.app-sidebar) .main-content .dashboard-content .page-header :is(.btn-primary, .btn-success),
+    body:has(.app-sidebar) .main-content .content-area .dashboard-header :is(.btn-primary, .btn-success),
+    body:has(.app-sidebar) .main-content .dashboard-content .dashboard-header :is(.btn-primary, .btn-success) {
+        color: #fff !important;
+        background: #087a50 !important;
+        border-color: #087a50 !important;
+        box-shadow: 0 6px 14px rgba(8, 122, 80, .15) !important;
+    }
+
+    /* White cards with small, colourful functional markers. */
+    body:has(.app-sidebar) .main-content :is(.overview-stat, .summary-card, .stats-grid .stat-card) {
+        border: 1px solid #dfe8e3 !important;
+        box-shadow: 0 4px 16px rgba(29, 72, 53, .045) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.overview-stat, .summary-card, .stats-grid .stat-card):hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 8px 22px rgba(29, 72, 53, .07) !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="income"]::before,
+    body:has(.app-sidebar) .summary-cards > :nth-child(1)::before,
+    body:has(.app-sidebar) .stats-grid > :nth-child(1)::before {
+        background: #14a96d !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="expense"]::before,
+    body:has(.app-sidebar) .summary-cards > :nth-child(2)::before,
+    body:has(.app-sidebar) .stats-grid > :nth-child(2)::before {
+        background: #f09a3e !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="balance"]::before,
+    body:has(.app-sidebar) .summary-cards > :nth-child(3)::before,
+    body:has(.app-sidebar) .stats-grid > :nth-child(3)::before {
+        background: #527bea !important;
+    }
+
+    body:has(.app-sidebar) .summary-cards > :nth-child(4)::before,
+    body:has(.app-sidebar) .stats-grid > :nth-child(4)::before {
+        background: #8a60d1 !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat-main,
+    body:has(.app-sidebar) .overview-stat[data-tone="expense"] .overview-stat-main {
+        background: #fff !important;
+    }
+
+    body:has(.app-sidebar) .overview-stat[data-tone="balance"] .overview-stat-icon,
+    body:has(.app-sidebar) .summary-cards > :nth-child(3) .summary-card-icon,
+    body:has(.app-sidebar) .stats-grid > :nth-child(3) .stat-icon {
+        color: #4169d7 !important;
+        background: #edf2ff !important;
+        box-shadow: inset 0 0 0 1px rgba(65, 105, 215, .1) !important;
+    }
+
+    body:has(.app-sidebar) .summary-cards > :nth-child(4) .summary-card-icon,
+    body:has(.app-sidebar) .stats-grid > :nth-child(4) .stat-icon {
+        color: #7a4bc1 !important;
+        background: #f4effc !important;
+        box-shadow: inset 0 0 0 1px rgba(122, 75, 193, .1) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .overview-panel, .card, .dashboard-card, .chart-card, .content-card,
+        .detail-card, .profile-card, .info-card, .report-card, .filter-card,
+        .filter-section, .form-container, .table-container, .schools-table-card,
+        .students-table-container, .import-card
+    ) {
+        border-color: #dfe7e3 !important;
+        box-shadow: 0 4px 16px rgba(29, 72, 53, .04) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-warning, .btn-edit) {
+        color: #a85d12 !important;
+        background: #fff6e9 !important;
+        border-color: #f6d5a8 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-danger, .btn-delete) {
+        color: #c53642 !important;
+        background: #fff1f2 !important;
+        border-color: #ffcdd1 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-info, .btn-view) {
+        color: #315fc8 !important;
+        background: #eef3ff !important;
+        border-color: #cedbff !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge-success, .bg-success, .status-success, .role-badge.super-admin) {
+        color: #087a50 !important;
+        background: #dcf8e9 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge-info, .bg-info, .status-info) {
+        color: #315fc8 !important;
+        background: #e8efff !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge-warning, .bg-warning, .status-warning) {
+        color: #a75b10 !important;
+        background: #fff0d9 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge-danger, .bg-danger, .status-danger) {
+        color: #c53642 !important;
+        background: #ffe8ea !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(table, .table, .schools-table, .overview-table) thead th {
+        color: #6a7770 !important;
+        background: #f5f8f6 !important;
+    }
+
+    @media (max-width: 760px) {
+        body:has(.app-sidebar) .app-sidebar {
+            background: #fff !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(.overview-heading, .page-header, .dashboard-header),
+        body:has(.app-sidebar) .main-content .content-area .page-header,
+        body:has(.app-sidebar) .main-content .dashboard-content .page-header {
+            padding: 2px 0 !important;
+            border-radius: 0 !important;
+        }
+    }
+
+    /* Nested SPP details are one compact table, not a stack of record cards. */
+    body:has(.app-sidebar) .payment-page .payment-group {
+        overflow: hidden !important;
+        border-color: #dfe5ee !important;
+        box-shadow: 0 2px 8px rgba(34, 48, 74, .035) !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-group.is-open {
+        border-color: #bdc9fb !important;
+        box-shadow: 0 7px 20px rgba(79, 70, 229, .075) !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-group-header {
+        background: #fff !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-group-body {
+        overflow-x: auto !important;
+        background: #fff !important;
+    }
+
+    @media (min-width: 761px) {
+        body:has(.app-sidebar) .payment-page .payment-bill-table {
+            width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            background: #fff !important;
+            table-layout: fixed !important;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+        }
+
+        body:has(.app-sidebar) .payment-page .payment-bill-table thead th {
+            height: 42px !important;
+            padding: 8px 12px !important;
+            color: #667085 !important;
+            background: #f7f8fc !important;
+            border: 0 !important;
+            border-top: 1px solid #e4e8ef !important;
+            border-bottom: 1px solid #e4e8ef !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body:has(.app-sidebar) .payment-page .payment-bill-table tbody td {
+            height: 54px !important;
+            padding: 9px 12px !important;
+            background: #fff !important;
+            border: 0 !important;
+            border-bottom: 1px solid #edf1ef !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body:has(.app-sidebar) .payment-page .payment-bill-table tbody tr:last-child td {
+            border-bottom: 0 !important;
+        }
+
+        body:has(.app-sidebar) .payment-page .payment-bill-table tbody tr:hover td {
+            background: #fafbff !important;
+            border-color: #e5e8f4 !important;
+        }
+    }
+
+    /* Functional colour accents: white surfaces, expressive controls. */
+    body:has(.app-sidebar) .main-content :is(
+        .page-title, .dashboard-title, .section-title, .table-title,
+        .table-header h3, .filter-card > h3, .filter-container > h3,
+        .form-header h3, .school-header h3
+    ) > i {
+        display: inline-grid !important;
+        place-items: center !important;
+        flex: 0 0 31px !important;
+        width: 31px !important;
+        height: 31px !important;
+        margin-right: 8px !important;
+        color: #087a50 !important;
+        background: #e6f8ef !important;
+        border: 1px solid #cceedd !important;
+        border-radius: 9px !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.table-title, .table-header h3) > i {
+        color: #3970dc !important;
+        background: #edf2ff !important;
+        border-color: #d7e1ff !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.filter-card > h3, .filter-container > h3) > i {
+        color: #7650bf !important;
+        background: #f4effd !important;
+        border-color: #e6dafa !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-header h3, .school-header h3) > i {
+        color: #bd681b !important;
+        background: #fff3e5 !important;
+        border-color: #f7ddbd !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.form-label, label) > i:not(.fa-chevron-down) {
+        display: inline-block !important;
+        width: auto !important;
+        margin-right: 5px !important;
+        color: #5578c8 !important;
+        font-size: .9em !important;
+    }
+
+    /* Buttons receive distinct semantic colours. */
+    body:has(.app-sidebar) .main-content :is(.btn-primary, .payment-button.is-primary, button[type="submit"]:not(.btn-danger):not(.btn-warning):not(.app-icon-button)) {
+        color: #fff !important;
+        background: linear-gradient(135deg, #0b9661, #08734b) !important;
+        border-color: #08734b !important;
+        box-shadow: 0 6px 14px rgba(8, 115, 75, .16) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-success, .export-btn) {
+        color: #fff !important;
+        background: linear-gradient(135deg, #13a978, #0b8660) !important;
+        border-color: #0b8660 !important;
+        box-shadow: 0 5px 13px rgba(11, 134, 96, .15) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-info, .btn-view) {
+        color: #fff !important;
+        background: linear-gradient(135deg, #5685ed, #3f68ce) !important;
+        border-color: #3f68ce !important;
+        box-shadow: 0 5px 13px rgba(63, 104, 206, .15) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-warning, .btn-edit) {
+        color: #9b520c !important;
+        background: #fff1dc !important;
+        border-color: #f5cd96 !important;
+        box-shadow: 0 4px 10px rgba(210, 126, 35, .08) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-danger, .btn-delete) {
+        color: #c12f3c !important;
+        background: #ffedef !important;
+        border-color: #ffc5ca !important;
+        box-shadow: 0 4px 10px rgba(205, 57, 69, .07) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-secondary, .btn-light, .btn-outline-secondary) {
+        color: #6248a4 !important;
+        background: #f5f1fc !important;
+        border-color: #e1d6f5 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.btn-print, .print-btn) {
+        color: #fff !important;
+        background: linear-gradient(135deg, #8a62d2, #6e47b5) !important;
+        border-color: #6e47b5 !important;
+        box-shadow: 0 5px 13px rgba(110, 71, 181, .15) !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .btn-primary, .btn-success, .btn-info, .btn-warning, .btn-danger,
+        .btn-secondary, .btn-edit, .btn-delete, .btn-view, .payment-button, .action-btn
+    ) > i {
+        font-size: .95em !important;
+    }
+
+    /* Statuses combine colour, soft fill and a subtle outline. */
+    body:has(.app-sidebar) .main-content :is(
+        .badge-success, .bg-success, .status-success, .status-lunas,
+        .badge-lunas, .role-badge.super-admin, .payment-status.is-paid
+    ) {
+        color: #08734b !important;
+        background: #def8ea !important;
+        border: 1px solid #c2efd7 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .badge-info, .bg-info, .status-info, .badge-primary,
+        .badge-code, .status-proses
+    ) {
+        color: #315fc8 !important;
+        background: #eaf0ff !important;
+        border: 1px solid #d3deff !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .badge-warning, .bg-warning, .status-warning, .status-sebagian,
+        .badge-secondary, .badge-menipis
+    ) {
+        color: #a25b14 !important;
+        background: #fff1dc !important;
+        border: 1px solid #f5d4a8 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .badge-danger, .bg-danger, .status-danger, .status-belum,
+        .badge-belum, .payment-status:not(.is-paid):not(.is-partial):not(.is-upcoming)
+    ) {
+        color: #c22f3c !important;
+        background: #ffedef !important;
+        border: 1px solid #ffd0d4 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.badge, [class*="status-"], [class^="badge-"]) {
+        font-weight: 750 !important;
+        letter-spacing: .005em !important;
+    }
+
+    body:has(.app-sidebar) .main-content table thead th:nth-child(4n + 1) > i { color: #0b9b62 !important; }
+    body:has(.app-sidebar) .main-content table thead th:nth-child(4n + 2) > i { color: #4774db !important; }
+    body:has(.app-sidebar) .main-content table thead th:nth-child(4n + 3) > i { color: #8557c7 !important; }
+    body:has(.app-sidebar) .main-content table thead th:nth-child(4n) > i { color: #d37925 !important; }
+
+    body:has(.app-sidebar) .main-content :is(.id-text, .overview-money.is-balance, .permission-count) {
+        color: #08734b !important;
+        font-weight: 700 !important;
+    }
+
+    /* Route proses-siswa: colourful summary icons and clearer hierarchy. */
+    body:has(.app-sidebar) .payment-page .payment-eyebrow {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        color: #6b54a8 !important;
+        font-weight: 750 !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-eyebrow i { color: #7e58c4 !important; }
+
+    body:has(.app-sidebar) .payment-page .payment-student-detail > span {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-student-detail:nth-child(1) > span i { color: #4b75d7 !important; }
+    body:has(.app-sidebar) .payment-page .payment-student-detail:nth-child(2) > span i { color: #8a5bca !important; }
+
+    body:has(.app-sidebar) .payment-page .payment-stat {
+        position: relative !important;
+        overflow: hidden !important;
+        padding: 15px 16px 15px 62px !important;
+        border-color: #dfe7e3 !important;
+        box-shadow: 0 4px 13px rgba(29, 72, 53, .035) !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-stat-label {
+        display: flex !important;
+        align-items: center !important;
+        min-height: 26px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-stat-icon {
+        position: absolute !important;
+        top: 50% !important;
+        left: 16px !important;
+        display: grid !important;
+        place-items: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        color: #3970dc !important;
+        background: #edf2ff !important;
+        border: 1px solid #d9e3ff !important;
+        border-radius: 9px !important;
+        font-size: 12px !important;
+        transform: translateY(-50%) !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-stat:nth-child(2) .payment-stat-icon {
+        color: #8557c7 !important;
+        background: #f4effd !important;
+        border-color: #e5dafa !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-stat.is-success .payment-stat-icon {
+        color: #087a50 !important;
+        background: #e5f8ee !important;
+        border-color: #cceedd !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-stat.is-danger .payment-stat-icon {
+        color: #c22f3c !important;
+        background: #ffedef !important;
+        border-color: #ffd0d4 !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-step-number {
+        color: #fff !important;
+        background: linear-gradient(135deg, #8a62d2, #6e47b5) !important;
+        box-shadow: 0 4px 10px rgba(110, 71, 181, .16) !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-selection-hint {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-selection-hint i { color: #d17a25 !important; }
+
+    body:has(.app-sidebar) .payment-page .payment-group-toggle {
+        color: #3970dc !important;
+        background: #edf2ff !important;
+        border-color: #d3dfff !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-row-kind.is-expandable {
+        color: #315fc8 !important;
+        background: #edf2ff !important;
+        border-color: #d3dfff !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-button:disabled,
+    body:has(.app-sidebar) .payment-page .payment-button.is-primary:disabled {
+        color: #98a2b3 !important;
+        background: #f2f4f7 !important;
+        border-color: #e1e6e3 !important;
+        box-shadow: none !important;
+        transform: none !important;
+        cursor: not-allowed !important;
+    }
+
+    @media (max-width: 700px) {
+        body:has(.app-sidebar) .payment-page .payment-stat {
+            padding: 13px 12px 13px 54px !important;
+        }
+
+        body:has(.app-sidebar) .payment-page .payment-stat-icon {
+            left: 12px !important;
+            width: 32px !important;
+            height: 32px !important;
+        }
+    }
+
+/* Typography system */
+/* Final legibility layer: intentionally loaded after every page-specific style. */
+    body:has(.app-sidebar) {
+        font-size: 14.5px !important;
+    }
+
+    body:has(.app-sidebar) .app-brand strong {
+        font-size: 15.5px !important;
+    }
+
+    body:has(.app-sidebar) .app-brand small {
+        font-size: 11.5px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search input {
+        font-size: 13px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-search > i {
+        font-size: 13px !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-label, .app-nav-search kbd) {
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link, .app-nav-group > summary) {
+        min-height: 43px !important;
+        font-size: 13.5px !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-nav-link, .app-nav-group > summary) > i:first-child {
+        font-size: 16px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a {
+        min-height: 35px !important;
+        font-size: 12.5px !important;
+    }
+
+    body:has(.app-sidebar) .app-nav-group > div a > i,
+    body:has(.app-sidebar) .app-nav-group > summary .fa-chevron-down {
+        font-size: 11.5px !important;
+    }
+
+    body:has(.app-sidebar) .app-topbar-context {
+        font-size: 10.5px !important;
+    }
+
+    body:has(.app-sidebar) .app-topbar-title strong {
+        font-size: 16px !important;
+    }
+
+    body:has(.app-sidebar) :is(.app-topbar-date, .app-system-status) {
+        font-size: 12px !important;
+    }
+
+    body:has(.app-sidebar) .app-user-copy strong {
+        font-size: 13px !important;
+    }
+
+    body:has(.app-sidebar) .app-user-copy small {
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) .main-content {
+        font-size: 14px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .page-title, .dashboard-title, .overview-title,
+        .billing-title, .payment-title, h1
+    ) {
+        font-size: clamp(29px, 2.55vw, 36px) !important;
+        line-height: 1.18 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .page-subtitle, .dashboard-subtitle, .overview-subtitle,
+        .billing-subtitle, .payment-subtitle, .history-subtitle,
+        .page-description, .section-description
+    ) {
+        font-size: 13.5px !important;
+        line-height: 1.6 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .card-header h2, .card-header h3, .form-header h2, .form-header h3,
+        .table-header h2, .table-header h3, .table-title,
+        .section-header h3, .section-header h4, .overview-panel-title,
+        .billing-panel-title, .payment-panel-title, .modal-title,
+        .section-title
+    ) {
+        font-size: 16px !important;
+        line-height: 1.35 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(p, li) {
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(label, .form-label, .filter-label) {
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        input, select, textarea, .form-control, .form-select,
+        .search-input, [class*="search-input"]
+    ) {
+        font-size: 13px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        input, textarea, .form-control, .search-input, [class*="search-input"]
+    )::placeholder {
+        font-size: 12.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        small, .small, .form-text, .text-muted, .help-text, .input-help,
+        [class*="-hint"], [class*="-note"], [class*="-caption"]
+    ) {
+        font-size: 11.25px !important;
+        line-height: 1.5 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .btn, .btn-primary, .btn-secondary, .btn-success, .btn-info,
+        .btn-warning, .btn-danger, .btn-light, .btn-edit, .btn-delete,
+        .btn-view, .btn-action, .filter-btn, .payment-button,
+        .billing-action, .billing-status-button, .overview-action,
+        .action-btn, .btn-filter, .btn-filter-primary, .btn-filter-secondary,
+        .reset-btn
+    ) {
+        font-size: 12.5px !important;
+        line-height: 1.15 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .btn, .btn-primary, .btn-secondary, .btn-success, .btn-info,
+        .btn-warning, .btn-danger, .btn-edit, .btn-delete, .btn-view,
+        .payment-button, .overview-action, .billing-action, .action-btn,
+        .reset-btn
+    ) > i {
+        font-size: 12.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .badge, .status-badge, .billing-status, .payment-status,
+        .paid-badge, .role-badge, .flow-state,
+        [class^="badge-"], [class*=" badge-"]
+    ) {
+        min-height: 29px !important;
+        padding-inline: 10px !important;
+        font-size: 10.75px !important;
+        line-height: 1.1 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-badge-icon {
+        width: 13px !important;
+        height: 13px !important;
+        font-size: 11.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content table:not(.receipt-table) thead th {
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+    }
+
+    body:has(.app-sidebar) .main-content table:not(.receipt-table) tbody td {
+        font-size: 12.75px !important;
+        line-height: 1.5 !important;
+    }
+
+    body:has(.app-sidebar) .main-content table:not(.receipt-table) tbody td :is(small, .small, .text-muted) {
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) .main-content table thead th > i {
+        width: 27px !important;
+        height: 27px !important;
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) .main-content td.pi-action-column :is(
+        .btn, .btn-edit, .btn-delete, .btn-view, .btn-action, .pi-table-action
+    ),
+    body:has(.app-sidebar) .main-content td.pi-action-column form > :is(button, .btn) {
+        font-size: 11.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content td.pi-action-column :is(a, button) > i {
+        font-size: 12px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .stat-label, .summary-label, .overview-stat-label,
+        .billing-stat-label, .payment-stat-label
+    ) {
+        font-size: 11.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(
+        .stat-value, .summary-value, .overview-stat-value,
+        .billing-stat-value, .payment-stat-value
+    ) {
+        font-size: 22px !important;
+        line-height: 1.2 !important;
+    }
+
+    body:has(.app-sidebar) .main-content :is(.pagination, .page-link) {
+        font-size: 11.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-table-sortbar-label,
+    body:has(.app-sidebar) .main-content .pi-table-sortbar-select {
+        font-size: 12.5px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page :is(
+        .payment-panel-context, .payment-selection-hint,
+        .payment-check-label, .payment-group-select
+    ) {
+        font-size: 11.75px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page :is(
+        .payment-group-copy strong, .payment-single-section-copy > div > strong,
+        .payment-single-name strong, .payment-single-value strong
+    ) {
+        font-size: 13px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page :is(
+        .payment-group-copy span, .payment-single-section-copy > div > span,
+        .payment-single-name span, .payment-single-value span,
+        .payment-group-amount span, .payment-single-section-balance span,
+        .payment-summary-item span, .payment-single-label
+    ) {
+        font-size: 11px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page :is(
+        .payment-group-amount strong, .payment-single-section-balance strong,
+        .payment-summary-item strong
+    ) {
+        font-size: 13px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-row-kind,
+    body:has(.app-sidebar) .payment-page .payment-single-count {
+        font-size: 10.5px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-bill-table thead th,
+    body:has(.app-sidebar) .payment-page .payment-single-head {
+        font-size: 10.75px !important;
+    }
+
+    body:has(.app-sidebar) .payment-page .payment-bill-table tbody td {
+        font-size: 12px !important;
+    }
+
+    @media (max-width: 760px) {
+        body:has(.app-sidebar) {
+            font-size: 14px !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(
+            .page-title, .dashboard-title, .overview-title,
+            .billing-title, .payment-title, h1
+        ) {
+            font-size: 27px !important;
+        }
+    }
+
+/* Print document system */
+/* Receipt surfaces are documents, never dashboard cards. */
+    body:has(.app-sidebar) .main-content :is(.receipt-paper, .print-kwitansi, .pi-receipt-document) {
+        color: #111 !important;
+        background: #fff !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    body:has(.app-sidebar) .main-content .receipt-paper.pi-receipt-document {
+        width: min(100%, 700px) !important;
+        padding: 28px 30px 22px !important;
+        border: 1px solid #bbb !important;
+    }
+
+    body:has(.app-sidebar) .main-content .print-kwitansi.pi-receipt-document {
+        width: min(100%, 700px) !important;
+        max-width: 700px !important;
+        margin-inline: auto !important;
+        padding: 0 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document :is(
+        .container, .row, [class^="col-"], [class*=" col-"],
+        .card, .card-body, .card-header,
+        .table-container, .table-responsive, .receipt-table-wrap
+    ) {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        color: inherit !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document .pi-table-sortbar {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table {
+        display: table !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        color: #111 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+        table-layout: auto !important;
+        font-size: 10.5px !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table thead {
+        display: table-header-group !important;
+        background: transparent !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table tbody {
+        display: table-row-group !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table tr {
+        display: table-row !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table th,
+    body:has(.app-sidebar) .main-content .pi-receipt-document table td {
+        position: static !important;
+        display: table-cell !important;
+        width: auto !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 7px 5px !important;
+        color: #111 !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+        vertical-align: top !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table th {
+        padding-block: 6px !important;
+        border-top: 1px dashed #777 !important;
+        border-bottom: 1px dashed #777 !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        letter-spacing: .02em !important;
+        text-transform: uppercase !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table tbody td {
+        border-bottom: 1px dotted #ccc !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table tbody tr:last-child td {
+        border-bottom: 1px dashed #777 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table :is(th, td)::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document table th :is(i, svg, .pi-sort-indicator, .pi-sort-sr) {
+        display: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document :is(
+        .receipt-document-header, .receipt-meta, .receipt-recipient,
+        .receipt-note, .receipt-signature-grid, .receipt-document-footer
+    ) {
+        background: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document .receipt-document-header {
+        border-bottom: 1px dashed #555 !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document :is(.receipt-meta, .receipt-recipient) {
+        border-color: #aaa !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document .receipt-table-number {
+        width: 34px !important;
+        text-align: center !important;
+    }
+
+    body:has(.app-sidebar) .main-content .pi-receipt-document :is(.receipt-table-amount, .receipt-money) {
+        width: 116px !important;
+        text-align: right !important;
+        white-space: nowrap !important;
+    }
+
+    @media (max-width: 760px) {
+        body:has(.app-sidebar) .main-content .receipt-paper.pi-receipt-document {
+            padding: 20px 16px !important;
+        }
+
+        body:has(.app-sidebar) .main-content .pi-receipt-document .receipt-table-wrap {
+            overflow-x: auto !important;
+        }
+
+        body:has(.app-sidebar) .main-content .pi-receipt-document table {
+            min-width: 560px !important;
+        }
+    }
+
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+
+        html,
+        body {
+            width: 100% !important;
+            min-width: 0 !important;
+            color: #000 !important;
+            background: #fff !important;
+        }
+
+        body:has(.app-sidebar) {
+            font-size: 10pt !important;
+        }
+
+        body:has(.app-sidebar) :is(
+            .app-sidebar, .app-topbar, .sidebar-overlay-bg,
+            .no-print, .pi-table-sortbar
+        ) {
+            display: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content,
+        body:has(.app-sidebar) .content-area {
+            position: static !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            color: #000 !important;
+            background: #fff !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(
+            .table-container, .table-responsive, .billing-table-wrap,
+            .overview-table-wrap, .students-table-container
+        ) {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content table:not(.receipt-table) {
+            display: table !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            color: #000 !important;
+            background: #fff !important;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            table-layout: auto !important;
+            font-size: 9pt !important;
+        }
+
+        body:has(.app-sidebar) .main-content table:not(.receipt-table) :is(thead, tbody) {
+            display: table-row-group !important;
+        }
+
+        body:has(.app-sidebar) .main-content table:not(.receipt-table) thead {
+            display: table-header-group !important;
+        }
+
+        body:has(.app-sidebar) .main-content table:not(.receipt-table) tr {
+            display: table-row !important;
+            margin: 0 !important;
+            background: #fff !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            break-inside: avoid !important;
+        }
+
+        body:has(.app-sidebar) .main-content table:not(.receipt-table) :is(th, td) {
+            display: table-cell !important;
+            width: auto !important;
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 5px 6px !important;
+            color: #000 !important;
+            background: #fff !important;
+            border: 1px solid #777 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            font-size: 9pt !important;
+            line-height: 1.3 !important;
+            vertical-align: top !important;
+        }
+
+        body:has(.app-sidebar) .main-content table:not(.receipt-table) th {
+            font-weight: 700 !important;
+            text-transform: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content table th :is(i, svg, .pi-sort-indicator, .pi-sort-sr) {
+            display: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content :is(
+            .card, .summary-card, .stat-card, .subtotal-item, .summary-item
+        ) {
+            color: #000 !important;
+            background: #fff !important;
+            border-color: #777 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content .pi-receipt-document {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+        }
+
+        body:has(.app-sidebar) .main-content .pi-receipt-document table,
+        body:has(.app-sidebar) .main-content .pi-receipt-document table :is(thead, tbody, tr, th, td) {
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body:has(.app-sidebar) .main-content .pi-receipt-document table th,
+        body:has(.app-sidebar) .main-content .pi-receipt-document table td {
+            border-right: 0 !important;
+            border-left: 0 !important;
+        }
+    }

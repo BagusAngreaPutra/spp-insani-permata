@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -42,7 +43,7 @@
         text-decoration: none;
     }
     .btn-back { background: linear-gradient(135deg, #64748b, #475569); }
-    .btn-print { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+    .btn-print { background: linear-gradient(135deg, #25845d, #1d6b4c); }
     .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); }
     .alert-success { background: #dcfce7; border-radius: 14px; color: #166534; margin-bottom: 1rem; padding: 1rem 1.25rem; }
     @media (max-width: 768px) {
@@ -50,6 +51,7 @@
         .items-table { display: block; overflow-x: auto; }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

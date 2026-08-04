@@ -7,6 +7,9 @@ use App\Models\Sekolah;
 use App\Models\Siswa;
 use App\Models\Kelas;
 use App\Models\LogAktivitas;
+use App\Models\Tagihan;
+use App\Models\TahunAjaran;
+use App\Services\TagihanPeriodReconciler;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 
 class JenisPembayaranController extends Controller
 {
+    private array $paymentTypeAcademicYearCache = [];
+
     // Tampilkan daftar
     public function index(Request $request)
     {
@@ -21,7 +26,7 @@ class JenisPembayaranController extends Controller
         $selectedSekolah = $request->input('sekolah_id');
         $search = $request->input('search');
 
-        $query = JenisPembayaran::with(['sekolah', 'siswa', 'kelas']);
+        $query = JenisPembayaran::with(['sekolah', 'tahunAjaran', 'siswa', 'kelas']);
 
         if (!empty($selectedSekolah)) {
             $query->where('sekolah_id', $selectedSekolah);
@@ -30,7 +35,8 @@ class JenisPembayaranController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_pembayaran', 'like', "%{$search}%")
-                  ->orWhere('tipe', 'like', "%{$search}%");
+                  ->orWhere('tipe', 'like', "%{$search}%")
+                  ->orWhereHas('tahunAjaran', fn ($tahun) => $tahun->where('nama_tahun', 'like', "%{$search}%"));
             });
         }
 
@@ -47,34 +53,33 @@ class JenisPembayaranController extends Controller
     public function create()
     {
         $sekolah = Sekolah::all();
+        $tahunAjaran = $this->getAcademicYearOptions();
         $siswa = collect();
         $kelas = collect();
         
-        return view('jenis_pembayaran.create', compact('sekolah', 'siswa', 'kelas'));
+        return view('jenis_pembayaran.create', compact('sekolah', 'tahunAjaran', 'siswa', 'kelas'));
     }
 
     public function store(Request $request)
     {
-        // ✅ TAMBAH handling untuk semester
-        if ($request->tipe === 'bulanan' && is_numeric($request->jatuh_tempo)) {
-            $request->merge([
-                'jatuh_tempo' => date('Y') . '-01-' . str_pad($request->jatuh_tempo, 2, '0', STR_PAD_LEFT),
-            ]);
-        }
-
-        // ✅ TAMBAH handling untuk semester
-        if ($request->tipe === 'semester' && is_numeric($request->jatuh_tempo)) {
-            $request->merge([
-                'jatuh_tempo' => date('Y') . '-' . str_pad($request->jatuh_tempo, 2, '0', STR_PAD_LEFT) . '-01',
-            ]);
-        }
+        $this->normalizeCurrencyFields($request, ['nominal']);
+        $this->normalizeDueDateForAcademicYear($request);
 
         $validated = $request->validate([
             'sekolah_id'      => 'required|exists:sekolah,id',
+            'tahun_ajaran_id' => [
+                'required',
+                'exists:tahun_ajaran,id',
+                function ($attribute, $value, $fail) {
+                    if (!TahunAjaran::find($value)?->hasValidPeriod()) {
+                        $fail('Tahun ajaran yang dipilih harus berformat berurutan, misalnya 2025/2026.');
+                    }
+                },
+            ],
             'nama_pembayaran' => 'required|string|max:255',
             'tipe'            => 'required|in:sekali,bulanan,setahun,semester', // ✅ TAMBAH semester
             'nominal'         => 'required|numeric|min:0',
-            'jatuh_tempo'     => 'required|date',
+            'jatuh_tempo'     => $this->dueDateRules($request),
             'target_type'     => 'required|in:all,specific_students,specific_classes',
             'siswa_ids'       => 'required_if:target_type,specific_students|array',
             'siswa_ids.*'     => 'exists:siswa,id',
@@ -117,8 +122,9 @@ class JenisPembayaranController extends Controller
 
     public function edit($id)
     {
-        $jenis = JenisPembayaran::with(['siswa', 'kelas'])->findOrFail($id);
+        $jenis = JenisPembayaran::with(['tahunAjaran', 'siswa', 'kelas'])->findOrFail($id);
         $sekolah = Sekolah::all();
+        $tahunAjaran = $this->getAcademicYearOptions();
 
         // ✅ PERBAIKAN: Langsung filter siswa berdasarkan id_sekolah
         $siswa = Siswa::where('id_sekolah', $jenis->sekolah_id)  // <- PERBAIKAN!
@@ -126,32 +132,30 @@ class JenisPembayaranController extends Controller
 
         $kelas = Kelas::where('sekolah_id', $jenis->sekolah_id)->get();
 
-        return view('jenis_pembayaran.edit', compact('jenis', 'sekolah', 'siswa', 'kelas'));
+        return view('jenis_pembayaran.create', compact('jenis', 'sekolah', 'tahunAjaran', 'siswa', 'kelas'));
     }
 
     
     public function update(Request $request, $id)
     {
-        // ✅ TAMBAH handling untuk semester (sama seperti store)
-        if ($request->tipe === 'bulanan' && is_numeric($request->jatuh_tempo)) {
-            $request->merge([
-                'jatuh_tempo' => date('Y') . '-01-' . str_pad($request->jatuh_tempo, 2, '0', STR_PAD_LEFT),
-            ]);
-        }
-
-        // ✅ TAMBAH handling untuk semester
-        if ($request->tipe === 'semester' && is_numeric($request->jatuh_tempo)) {
-            $request->merge([
-                'jatuh_tempo' => date('Y') . '-' . str_pad($request->jatuh_tempo, 2, '0', STR_PAD_LEFT) . '-01',
-            ]);
-        }
+        $this->normalizeCurrencyFields($request, ['nominal']);
+        $this->normalizeDueDateForAcademicYear($request);
 
         $validated = $request->validate([
             'sekolah_id'      => 'required|exists:sekolah,id',
+            'tahun_ajaran_id' => [
+                'required',
+                'exists:tahun_ajaran,id',
+                function ($attribute, $value, $fail) {
+                    if (!TahunAjaran::find($value)?->hasValidPeriod()) {
+                        $fail('Tahun ajaran yang dipilih harus berformat berurutan, misalnya 2025/2026.');
+                    }
+                },
+            ],
             'nama_pembayaran' => 'required|string|max:255',
             'tipe'            => 'required|in:sekali,bulanan,setahun,semester', // ✅ TAMBAH semester
             'nominal'         => 'required|numeric|min:0',
-            'jatuh_tempo'     => 'required|date',
+            'jatuh_tempo'     => $this->dueDateRules($request),
             'target_type'     => 'required|in:all,specific_students,specific_classes',
             'siswa_ids'       => 'required_if:target_type,specific_students|array',
             'siswa_ids.*'     => 'exists:siswa,id',
@@ -246,6 +250,61 @@ class JenisPembayaranController extends Controller
         ]);
     }
 
+    private function getAcademicYearOptions()
+    {
+        return TahunAjaran::validPeriods();
+    }
+
+    private function normalizeDueDateForAcademicYear(Request $request): void
+    {
+        $tahunAjaran = TahunAjaran::find($request->input('tahun_ajaran_id'));
+        $bounds = $tahunAjaran?->periodBounds();
+
+        if (!$bounds || !is_numeric($request->input('jatuh_tempo'))) {
+            return;
+        }
+
+        [$startYear, $endYear] = $bounds;
+        $selected = (int) $request->input('jatuh_tempo');
+
+        if ($request->input('tipe') === 'bulanan' && $selected >= 1 && $selected <= 28) {
+            $request->merge([
+                'jatuh_tempo' => Carbon::create($startYear, 7, $selected)->toDateString(),
+            ]);
+        }
+
+        if ($request->input('tipe') === 'semester' && $selected >= 1 && $selected <= 6) {
+            $request->merge([
+                'jatuh_tempo' => Carbon::create($endYear, $selected, 1)->toDateString(),
+            ]);
+        }
+    }
+
+    private function dueDateRules(Request $request): array
+    {
+        return [
+            'required',
+            'date',
+            function ($attribute, $value, $fail) use ($request) {
+                $tahunAjaran = TahunAjaran::find($request->input('tahun_ajaran_id'));
+                $bounds = $tahunAjaran?->periodBounds();
+
+                if (!$bounds) {
+                    return;
+                }
+
+                [$startYear, $endYear] = $bounds;
+                $dueDate = Carbon::parse($value)->startOfDay();
+                $periodStart = Carbon::create($startYear, 7, 1)->startOfDay();
+                $periodEnd = Carbon::create($endYear, 6, 30)->endOfDay();
+
+                if (!$dueDate->betweenIncluded($periodStart, $periodEnd)) {
+                    $fail("Tanggal jatuh tempo harus berada dalam Tahun Ajaran {$startYear}/{$endYear} (Juli {$startYear} sampai Juni {$endYear}).");
+                }
+            },
+        ];
+    }
+
     
     /**
      * Generate bills for a given payment type.
@@ -253,14 +312,160 @@ class JenisPembayaranController extends Controller
      * @param JenisPembayaran $jenis
      * @return void
      */
-    private function _generateBillsFor(JenisPembayaran $jenis)
+    private function _generateBillsFor(JenisPembayaran $jenis): void
     {
+        $jenis->loadMissing('tahunAjaran');
+        app(TagihanPeriodReconciler::class)->reconcileJenis($jenis);
+
+        foreach ($jenis->getEligibleSiswa() as $siswa) {
+            $siswa->loadMissing('tahunAjaran');
+            [$tahunAwal, $tahunAkhir] = $this->resolveAcademicYearBounds($siswa, $jenis);
+            $namaTagihan = $jenis->nama_pembayaran . ' - Tahun Ajaran ' . $tahunAwal . '/' . $tahunAkhir;
+
+            if ($jenis->tipe === 'bulanan') {
+                $tanggalJatuhTempo = Carbon::parse($jenis->jatuh_tempo)->day;
+
+                foreach ($this->getYearMonths($siswa, $jenis) as $bulanTagihan) {
+                    $this->saveGeneratedBill(
+                        [
+                            'siswa_id' => $siswa->id,
+                            'jenis_pembayaran_id' => $jenis->id,
+                            'periode' => $bulanTagihan->format('Y-m'),
+                        ],
+                        [
+                            'id_sekolah' => $siswa->id_sekolah,
+                            'nama_tagihan' => $namaTagihan,
+                            'nominal' => $jenis->nominal,
+                            'tipe' => $jenis->tipe,
+                            'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day($tanggalJatuhTempo),
+                        ]
+                    );
+                }
+
+                continue;
+            }
+
+            if ($jenis->tipe === 'semester') {
+                $bulanPilihan = Carbon::parse($jenis->jatuh_tempo)->month;
+                $pasanganBulan = [$bulanPilihan, (($bulanPilihan + 5) % 12) + 1];
+                usort($pasanganBulan, fn ($a, $b) => (($a + 5) % 12) <=> (($b + 5) % 12));
+
+                foreach ($pasanganBulan as $index => $bulan) {
+                    $tahunPeriode = $bulan >= 7 ? $tahunAwal : $tahunAkhir;
+
+                    $this->saveGeneratedBill(
+                        [
+                            'siswa_id' => $siswa->id,
+                            'jenis_pembayaran_id' => $jenis->id,
+                            'periode' => sprintf('%04d-%02d', $tahunPeriode, $bulan),
+                        ],
+                        [
+                            'id_sekolah' => $siswa->id_sekolah,
+                            'nama_tagihan' => $namaTagihan . ' - Semester ' . ($index + 1),
+                            'nominal' => $jenis->nominal,
+                            'tipe' => $jenis->tipe,
+                            'tanggal_jatuh_tempo' => Carbon::create($tahunPeriode, $bulan, 10),
+                        ]
+                    );
+                }
+
+                continue;
+            }
+
+            if (
+                $jenis->tipe === 'sekali'
+                && Tagihan::where('siswa_id', $siswa->id)
+                    ->where('jenis_pembayaran_id', $jenis->id)
+                    ->whereHas('pembayaran')
+                    ->exists()
+            ) {
+                continue;
+            }
+
+            $identity = [
+                'siswa_id' => $siswa->id,
+                'jenis_pembayaran_id' => $jenis->id,
+            ];
+
+            if ($jenis->tipe === 'setahun') {
+                $identity['periode'] = (string) $tahunAwal;
+            }
+
+            $this->saveGeneratedBill(
+                $identity,
+                [
+                    'id_sekolah' => $siswa->id_sekolah,
+                    'nama_tagihan' => $namaTagihan,
+                    'nominal' => $jenis->nominal,
+                    'tipe' => $jenis->tipe,
+                    'periode' => (string) $tahunAwal,
+                    'tanggal_jatuh_tempo' => $jenis->jatuh_tempo,
+                ]
+            );
+        }
+    }
+
+    private function saveGeneratedBill(array $identity, array $attributes): void
+    {
+        $paymentTypeId = $identity['jenis_pembayaran_id'] ?? $attributes['jenis_pembayaran_id'] ?? null;
+        if ($paymentTypeId) {
+            $attributes['tahun_ajaran_id'] = $this->paymentTypeAcademicYearCache[$paymentTypeId]
+                ??= JenisPembayaran::whereKey($paymentTypeId)->value('tahun_ajaran_id');
+        }
+
+        $tagihan = Tagihan::firstOrNew($identity);
+        $tagihan->fill($attributes);
+
+        if (!$tagihan->exists) {
+            $tagihan->status = 'belum';
+        }
+
+        $tagihan->save();
+    }
+
+    private function resolveAcademicYearBounds(Siswa $siswa, JenisPembayaran $jenis): array
+    {
+        $bounds = $jenis->tahunAjaran?->periodBounds()
+            ?? $siswa->tahunAjaran?->periodBounds();
+
+        if ($bounds) {
+            return $bounds;
+        }
+
+        $tahunAwal = TahunAjaran::currentStartYear();
+
+        return [$tahunAwal, $tahunAwal + 1];
+    }
+
+    private function getYearMonths(Siswa $siswa, JenisPembayaran $jenis): array
+    {
+        [$tahunAwal] = $this->resolveAcademicYearBounds($siswa, $jenis);
+        $bulanPertama = Carbon::create($tahunAwal, 7, 1)->startOfDay();
+
+        return array_map(
+            fn (int $offset) => $bulanPertama->copy()->addMonths($offset),
+            range(0, 11)
+        );
+    }
+
+    /**
+     * Generator lama dipertahankan sementara sebagai referensi kompatibilitas data.
+     */
+    private function _generateBillsForLegacy(JenisPembayaran $jenis)
+    {
+        $this->_generateBillsFor($jenis);
+        return;
+
         $eligibleSiswa = $jenis->getEligibleSiswa();
 
         foreach ($eligibleSiswa as $siswa) {
+            $siswa->loadMissing('tahunAjaran');
+
             if ($jenis->tipe === 'bulanan') {
-                for ($month = 1; $month <= 12; $month++) {
-                    $periode = Carbon::now()->year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
+                $dueDay = Carbon::parse($jenis->jatuh_tempo)->day;
+
+                foreach ($this->getAcademicYearMonths($siswa) as $bulanTagihan) {
+                    $periode = $bulanTagihan->format('Y-m');
 
                     \App\Models\Tagihan::updateOrCreate(
                         [
@@ -273,7 +478,7 @@ class JenisPembayaranController extends Controller
                             'nama_tagihan' => $jenis->nama_pembayaran . ' - ' . Carbon::parse($periode)->format('F Y'),
                             'nominal' => $jenis->nominal,
                             'tipe' => $jenis->tipe,
-                            'tanggal_jatuh_tempo' => Carbon::parse($periode)->day(10),
+                            'tanggal_jatuh_tempo' => $bulanTagihan->copy()->day($dueDay),
                             'status' => 'belum',
                         ]
                     );
@@ -339,5 +544,29 @@ class JenisPembayaranController extends Controller
                 );
             }
         }
+    }
+
+    private function getAcademicYearBounds(Siswa $siswa): array
+    {
+        $bounds = $siswa->tahunAjaran?->periodBounds();
+
+        if ($bounds) {
+            return $bounds;
+        }
+
+        $startYear = TahunAjaran::currentStartYear();
+
+        return [$startYear, $startYear + 1];
+    }
+
+    private function getAcademicYearMonths(Siswa $siswa): array
+    {
+        [$startYear] = $this->getAcademicYearBounds($siswa);
+        $firstMonth = Carbon::create($startYear, 7, 1)->startOfDay();
+
+        return array_map(
+            fn (int $offset) => $firstMonth->copy()->addMonths($offset),
+            range(0, 11)
+        );
     }
 }

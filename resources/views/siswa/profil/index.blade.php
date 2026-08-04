@@ -2,6 +2,7 @@
 @include('layouts.sidebar-siswa')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -74,6 +75,7 @@
         margin-bottom: 1.5rem;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header-siswa')
@@ -113,7 +115,7 @@
 
             <div class="mt-6">
                 <a href="{{ route('siswa.profil.editPassword') }}"
-                   class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition duration-200">
+                   class="bg-green-700 text-white px-5 py-2 rounded hover:bg-green-800 transition duration-200">
                     Ubah Password
                 </a>
             </div>

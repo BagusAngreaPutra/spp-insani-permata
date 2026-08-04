@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -63,7 +64,7 @@
     }
 
     .btn-download {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, #25845d, #1d6b4c);
         color: #fff;
         padding: 0.5rem 1rem;
         border-radius: 8px;
@@ -146,6 +147,7 @@
         box-shadow: 0 8px 20px rgba(22, 163, 74, 0.5);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -185,7 +187,7 @@
                         <tr>
                             <td>
                                 <div class="flex items-center gap-2">
-                                    <i class="fas fa-file-archive text-blue-500"></i>
+                                    <i class="fas fa-file-archive text-green-600"></i>
                                     <span>{{ $file['name'] }}</span>
                                 </div>
                             </td>

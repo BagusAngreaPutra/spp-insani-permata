@@ -22,6 +22,12 @@ class LaporanKelulusanController extends Controller
         $tanggalLulus   = $request->get('tanggal_lulus');
         $search         = $request->get('search');
 
+        if ($sekolahId && $kelasId
+            && !Kelas::whereKey($kelasId)->where('sekolah_id', $sekolahId)->exists()) {
+            $kelasId = null;
+            $request->merge(['kelas_id' => null]);
+        }
+
         // 🔗 Ambil kelulusan lengkap dengan relasi
         $kelulusanQuery = RiwayatKelulusan::with(['siswa', 'sekolah', 'kelas', 'tahunAjaran'])
             ->orderBy('tanggal_lulus', 'desc');
@@ -82,7 +88,9 @@ class LaporanKelulusanController extends Controller
         $semuaSekolah = Sekolah::orderBy('nama_sekolah')->get();
 
         // ✅ Hanya ambil kelas tingkat 6
-        $semuaKelas = Kelas::where('tingkat', 6)
+        $semuaKelas = Kelas::with('sekolah')
+            ->where('tingkat', 6)
+            ->orderBy('sekolah_id')
             ->orderBy('tingkat')
             ->orderBy('nama_kelas')
             ->get();

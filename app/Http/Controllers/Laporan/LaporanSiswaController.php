@@ -26,6 +26,12 @@ class LaporanSiswaController extends Controller
         $sekolahId = $request->input('sekolah_id');
         $kelasId = $request->input('kelas_id');
 
+        if ($sekolahId && $kelasId
+            && !\App\Models\Kelas::whereKey($kelasId)->where('sekolah_id', $sekolahId)->exists()) {
+            $kelasId = null;
+            $request->merge(['kelas_id' => null]);
+        }
+
         // Query dengan filter dinamis dan relasi
         $siswas = Siswa::with(['kelas.sekolah'])
             ->select(
@@ -67,7 +73,11 @@ class LaporanSiswaController extends Controller
 
         // Untuk dropdown filter
         $daftarSekolah = \App\Models\Sekolah::all();
-        $daftarKelas   = \App\Models\Kelas::all();
+        $daftarKelas = \App\Models\Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
 
         // Tanggal laporan
         $tanggalLaporan = \Carbon\Carbon::now()->translatedFormat('d F Y');

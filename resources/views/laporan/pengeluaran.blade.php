@@ -3,6 +3,7 @@
 
 @section('content')
 
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -486,11 +487,12 @@
     }
 }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area pi-report-document">
         <!-- Kop laporan hanya tampil saat cetak -->
         <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; margin-bottom: 20px; text-align: center; justify-content: center;">
@@ -521,16 +523,14 @@
         </div>
 
        {{-- 🔎 Form Filter Pengeluaran --}}
-        <form method="GET" action="{{ route('laporan.pengeluaran') }}" class="no-print" 
-            style="margin-bottom: 2rem; max-width: 800px; width: 100%; padding-inline: 1rem;">
+        <form method="GET" action="{{ route('laporan.pengeluaran') }}" class="filter-form pi-filter-form no-print">
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; align-items: end;">
+            <div class="filter-grid pi-filter-grid">
                 
                 {{-- Filter Sekolah --}}
-                <div>
-                    <label for="sekolah_id" style="font-weight:600; color:#374151; font-size: 0.9rem;">Sekolah</label>
-                    <select name="sekolah_id" id="sekolah_id"
-                        style="width:100%; padding:0.6rem 0.75rem; border-radius:10px; border:1px solid #ccc;">
+                <div class="form-group pi-filter-field">
+                    <label for="sekolah_id">Sekolah</label>
+                    <select name="sekolah_id" id="sekolah_id" class="form-control">
                         <option value="">Semua Sekolah</option>
                         @foreach($daftarSekolah as $p)
                             <option value="{{ $p->id }}" {{ request('sekolah_id') == $p->id ? 'selected' : '' }}>
@@ -541,10 +541,11 @@
                 </div>
 
                 {{-- Tombol Tampilkan --}}
-                <div>
+                <div class="form-group pi-filter-action-group">
                     <label style="visibility:hidden;">Tampilkan</label>
-                    <button type="submit" class="btn-primary" 
-                        style="width:100%; padding:0.6rem 0.75rem;">🔍 Tampilkan</button>
+                    <button type="submit" class="btn btn-primary pi-filter-control">
+                        <i class="fas fa-filter"></i> Tampilkan
+                    </button>
                 </div>
 
             </div>

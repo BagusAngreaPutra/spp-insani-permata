@@ -3,6 +3,7 @@
 @include('layouts.sidebar-siswa')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -100,7 +101,19 @@
         font-size: 0.75rem;
         font-weight: 600;
     }
+
+    .badge-mendatang {
+        background-color: #fff7d6;
+        color: #a15c07;
+        border: 1px solid #f4c84a;
+        padding: 0.4rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header-siswa')
@@ -128,6 +141,12 @@
                 </thead>
                 <tbody>
                     @forelse($tagihanSaya as $index => $tagihan)
+                        @php
+                            $totalTerbayar = (float) $tagihan->pembayaran->sum('jumlah_bayar')
+                                + (float) $tagihan->pembayaran->sum('diskon');
+                            $sisaAktual = max(0, (float) $tagihan->nominal - $totalTerbayar);
+                            $belumJatuhTempo = $sisaAktual > 0 && $tagihan->isBelumJatuhTempo();
+                        @endphp
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $tagihan->nama_tagihan_dinamis }}</td>
@@ -136,8 +155,10 @@
                             <td>{{ $tagihan->tanggal_jatuh_tempo?->format('d/m/Y') ?? '-' }}</td>
                             <td>Rp {{ number_format($tagihan->nominal, 0, ',', '.') }}</td>
                             <td>
-                                @if($tagihan->status === 'lunas')
+                                @if($sisaAktual <= 0)
                                     <span class="badge-lunas">Lunas</span>
+                                @elseif($belumJatuhTempo)
+                                    <span class="badge-mendatang">Belum jatuh tempo</span>
                                 @else
                                     <span class="badge-belum">Belum Lunas</span>
                                 @endif

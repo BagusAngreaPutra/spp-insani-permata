@@ -1,8 +1,19 @@
 @php
     $selected = old('permissions', $selectedPermissions ?? []);
     $roleValue = old('role', $role ?? ($admin->role ?? 'admin'));
+    $permissionVisuals = [
+        'Master Data Sekolah' => ['icon' => 'fa-school', 'tone' => 'blue'],
+        'Pembayaran SPP & Tagihan' => ['icon' => 'fa-file-invoice-dollar', 'tone' => 'green'],
+        'Koperasi' => ['icon' => 'fa-store', 'tone' => 'orange'],
+        'Keuangan Kas' => ['icon' => 'fa-wallet', 'tone' => 'purple'],
+        'Kenaikan & Kelulusan' => ['icon' => 'fa-graduation-cap', 'tone' => 'pink'],
+        'Import & Export Data' => ['icon' => 'fa-file-arrow-up', 'tone' => 'cyan'],
+        'Laporan' => ['icon' => 'fa-chart-column', 'tone' => 'indigo'],
+        'Admin & Sistem' => ['icon' => 'fa-shield-halved', 'tone' => 'red'],
+    ];
 @endphp
 
+@pushOnce('page-styles')
 <style>
     .role-grid {
         display: grid;
@@ -65,10 +76,11 @@
         opacity: 0.55;
     }
 </style>
+@endPushOnce
 
 <div class="role-grid">
-    <div>
-        <label for="role" class="form-label">Role Admin</label>
+    <div class="role-field">
+        <label for="role" class="form-label"><i class="fas fa-user-shield"></i> Role Admin</label>
         <select id="role" name="role" class="form-control" required>
             <option value="admin" {{ $roleValue === 'admin' || $roleValue === 'staff' ? 'selected' : '' }}>Admin</option>
             <option value="super_admin" {{ $roleValue === 'super_admin' || $roleValue === 'administrator' ? 'selected' : '' }}>Super Admin</option>
@@ -77,14 +89,32 @@
 </div>
 
 <div class="permission-note">
-    Dashboard dan monitoring otomatis dimiliki semua admin. Hak di bawah ini hanya mengatur akses fitur selain dashboard.
+    <i class="fas fa-circle-info" aria-hidden="true"></i>
+    <span>Dashboard dan monitoring otomatis dimiliki semua admin. Hak di bawah ini hanya mengatur akses fitur selain dashboard.</span>
 </div>
 
 <div class="permissions-wrapper" id="permissionsWrapper">
+    <div class="permissions-heading">
+        <div>
+            <span class="permissions-eyebrow">Kontrol akses</span>
+            <h3>Hak Akses Fitur</h3>
+        </div>
+        <span class="permissions-count"><i class="fas fa-layer-group"></i> {{ count($permissionGroups) }} kategori</span>
+    </div>
     <div class="permission-grid">
         @foreach($permissionGroups as $groupName => $permissions)
-            <div class="permission-card">
-                <div class="permission-card-title">{{ $groupName }}</div>
+            @php
+                $visual = $permissionVisuals[$groupName] ?? ['icon' => 'fa-grid-2', 'tone' => 'blue'];
+            @endphp
+            <div class="permission-card" data-tone="{{ $visual['tone'] }}">
+                <div class="permission-card-title">
+                    <span class="permission-card-icon"><i class="fas {{ $visual['icon'] }}" aria-hidden="true"></i></span>
+                    <span class="permission-card-copy">
+                        <strong>{{ $groupName }}</strong>
+                        <small>{{ count($permissions) }} hak akses</small>
+                    </span>
+                </div>
+                <div class="permission-card-options">
                 @foreach($permissions as $permission => $label)
                     <label class="permission-option">
                         <input
@@ -96,6 +126,7 @@
                         <span>{{ $label }}</span>
                     </label>
                 @endforeach
+                </div>
             </div>
         @endforeach
     </div>

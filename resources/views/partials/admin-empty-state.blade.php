@@ -1,4 +1,5 @@
 @once
+@pushOnce('page-styles')
 <style>
     .guided-empty-state {
         align-items: center;
@@ -34,6 +35,7 @@
         text-decoration: none;
     }
 </style>
+@endPushOnce
 @endonce
 
 <div class="guided-empty-state">

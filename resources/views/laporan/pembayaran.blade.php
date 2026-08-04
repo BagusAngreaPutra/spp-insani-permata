@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     /* ====== STYLE NORMAL ====== */
     .main-content {
@@ -167,8 +168,8 @@
     }
     
     .badge-info {
-        background: linear-gradient(135deg, #bfdbfe, #93c5fd);
-        color: #1e40af;
+        background: linear-gradient(135deg, #cbe8da, #a7d8bd);
+        color: #15533b;
     }
     
     .empty-state {
@@ -410,11 +411,12 @@
         }
     }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
+    <div class="content-area pi-report-document">
         <!-- Kop laporan untuk cetak -->
         <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; margin-bottom: 20px;">
@@ -432,7 +434,7 @@
         </div>
         <h3 class="print-title d-none d-print-block">LAPORAN PEMBAYARAN</h3>
 
-        <div class="page-header">
+        <div class="page-header no-print">
             <h1 class="page-title">
                 <i class="fas fa-money-bill-wave"></i>
                 Laporan Pembayaran
@@ -452,7 +454,7 @@
                 <i class="fas fa-filter"></i> Filter Data
             </h3>
             
-            <form method="GET" action="{{ route('laporan.pembayaran') }}" id="filterForm">
+            <form method="GET" action="{{ route('laporan.pembayaran') }}" id="filterForm" class="report-filter-form pi-filter-form">
                 <div class="filter-grid">
                     <div class="form-group">
                         <label for="sekolah_id">
@@ -470,11 +472,25 @@
                         <label for="kelas_id">
                             <i class="fas fa-chalkboard"></i> Kelas
                         </label>
-                        <select name="kelas_id" id="kelas_id" class="form-control">
+                        <select name="kelas_id"
+                                id="kelas_id"
+                                class="form-control"
+                                data-class-filter-for="sekolah_id"
+                                data-all-label="Semua Kelas">
                             <option value="">Semua Kelas</option>
                             @foreach($daftarKelas as $k)
-                                <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
-                                    Tingkat {{ $k->tingkat }} - {{ $k->nama_kelas }}
+                                @php
+                                    $className = trim((string) $k->nama_kelas);
+                                    $classLabel = in_array($className, ['', '-', '–'], true)
+                                        ? 'Tingkat '.$k->tingkat
+                                        : 'Tingkat '.$k->tingkat.' · '.$className;
+                                @endphp
+                                <option value="{{ $k->id }}"
+                                        data-school-id="{{ $k->sekolah_id }}"
+                                        data-school-name="{{ $k->sekolah?->nama_sekolah }}"
+                                        data-class-label="{{ $classLabel }}"
+                                        {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
+                                    {{ $classLabel }}
                                 </option>
                             @endforeach
                         </select>
@@ -502,22 +518,19 @@
                         </label>
                         <input type="text" name="search" id="search" 
                                value="{{ request('search') }}" 
-                               placeholder="Masukkan nama siswa..." 
+                               placeholder="Cari nama siswa..."
                                class="form-control">
                     </div>
 
-                    <div class="form-group">
-                        <label style="visibility: hidden;">Aksi</label>
-                        <div style="display: flex; gap: 0.75rem; align-items: center;">
-                            <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
-                                <i class="fas fa-search"></i> Tampilkan Data
-                            </button>
-                            <a href="{{ route('laporan.pembayaran') }}" class="btn btn-secondary" 
-                               style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3); white-space: nowrap;">
-                                <i class="fas fa-redo"></i> Reset
-                            </a>
-                        </div>
-                    </div>
+                </div>
+
+                <div class="filter-actions report-filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Tampilkan Data
+                    </button>
+                    <a href="{{ route('laporan.pembayaran') }}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
                 </div>
 
                 <div id="warning-message" class="warning-message">
@@ -647,55 +660,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Dynamic class loading based on school selection
-    const sekolahSelect = document.getElementById('sekolah_id');
-    const kelasSelect = document.getElementById('kelas_id');
-
-    sekolahSelect.addEventListener('change', function () {
-        const sekolahId = this.value;
-        
-        // Show loading state
-        kelasSelect.innerHTML = '<option value="">Memuat data...</option>';
-        kelasSelect.disabled = true;
-
-        if (!sekolahId) {
-            // If no school selected, show all classes
-            kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
-            @foreach($daftarKelas as $k)
-                kelasSelect.innerHTML += '<option value="{{ $k->id }}">Tingkat {{ $k->tingkat }} - {{ $k->nama_kelas }}</option>';
-            @endforeach
-            kelasSelect.disabled = false;
-            return;
-        }
-
-        // AJAX request to get classes by school
-        fetch(`/get-kelas-by-sekolah/${sekolahId}`)
-            .then(response => response.json())
-            .then(data => {
-                kelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.text = `Tingkat ${item.tingkat} - ${item.nama_kelas}`;
-                    if ({{ request('kelas_id') ?? 'null' }} == item.id) {
-                        option.selected = true;
-                    }
-                    kelasSelect.appendChild(option);
-                });
-                kelasSelect.disabled = false;
-            })
-            .catch(error => {
-                kelasSelect.innerHTML = '<option value="">Gagal memuat kelas</option>';
-                kelasSelect.disabled = false;
-                console.error('Error:', error);
-            });
-    });
-
-    // Trigger on load if school is already selected
-    if (sekolahSelect.value) {
-        sekolahSelect.dispatchEvent(new Event('change'));
-    }
-
     // Date validation
     const tanggalMulai = document.getElementById('tanggal_mulai');
     const tanggalSelesai = document.getElementById('tanggal_selesai');

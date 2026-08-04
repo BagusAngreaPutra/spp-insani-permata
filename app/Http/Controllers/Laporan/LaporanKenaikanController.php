@@ -22,6 +22,12 @@ class LaporanKenaikanController extends Controller
         $tahunAjaranId = $request->get('tahun_ajaran_id');
         $search        = $request->get('search');
 
+        if ($sekolahId && $kelasId
+            && !Kelas::whereKey($kelasId)->where('sekolah_id', $sekolahId)->exists()) {
+            $kelasId = null;
+            $request->merge(['kelas_id' => null]);
+        }
+
         $riwayatQuery = RiwayatKenaikan::with(['siswa.sekolah', 'kelasAwal', 'kelasBaru', 'tahunAjaran'])
             ->orderBy('tanggal_kenaikan', 'desc');
 
@@ -29,7 +35,7 @@ class LaporanKenaikanController extends Controller
         if ($sekolahId || $search) {
             $riwayatQuery->whereHas('siswa', function ($q) use ($sekolahId, $search) {
                 if ($sekolahId) {
-                    $q->where('sekolah_id', $sekolahId);
+                    $q->where('id_sekolah', $sekolahId);
                 }
                 if ($search) {
                     $q->where('nama', 'like', '%' . $search . '%');
@@ -54,8 +60,12 @@ class LaporanKenaikanController extends Controller
 
         // Dropdown data
         $daftarSekolah     = Sekolah::all();
-        $daftarKelas       = Kelas::all();
-        $daftarTahunAjaran = TahunAjaran::all();
+        $daftarKelas = Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
+        $daftarTahunAjaran = TahunAjaran::validPeriods();
 
         // Identitas sekolah di header
         if ($sekolahId) {

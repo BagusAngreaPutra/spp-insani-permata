@@ -75,13 +75,22 @@ class RiwayatPembayaranController extends Controller
 
         // Get data for filters
         $sekolahList = Sekolah::all();
-        $kelasList = Kelas::all();
+        $kelasList = Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
 
         return view('siswa.riwayat.index', compact('riwayatPembayaran', 'sekolahList', 'kelasList', 'search', 'kelasId', 'sekolahId', 'startDate', 'endDate'));
     }
 
     private function indexWithKoperasi(Request $request, $siswa, $search, $kelasId, $sekolahId, $startDate, $endDate, $jenisPembayaran)
     {
+        if ($sekolahId && $kelasId
+            && !Kelas::whereKey($kelasId)->where('sekolah_id', $sekolahId)->exists()) {
+            $kelasId = null;
+        }
+
         $rows = collect();
 
         if ($jenisPembayaran !== 'koperasi') {
@@ -191,7 +200,11 @@ class RiwayatPembayaranController extends Controller
         );
 
         $sekolahList = Sekolah::all();
-        $kelasList = Kelas::all();
+        $kelasList = Kelas::with('sekolah')
+            ->orderBy('sekolah_id')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
 
         return view('siswa.riwayat.index', compact(
             'riwayatPembayaran',

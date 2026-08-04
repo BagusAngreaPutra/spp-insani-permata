@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
 .main-content {
     margin-left: 280px;
@@ -79,7 +80,7 @@
     color:#fff;
 }
 .badge.bg-info {
-    background: linear-gradient(135deg,#3b82f6,#1d4ed8);
+    background: linear-gradient(135deg,#25845d,#1d6b4c);
     color:#fff;
 }
 .action-buttons {
@@ -149,6 +150,7 @@
     box-shadow: 0 4px 10px rgba(107,114,128,0.3);
 }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

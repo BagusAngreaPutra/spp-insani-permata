@@ -11,6 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('jenis_pembayaran_kelas')
+            || !Schema::hasTable('jenis_pembayaran')
+            || !Schema::hasTable('kelas')) {
+            return;
+        }
+
         Schema::create('jenis_pembayaran_kelas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('jenis_pembayaran_id')->constrained('jenis_pembayaran')->onDelete('cascade');

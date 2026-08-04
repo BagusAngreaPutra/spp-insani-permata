@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -245,6 +246,7 @@
         box-shadow: none;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -269,7 +271,7 @@
                 <i class="fas fa-chalkboard"></i> Kelas
             </h2>
             <a href="{{ route('kelas.create') }}" class="btn-primary">
-                + Tambah Kelas
+                Tambah Kelas
             </a>
         </div>
 

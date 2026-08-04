@@ -44,6 +44,7 @@
         || filled($endDate);
 @endphp
 
+@push('page-styles')
 <style>
     .history-page,
     .history-page * {
@@ -127,8 +128,8 @@
 
     .history-button.is-primary {
         color: #fff !important;
-        background: #2878f0 !important;
-        border-color: #2878f0 !important;
+        background: #1d6b4c !important;
+        border-color: #1d6b4c !important;
     }
 
     .history-button.is-compact {
@@ -144,8 +145,8 @@
 
     .history-button.is-primary:hover {
         color: #fff !important;
-        background: #1768dc !important;
-        border-color: #1768dc !important;
+        background: #15533b !important;
+        border-color: #15533b !important;
     }
 
     .history-alert {
@@ -242,7 +243,7 @@
     .history-field input:focus,
     .history-field select:focus {
         border-color: #8fb7f5 !important;
-        box-shadow: 0 0 0 3px rgba(40, 120, 240, .08) !important;
+        box-shadow: 0 0 0 3px rgba(37, 132, 93, .08) !important;
     }
 
     .history-filter-footer {
@@ -417,7 +418,7 @@
     }
 
     .history-source-badge.is-school {
-        color: #175cd3;
+        color: #1d6b4c;
         background: #eff8ff;
     }
 
@@ -755,6 +756,7 @@
         }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -828,13 +830,17 @@
 
                         <div class="history-field">
                             <label for="historyClass">Kelas</label>
-                            <select id="historyClass" name="kelas_id">
+                            <select id="historyClass"
+                                    name="kelas_id"
+                                    data-class-filter-for="historySchool"
+                                    data-all-label="Semua kelas">
                                 <option value="">Semua kelas</option>
                                 @foreach($kelasList as $kelas)
-                                    <option value="{{ $kelas->id }}" {{ $selectedKelas === $kelas->id ? 'selected' : '' }}>
-                                        @if(!$selectedSekolah)
-                                            {{ $kelas->sekolah?->nama_sekolah ?? 'Sekolah belum diatur' }} ·
-                                        @endif
+                                    <option value="{{ $kelas->id }}"
+                                            data-school-id="{{ $kelas->sekolah_id }}"
+                                            data-school-name="{{ $kelas->sekolah?->nama_sekolah }}"
+                                            data-class-label="{{ $classLabel($kelas) }}"
+                                            {{ $selectedKelas === $kelas->id ? 'selected' : '' }}>
                                         {{ $classLabel($kelas) }}
                                     </option>
                                 @endforeach

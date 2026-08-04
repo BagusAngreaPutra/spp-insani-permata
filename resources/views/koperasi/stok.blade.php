@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -58,6 +59,7 @@
         .form-grid { grid-template-columns: 1fr; }
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

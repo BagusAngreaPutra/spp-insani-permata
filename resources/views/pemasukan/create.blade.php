@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -114,6 +115,7 @@
         box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -148,7 +150,7 @@
                 <input type="date" name="tanggal" class="form-control" value="{{ old('tanggal') }}" required>
 
                 <label class="form-label">Jumlah</label>
-                <input type="number" name="jumlah" class="form-control" step="0.01" value="{{ old('jumlah') }}" required>
+                <input type="number" name="jumlah" class="form-control" step="1" min="0" data-rupiah value="{{ old('jumlah') }}" required>
 
                 <label class="form-label">Sumber</label>
                 <input type="text" name="sumber" class="form-control" value="{{ old('sumber') }}" placeholder="Contoh: Dana BOS, Donasi, dll.">

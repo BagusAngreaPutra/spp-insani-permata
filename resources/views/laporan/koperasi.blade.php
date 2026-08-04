@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -130,12 +131,13 @@
         .signature-line { border-top: 1px solid #000; margin: 60px 0 10px; }
     }
 </style>
+@endpush
 
-<div class="main-content">
+<div id="pi-report-page" class="main-content pi-report-page">
     @include('layouts.header')
 
-    <div class="content-area">
-        <div class="kop-laporan">
+    <div class="content-area pi-report-document">
+        <div class="kop-laporan d-none d-print-block">
             <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
                 <img src="{{ asset('images/logo.jpg') }}" onerror="this.style.display='none'" alt="Logo" style="width: 90px; height: 90px; margin-right: 20px; border-radius: 50%;">
                 <div style="font-weight: bold; font-size: 16px; line-height: 1.3; text-align: left;">
@@ -144,9 +146,9 @@
                     <span style="font-weight: normal; font-size: 14px;">Jl. Abdul Muis Rt. 09, Kel. Lingkar Selatan, Kec. Paal Merah Jambi 36139</span>
                 </div>
             </div>
-            <hr style="border: 1px solid #000;">
-            <div style="text-align: right; font-size: 14px;">Tanggal Laporan: {{ $tanggalLaporan }}</div>
         </div>
+        <div class="tanggal-laporan d-none d-print-block">Tanggal Laporan: {{ $tanggalLaporan }}</div>
+        <h3 class="print-title d-none d-print-block">LAPORAN KOPERASI</h3>
 
         <div class="page-header no-print">
             <h2 class="page-title"><i class="fas fa-store"></i> Laporan Koperasi</h2>
@@ -158,7 +160,7 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('laporan.koperasi') }}" class="filter-section no-print">
+        <form method="GET" action="{{ route('laporan.koperasi') }}" class="filter-section report-filter-form pi-filter-form no-print">
             <div class="filter-grid">
                 <div class="form-group">
                     <label for="sekolah_id">Sekolah</label>
@@ -174,11 +176,25 @@
 
                 <div class="form-group">
                     <label for="kelas_id">Kelas</label>
-                    <select name="kelas_id" id="kelas_id" class="form-control">
+                    <select name="kelas_id"
+                            id="kelas_id"
+                            class="form-control"
+                            data-class-filter-for="sekolah_id"
+                            data-all-label="Semua Kelas">
                         <option value="">Semua Kelas</option>
                         @foreach($daftarKelas as $item)
-                            <option value="{{ $item->id }}" {{ request('kelas_id') == $item->id ? 'selected' : '' }}>
-                                {{ $item->kelas }} - {{ $item->sekolah->nama_sekolah ?? '-' }}
+                            @php
+                                $className = trim((string) $item->nama_kelas);
+                                $classLabel = in_array($className, ['', '-', '–'], true)
+                                    ? 'Tingkat '.$item->tingkat
+                                    : 'Tingkat '.$item->tingkat.' · '.$className;
+                            @endphp
+                            <option value="{{ $item->id }}"
+                                    data-school-id="{{ $item->sekolah_id }}"
+                                    data-school-name="{{ $item->sekolah?->nama_sekolah }}"
+                                    data-class-label="{{ $classLabel }}"
+                                    {{ request('kelas_id') == $item->id ? 'selected' : '' }}>
+                                {{ $classLabel }}
                             </option>
                         @endforeach
                     </select>
@@ -271,7 +287,7 @@
             </table>
         </div>
 
-        <div class="print-footer">
+        <div class="print-footer d-none d-print-block">
             <div class="signature-section">
                 <div class="signature-box">
                     <p>Mengetahui,</p>

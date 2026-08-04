@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -121,6 +122,7 @@
         margin-bottom: 0.5rem;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -145,7 +147,7 @@
                 @if($tagihan->jenis_pembayaran_id === null)
                     SPP
                 @else
-                    {{ $tagihan->jenisPembayaran->nama_pembayaran ?? '-' }}
+                    {{ $tagihan->jenisPembayaran->nama_dengan_tahun ?? '-' }}
                 @endif
             </p>
 
@@ -194,7 +196,7 @@
                     <div class="mb-3">
                         <label class="text-sm text-gray-600">Jumlah Bayar</label>
                         {{-- otomatis ambil dari nominal tagihan --}}
-                        <input type="number" name="jumlah_bayar" class="border rounded p-2 w-full bg-gray-100"
+                        <input type="number" name="jumlah_bayar" class="border rounded p-2 w-full bg-gray-100" data-rupiah
                             value="{{ $tagihan->nominal }}" readonly>
                     </div>
                     <div class="mb-3">

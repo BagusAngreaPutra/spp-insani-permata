@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -139,6 +140,7 @@
         font-family: Arial, sans-serif;
     }
 </style>
+@endpush
 
 <div class="main-content">
     <div class="content-area">
@@ -155,7 +157,7 @@
             </div>
         </div>
 
-        <div class="container print-kwitansi" id="kwitansi-container">
+        <div class="container print-kwitansi pi-print-document pi-receipt-document" id="kwitansi-container" data-receipt-document>
             <div class="row justify-content-center">
                 <div class="col-md-12">
                     <div class="card" style="border: none;">

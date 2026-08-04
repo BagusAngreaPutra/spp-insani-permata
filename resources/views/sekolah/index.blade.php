@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     /* Modern CSS Variables for consistent theming */
     :root {
@@ -148,7 +149,7 @@
         color: white;
     }
 
-    .stat-primary .stat-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-primary .stat-icon { background: linear-gradient(135deg, #25845d, #1d6b4c); }
     .stat-success .stat-icon { background: linear-gradient(135deg, #10b981, #059669); }
     .stat-info .stat-icon { background: linear-gradient(135deg, #06b6d4, #0891b2); }
     .stat-warning .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
@@ -299,9 +300,9 @@
     }
 
     .badge-code {
-        background: #dbeafe;
-        color: #1e40af;
-        border: 1px solid #93c5fd;
+        background: #e5f4ec;
+        color: #15533b;
+        border: 1px solid #a7d8bd;
     }
 
     .badge-warning {
@@ -311,9 +312,9 @@
     }
 
     .badge-primary {
-        background: #dbeafe;
-        color: #1e40af;
-        border: 1px solid #93c5fd;
+        background: #e5f4ec;
+        color: #15533b;
+        border: 1px solid #a7d8bd;
     }
 
     /* Action Buttons */
@@ -349,7 +350,7 @@
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: linear-gradient(135deg, #25845d, #1d6b4c);
         color: white;
     }
 
@@ -380,8 +381,8 @@
 
     .btn-outline-primary {
         background: transparent;
-        color: #3b82f6;
-        border: 2px solid #3b82f6;
+        color: #1d6b4c;
+        border: 2px solid #1d6b4c;
     }
 
     .btn-outline-secondary {
@@ -396,7 +397,7 @@
     }
 
     .btn-outline-primary:hover {
-        background: #3b82f6;
+        background: #1d6b4c;
         color: white;
     }
 
@@ -593,164 +594,201 @@
         transform: none;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
-    <div class="content-area">
-        @include('partials.admin-page-context', [
-            'section' => 'Master Data',
-            'current' => 'Sekolah',
-            'title' => 'Sekolah adalah data pertama yang perlu disiapkan.',
-            'description' => 'Setiap kelas, siswa, pembayaran, dan laporan akan terhubung ke sekolah. Mulai dari sini jika sistem masih kosong.',
-            'steps' => ['Sekolah', 'Tahun Ajaran', 'Kelas', 'Siswa']
-        ])
-
+    <div class="content-area school-directory-page">
         <!-- Page Header -->
         <div class="page-header">
-            <h2 class="page-title">
-                <i class="fas fa-school"></i> Sekolah
-            </h2>
-            <a href="{{ route('sekolah.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Tambah Sekolah
-            </a>
+            <div>
+                <p class="page-eyebrow">Master Data</p>
+                <h2 class="page-title">
+                    <i class="fas fa-school"></i> Sekolah & Kelas
+                </h2>
+                <p class="page-subtitle">Kelola identitas sekolah dan susunan kelas dari satu daftar yang terintegrasi.</p>
+            </div>
         </div>
 
         <!-- Search Card -->
         <div class="filter-card">
             <form method="GET" action="{{ route('sekolah.index') }}" class="filter-form">
-                <div class="filter-row">
+                <div class="filter-row pi-filter-grid">
                     <div class="filter-group">
                         <label class="filter-label">
                             <i class="fas fa-search"></i> Pencarian
                         </label>
-                        <input type="text" 
-                               name="search" 
-                               class="form-control" 
-                               value="{{ request('search') }}"
-                               placeholder="Cari nama sekolah atau kode...">
+                        <div class="school-search-control">
+                            <i class="fas fa-search school-search-icon" aria-hidden="true"></i>
+                            <input type="text"
+                                   name="search"
+                                   id="schoolSearchInput"
+                                   class="form-control"
+                                   value="{{ request('search') }}"
+                                   placeholder="Cari sekolah, kode, tingkat, atau nama kelas..."
+                                   autocomplete="off">
+                            <button type="button"
+                                    id="schoolSearchClear"
+                                    class="school-search-clear"
+                                    aria-label="Hapus pencarian"
+                                    title="Hapus pencarian">
+                                <i class="fas fa-times" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Cari
                         </button>
-                        <a href="{{ route('sekolah.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Reset
-                        </a>
                     </div>
                 </div>
             </form>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card stat-primary">
-                <div class="stat-icon">
-                    <i class="fas fa-school"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ $totalSekolah }}</div>
-                    <div class="stat-label">Total Sekolah</div>
-                </div>
-            </div>
-            <div class="stat-card stat-info">
-                <div class="stat-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ $totalSiswa }}</div>
-                    <div class="stat-label">Total Siswa</div>
-                </div>
-            </div>
-            <div class="stat-card stat-warning">
-                <div class="stat-icon">
-                    <i class="fas fa-code"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ $sekolahDenganKode }}</div>
-                    <div class="stat-label">Dengan Kode</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Main Table Card -->
         <div class="table-card">
             <div class="table-header">
-                <h3><i class="fas fa-list"></i> Daftar Sekolah</h3>
+                <h3><i class="fas fa-list"></i> Daftar Sekolah & Kelas</h3>
                 <div class="table-actions">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
+                    <a href="{{ route('sekolah.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Tambah Sekolah
+                    </a>
                 </div>
             </div>
 
             @if($sekolah->count() > 0)
                 <div class="table-responsive">
-                    <table class="data-table">
+                    <table class="modern-table school-table">
                         <thead>
                             <tr>
-                                <th width="5%">#</th>
-                                <th width="25%">Nama Sekolah</th>
-                                <th width="12%">Kode Sekolah</th>
-                                <th width="30%">Alamat</th>
-                                <th width="15%">Kontak</th>
-                                <th width="8%">Total Siswa</th>
-                                <th width="15%">Aksi</th>
+                                <th class="pi-index-column">No</th>
+                                <th class="school-column">Sekolah</th>
+                                <th class="classes-column">Kelas</th>
+                                <th class="contact-column">Lokasi & Kontak</th>
+                                <th class="student-column">Siswa</th>
+                                <th class="pi-action-column pi-actions-2">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($sekolah as $index => $item)
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>
-                                        <div class="school-info">
-                                            <div class="school-name">{{ $item->nama_sekolah }}</div>
-                                        </div>
+                                    <td class="pi-index-column">
+                                        <span class="school-row-number">{{ ($sekolah->firstItem() ?? 1) + $index }}</span>
                                     </td>
-                                    <td>
-                                        @if($item->kode_sekolah)
-                                            <span class="badge badge-code">{{ $item->kode_sekolah }}</span>
-                                        @else
-                                            <span class="badge badge-warning">Belum Ada</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <div class="address-info">
-                                            <i class="fas fa-map-marker-alt"></i> 
-                                            <span>{{ Str::limit($item->alamat, 60) }}</span>
-                                        </div>
-                                        @if($item->email)
-                                            <div class="email-info">
-                                                <i class="fas fa-envelope"></i> {{ $item->email }}
-                                            </div>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($item->telepon)
-                                            <span class="phone-number">
-                                                <i class="fas fa-phone"></i> {{ $item->telepon }}
+                                    <td class="school-identity-cell">
+                                        <div class="table-entity">
+                                            <span class="table-entity-icon" aria-hidden="true">
+                                                <i class="fas fa-school"></i>
                                             </span>
+                                            <div class="school-info">
+                                                <div class="school-name">{{ $item->nama_sekolah }}</div>
+                                                <div class="school-meta-row">
+                                                    @if($item->kode_sekolah)
+                                                        <span class="badge badge-code">{{ $item->kode_sekolah }}</span>
+                                                    @else
+                                                        <span class="badge badge-warning">Belum ada kode</span>
+                                                    @endif
+                                                    @if($item->durasi_pendidikan)
+                                                        <span class="school-duration">
+                                                            <i class="fas fa-clock" aria-hidden="true"></i>
+                                                            {{ $item->durasi_pendidikan }} tahun
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="school-class-cell">
+                                        @if($item->kelas_count > 0)
+                                            <div class="school-class-overview">
+                                                <div class="school-class-summary">
+                                                    <span class="school-class-count" aria-hidden="true">
+                                                        <i class="fas fa-chalkboard"></i>
+                                                    </span>
+                                                    <span class="school-class-summary-copy">
+                                                        <strong>{{ $item->kelas_count }} kelas terdaftar</strong>
+                                                        <small>
+                                                            @php
+                                                                $academicYears = $item->kelas
+                                                                    ->pluck('tahunAjaran.nama_tahun')
+                                                                    ->filter()
+                                                                    ->unique()
+                                                                    ->values();
+                                                            @endphp
+                                                            {{ $academicYears->isNotEmpty() ? $academicYears->take(2)->join(', ') : 'Tahun ajaran belum ditentukan' }}
+                                                            @if($academicYears->count() > 2)
+                                                                +{{ $academicYears->count() - 2 }} lainnya
+                                                            @endif
+                                                        </small>
+                                                    </span>
+                                                </div>
+                                                <div class="school-class-content">
+                                                    @foreach($item->kelas->take(3) as $kelasItem)
+                                                        @php
+                                                            $className = trim((string) $kelasItem->nama_kelas) === '-'
+                                                                ? ''
+                                                                : trim((string) $kelasItem->nama_kelas);
+                                                        @endphp
+                                                        <span class="school-class-chip">
+                                                            Tingkat {{ $kelasItem->tingkat }}{{ $className ? ' '.$className : '' }}
+                                                        </span>
+                                                    @endforeach
+                                                    @if($item->kelas_count > 3)
+                                                        <span class="school-class-chip school-class-chip--more">
+                                                            +{{ $item->kelas_count - 3 }} lainnya
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         @else
-                                            <span class="text-muted">-</span>
+                                            <span class="school-class-empty-label">
+                                                <i class="fas fa-circle-plus" aria-hidden="true"></i>
+                                                Belum ada kelas
+                                            </span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="school-contact-cell">
+                                        <div class="school-contact-stack">
+                                            <div class="school-contact-line school-contact-line--address" title="{{ $item->alamat }}">
+                                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                                                <span>{{ Str::limit($item->alamat, 54) }}</span>
+                                            </div>
+                                            @if($item->telepon)
+                                                <div class="school-contact-line school-contact-line--phone">
+                                                    <i class="fas fa-phone" aria-hidden="true"></i>
+                                                    <span>{{ $item->telepon }}</span>
+                                                </div>
+                                            @endif
+                                            @if($item->email)
+                                                <div class="school-contact-line school-contact-line--email" title="{{ $item->email }}">
+                                                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                                                    <span>{{ $item->email }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="student-column">
                                         <div class="student-count">
-                                            <span class="count-number">{{ $item->siswa->count() }}</span>
+                                            <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                                            <span class="count-number">{{ $item->siswa_count }}</span>
                                             <small>siswa</small>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="pi-action-column pi-actions-2">
                                         <div class="action-buttons">
                                             <a href="{{ route('sekolah.edit', $item->id) }}" 
                                                class="btn btn-sm btn-warning" 
                                                title="Edit">
                                                 <i class="fas fa-edit"></i>
+                                                <span>Edit</span>
                                             </a>
                                             <button type="button" 
-                                                    class="btn btn-sm btn-danger" 
-                                                    onclick="confirmDelete({{ $item->id }}, '{{ addslashes($item->nama_sekolah) }}')"
+                                                    class="btn btn-sm btn-danger school-delete-button"
+                                                    data-school-id="{{ $item->id }}"
+                                                    data-school-name="{{ $item->nama_sekolah }}"
                                                     title="Hapus">
                                                 <i class="fas fa-trash"></i>
+                                                <span>Hapus</span>
                                             </button>
                                         </div>
                                     </td>
@@ -782,7 +820,7 @@
                 @include('partials.admin-empty-state', [
                     'icon' => 'fas fa-school',
                     'title' => 'Belum Ada Data Sekolah',
-                    'message' => 'Tambahkan sekolah pertama lebih dulu. Setelah itu admin bisa membuat tahun ajaran, kelas, dan data siswa.',
+                    'message' => 'Tambahkan sekolah pertama beserta susunan kelasnya, lalu lanjutkan dengan data siswa.',
                     'actionRoute' => route('sekolah.create'),
                     'actionText' => 'Tambah Sekolah Pertama'
                 ])
@@ -799,9 +837,7 @@
                         <i class="fas fa-exclamation-triangle text-warning"></i>
                         Konfirmasi Hapus
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
                     <p>Apakah Anda yakin ingin menghapus sekolah <strong id="schoolName"></strong>?</p>
@@ -811,7 +847,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i> Batal
                     </button>
                     <form method="POST" id="deleteForm" style="display: inline;">
@@ -828,16 +864,54 @@
 </div>
 
 <script>
-function confirmDelete(id, name) {
-    document.getElementById('schoolName').textContent = name;
-    document.getElementById('deleteForm').action = '{{ url("sekolah") }}/' + id;
-    $('#deleteModal').modal('show');
-}
-
 function exportData() {
     // Implementasi export data
     alert('Fitur export akan segera tersedia!');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModalElement = document.getElementById('deleteModal');
+    const deleteForm = document.getElementById('deleteForm');
+    const schoolName = document.getElementById('schoolName');
+
+    if (deleteModalElement && deleteForm && schoolName && window.bootstrap?.Modal) {
+        const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
+
+        document.querySelectorAll('.school-delete-button').forEach(function(button) {
+            button.addEventListener('click', function() {
+                schoolName.textContent = this.dataset.schoolName || '';
+                deleteForm.action = '{{ url("sekolah") }}/' + this.dataset.schoolId;
+                deleteModal.show();
+            });
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('schoolSearchInput');
+    const clearButton = document.getElementById('schoolSearchClear');
+    const searchForm = searchInput ? searchInput.closest('form') : null;
+
+    if (!searchInput || !clearButton || !searchForm) return;
+
+    const syncClearButton = function() {
+        clearButton.classList.toggle('is-visible', searchInput.value.trim().length > 0);
+    };
+
+    syncClearButton();
+    searchInput.addEventListener('input', syncClearButton);
+
+    clearButton.addEventListener('click', function() {
+        const hasAppliedSearch = new URLSearchParams(window.location.search).has('search');
+        searchInput.value = '';
+        syncClearButton();
+        searchInput.focus();
+
+        if (hasAppliedSearch) {
+            searchForm.requestSubmit();
+        }
+    });
+});
 
 // Auto-hide alerts
 document.addEventListener('DOMContentLoaded', function() {

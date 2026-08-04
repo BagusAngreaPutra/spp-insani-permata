@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -274,6 +275,7 @@
         margin-top: 1.5rem;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -296,12 +298,12 @@
                 <i class="fas fa-boxes-stacked"></i> Stok Barang Koperasi
             </h2>
 
-            <div>
-                <a href="{{ route('koperasi.penjualan.index') }}" class="btn-primary" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+            <div class="page-actions">
+                <a href="{{ route('koperasi.penjualan.index') }}" class="btn btn-info">
                     <i class="fas fa-cash-register"></i> Penjualan
                 </a>
 
-                <a href="{{ route('koperasi.create') }}" class="btn-primary">
+                <a href="{{ route('koperasi.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Tambah Barang
                 </a>
             </div>
@@ -412,7 +414,7 @@
                                     <a
                                         href="{{ route('koperasi.stok.edit', $item->id) }}"
                                         class="btn-edit"
-                                        style="background: linear-gradient(135deg, #0ea5e9, #0284c7);"
+                                        style="background: linear-gradient(135deg, #25845d, #1d6b4c);"
                                     >
                                         Stok
                                     </a>

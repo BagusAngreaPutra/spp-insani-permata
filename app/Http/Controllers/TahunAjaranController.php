@@ -6,13 +6,18 @@ use App\Models\TahunAjaran;
 use App\Models\LogAktivitas; // 👉 tambahkan
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class TahunAjaranController extends Controller
 {
     // 📌 Menampilkan daftar tahun ajaran
     public function index(Request $request)
     {
-        $tahunAjaran = TahunAjaran::all();
+        $tahunAjaran = TahunAjaran::query()
+            ->get()
+            ->sortByDesc(fn (TahunAjaran $tahun) => $tahun->periodBounds()[0] ?? -1)
+            ->values();
 
         // ✅ log aktivitas
         LogAktivitas::create([
@@ -38,21 +43,21 @@ class TahunAjaranController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return view('tahun_ajaran.create');
+        return view('tahun_ajaran.create', $this->formData());
     }
 
     // 📌 Proses simpan
     public function store(Request $request)
     {
-        $request->validate([
-            'nama_tahun' => 'required',
-            'aktif'      => 'boolean'
-        ]);
+        $validated = $this->validatePeriod($request);
 
-        $tahun = TahunAjaran::create([
-            'nama_tahun' => $request->nama_tahun,
-            'aktif'      => $request->aktif ? true : false,
-        ]);
+        $tahun = DB::transaction(function () use ($validated) {
+            if ($validated['aktif']) {
+                TahunAjaran::query()->update(['aktif' => false]);
+            }
+
+            return TahunAjaran::create($validated);
+        });
 
         // ✅ log aktivitas
         LogAktivitas::create([
@@ -78,31 +83,31 @@ class TahunAjaranController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return view('tahun_ajaran.edit', compact('tahun_ajaran'));
+        return view('tahun_ajaran.create', $this->formData($tahun_ajaran));
     }
 
     // 📌 Proses update
     public function update(Request $request, TahunAjaran $tahun_ajaran)
     {
-        $request->validate([
-            'nama_tahun' => 'required',
-            'aktif'      => 'boolean'
-        ]);
+        $validated = $this->validatePeriod($request, $tahun_ajaran);
 
         // Simpan data lama sebelum update
         $oldData = $tahun_ajaran->only(['nama_tahun', 'aktif']);
 
         // Update data
-        $tahun_ajaran->update([
-            'nama_tahun' => $request->nama_tahun,
-            'aktif'      => $request->aktif ? true : false,
-        ]);
+        DB::transaction(function () use ($tahun_ajaran, $validated) {
+            if ($validated['aktif']) {
+                TahunAjaran::whereKeyNot($tahun_ajaran->id)->update(['aktif' => false]);
+            }
+
+            $tahun_ajaran->update($validated);
+        });
 
         // Bandingkan perubahan
         $changes = [];
         $newData = [
-            'nama_tahun' => $request->nama_tahun,
-            'aktif'      => $request->aktif ? true : false,
+            'nama_tahun' => $validated['nama_tahun'],
+            'aktif'      => $validated['aktif'],
         ];
 
         foreach ($newData as $field => $newValue) {
@@ -138,6 +143,12 @@ class TahunAjaranController extends Controller
     // 📌 Hapus
     public function destroy(Request $request, TahunAjaran $tahun_ajaran)
     {
+        if ($tahun_ajaran->isInUse()) {
+            return redirect()
+                ->route('tahun_ajaran.index')
+                ->with('error', 'Tahun ajaran tidak dapat dihapus karena sudah digunakan oleh kelas, siswa, jenis pembayaran, atau tagihan.');
+        }
+
         $nama = $tahun_ajaran->nama_tahun;
         $tahun_ajaran->delete();
 
@@ -151,5 +162,48 @@ class TahunAjaranController extends Controller
         ]);
 
         return redirect()->route('tahun_ajaran.index')->with('success','Tahun ajaran dihapus.');
+    }
+
+    private function formData(?TahunAjaran $tahunAjaran = null): array
+    {
+        $periodLocked = $tahunAjaran?->isInUse() ?? false;
+        $academicYearOptions = TahunAjaran::periodOptions(20, $tahunAjaran?->nama_tahun);
+        $usedAcademicYears = TahunAjaran::query()
+            ->when($tahunAjaran, fn ($query) => $query->whereKeyNot($tahunAjaran->id))
+            ->pluck('nama_tahun')
+            ->map(fn ($period) => TahunAjaran::canonicalizePeriod($period))
+            ->filter()
+            ->values()
+            ->all();
+
+        return compact('tahunAjaran', 'academicYearOptions', 'usedAcademicYears', 'periodLocked');
+    }
+
+    private function validatePeriod(Request $request, ?TahunAjaran $tahunAjaran = null): array
+    {
+        $canonical = TahunAjaran::canonicalizePeriod($request->input('nama_tahun'));
+        if ($canonical) {
+            $request->merge(['nama_tahun' => $canonical]);
+        }
+
+        $allowedPeriods = $tahunAjaran?->isInUse()
+            ? array_filter([$tahunAjaran->label])
+            : TahunAjaran::periodOptions(20, $tahunAjaran?->nama_tahun);
+        $validated = $request->validate([
+            'nama_tahun' => [
+                'required',
+                Rule::in($allowedPeriods),
+                Rule::unique('tahun_ajaran', 'nama_tahun')->ignore($tahunAjaran?->id),
+            ],
+            'aktif' => ['nullable', 'boolean'],
+        ], [
+            'nama_tahun.in' => 'Pilih tahun ajaran yang tersedia pada daftar.',
+            'nama_tahun.unique' => 'Tahun ajaran tersebut sudah tersimpan.',
+        ]);
+
+        return [
+            'nama_tahun' => $validated['nama_tahun'],
+            'aktif' => (bool) ($validated['aktif'] ?? false),
+        ];
     }
 }

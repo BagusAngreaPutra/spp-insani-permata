@@ -3,6 +3,7 @@
 @section('content')
 @include('layouts.sidebar')
 
+@push('page-styles')
 <style>
 /* Memakai gaya utama seperti template */
 .main-content {
@@ -116,6 +117,7 @@
     box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
 }
 </style>
+@endpush
 
 <div class="main-content">
     <!-- Header dengan dropdown profile -->
@@ -140,16 +142,24 @@
                 @csrf
                 @method('PUT')
 
-                <label for="nama_admin" class="form-label">Nama Admin</label>
-                <input type="text" class="form-control" id="nama_admin" name="nama_admin"
-                    value="{{ old('nama_admin', $admin->nama_admin) }}" required>
+                <div class="admin-identity-grid">
+                    <div class="form-group">
+                        <label for="nama_admin" class="form-label"><i class="fas fa-id-card"></i> Nama Admin</label>
+                        <input type="text" class="form-control" id="nama_admin" name="nama_admin"
+                            value="{{ old('nama_admin', $admin->nama_admin) }}" required>
+                    </div>
 
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username"
-                    value="{{ old('username', $admin->username) }}" required>
+                    <div class="form-group">
+                        <label for="username" class="form-label"><i class="fas fa-at"></i> Username</label>
+                        <input type="text" class="form-control" id="username" name="username"
+                            value="{{ old('username', $admin->username) }}" required>
+                    </div>
 
-                <label for="password" class="form-label">Password (biarkan kosong jika tidak diubah)</label>
-                <input type="password" class="form-control" id="password" name="password">
+                    <div class="form-group">
+                        <label for="password" class="form-label"><i class="fas fa-key"></i> Password Baru</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Kosongkan jika tidak diubah">
+                    </div>
+                </div>
 
                 @if(Auth::user()->hasPermission('admin.permissions.manage'))
                     @include('admin.partials.permission-fields', [
@@ -161,12 +171,14 @@
                     <input type="hidden" name="role" value="{{ $admin->role }}">
                 @endif
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Update
-                </button>
-                <a href="{{ route('admin.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Batal
-                </a>
+                <div class="form-actions">
+                    <a href="{{ route('admin.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Batal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Perubahan
+                    </button>
+                </div>
             </form>
         </div>
     </div>

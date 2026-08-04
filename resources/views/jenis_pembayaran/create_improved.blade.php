@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
     .main-content {
         margin-left: 280px;
@@ -213,6 +214,7 @@
         color: #6b7280;
     }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')

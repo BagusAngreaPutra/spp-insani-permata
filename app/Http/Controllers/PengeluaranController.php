@@ -37,6 +37,8 @@ class PengeluaranController extends Controller
     // ✅ Simpan data baru
     public function store(Request $request)
     {
+        $this->normalizeCurrencyFields($request, ['jumlah']);
+
         $validated = $request->validate([
             'sekolah_id' => 'required|exists:sekolah,id',
             'tanggal'    => 'required|date',
@@ -69,6 +71,8 @@ class PengeluaranController extends Controller
     // ✅ Update data pengeluaran
     public function update(Request $request, Pengeluaran $pengeluaran)
     {
+        $this->normalizeCurrencyFields($request, ['jumlah']);
+
         $validated = $request->validate([
             'sekolah_id' => 'required|exists:sekolah,id',
             'tanggal'    => 'required|date',

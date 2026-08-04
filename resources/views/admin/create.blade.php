@@ -2,6 +2,7 @@
 @include('layouts.sidebar')
 
 @section('content')
+@push('page-styles')
 <style>
 .main-content {
     margin-left: 280px;
@@ -114,6 +115,7 @@
     box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
 }
 </style>
+@endpush
 
 <div class="main-content">
     @include('layouts.header')
@@ -134,16 +136,24 @@
 
             <form action="{{ route('admin.store') }}" method="POST">
                 @csrf
-                <label for="nama_admin" class="form-label">Nama Admin</label>
-                <input type="text" id="nama_admin" name="nama_admin" class="form-control"
-                       value="{{ old('nama_admin') }}" required>
+                <div class="admin-identity-grid">
+                    <div class="form-group">
+                        <label for="nama_admin" class="form-label"><i class="fas fa-id-card"></i> Nama Admin</label>
+                        <input type="text" id="nama_admin" name="nama_admin" class="form-control"
+                               value="{{ old('nama_admin') }}" required>
+                    </div>
 
-                <label for="username" class="form-label">Username</label>
-                <input type="text" id="username" name="username" class="form-control"
-                       value="{{ old('username') }}" required>
+                    <div class="form-group">
+                        <label for="username" class="form-label"><i class="fas fa-at"></i> Username</label>
+                        <input type="text" id="username" name="username" class="form-control"
+                               value="{{ old('username') }}" required>
+                    </div>
 
-                <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-control" required>
+                    <div class="form-group">
+                        <label for="password" class="form-label"><i class="fas fa-key"></i> Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                </div>
 
                 @if(Auth::user()->hasPermission('admin.permissions.manage'))
                     @include('admin.partials.permission-fields', [
@@ -155,12 +165,14 @@
                     <input type="hidden" name="role" value="admin">
                 @endif
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Simpan
-                </button>
-                <a href="{{ route('admin.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Batal
-                </a>
+                <div class="form-actions">
+                    <a href="{{ route('admin.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Batal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Admin
+                    </button>
+                </div>
             </form>
         </div>
     </div>
