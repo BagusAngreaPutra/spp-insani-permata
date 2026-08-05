@@ -310,6 +310,16 @@
             </div>
 
             <div class="form-group">
+                <label for="target_type">Target Pembayaran</label>
+                <select name="target_type" id="target_type">
+                    <option value="">Semua Target</option>
+                    <option value="all" {{ $selectedTarget === 'all' ? 'selected' : '' }}>Semua Siswa</option>
+                    <option value="specific_students" {{ $selectedTarget === 'specific_students' ? 'selected' : '' }}>Siswa Tertentu</option>
+                    <option value="specific_classes" {{ $selectedTarget === 'specific_classes' ? 'selected' : '' }}>Kelas Tertentu</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="search">Cari (Nama / Tipe / Tahun Ajaran)</label>
                 <input type="text" name="search" id="search" value="{{ $search }}" placeholder="Ketik nama, tipe, atau tahun ajaran...">
             </div>

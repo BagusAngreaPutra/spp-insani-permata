@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export APPPATH=$HOME/public_html/spp
+    - /bin/bash $APPPATH/scripts/cpanel-deploy.sh

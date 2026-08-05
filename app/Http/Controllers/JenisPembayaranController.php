@@ -24,12 +24,24 @@ class JenisPembayaranController extends Controller
     {
         $sekolah = Sekolah::all();
         $selectedSekolah = $request->input('sekolah_id');
+        $selectedTarget = $request->input('target_type');
         $search = $request->input('search');
 
         $query = JenisPembayaran::with(['sekolah', 'tahunAjaran', 'siswa', 'kelas']);
 
         if (!empty($selectedSekolah)) {
             $query->where('sekolah_id', $selectedSekolah);
+        }
+
+        if (in_array($selectedTarget, ['all', 'specific_students', 'specific_classes'], true)) {
+            if ($selectedTarget === 'all') {
+                $query->where(function ($targetQuery) {
+                    $targetQuery->where('target_type', 'all')
+                        ->orWhereNull('target_type');
+                });
+            } else {
+                $query->where('target_type', $selectedTarget);
+            }
         }
 
         if (!empty($search)) {
@@ -46,6 +58,7 @@ class JenisPembayaranController extends Controller
             'jenis'           => $jenis,
             'sekolah'         => $sekolah,
             'selectedSekolah' => $selectedSekolah,
+            'selectedTarget'  => $selectedTarget,
             'search'          => $search,
         ]);
     }
