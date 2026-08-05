@@ -730,7 +730,7 @@
                                                                 : trim((string) $kelasItem->nama_kelas);
                                                         @endphp
                                                         <span class="school-class-chip">
-                                                            Tingkat {{ $kelasItem->tingkat }}{{ $className ? ' '.$className : '' }}
+                                                            {{ $kelasItem->label_tingkat }}{{ $className ? ' '.$className : '' }}
                                                         </span>
                                                     @endforeach
                                                     @if($item->kelas_count > 3)

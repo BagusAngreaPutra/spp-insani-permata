@@ -247,7 +247,7 @@ class JenisPembayaranController extends Controller
                             'nama' => $s->nama,
                             'nis' => $s->nis,
                             'kelas_id' => $s->kelas_id,
-                            'kelas_nama' => $s->kelas ? "Kelas {$s->kelas->tingkat} - {$s->kelas->nama_kelas}" : 'Kelas tidak diketahui'
+                            'kelas_nama' => $s->kelas ? $s->kelas->kelas : 'Kelas tidak diketahui'
                         ];
                     });
 

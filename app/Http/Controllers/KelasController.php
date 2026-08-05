@@ -54,7 +54,7 @@ class KelasController extends Controller
         $tahunAjaran = TahunAjaran::validPeriods()->where('aktif', true)->values();
 
         // buat array tingkat untuk ditampilkan di dropdown
-        $tingkatOptions = range(1, 6);
+        $tingkatOptions = range(1, 12);
 
         return view('kelas.create', compact('sekolah', 'tahunAjaran', 'tingkatOptions'));
     }
@@ -64,16 +64,17 @@ class KelasController extends Controller
         $request->validate([
             'sekolah_id'      => 'required|exists:sekolah,id',
             'nama_kelas'      => 'required|string|max:100',
-            'tingkat'         => ['required', Rule::in([1,2,3,4,5,6])],
+            'tingkat'         => ['required', Rule::in(array_merge(['none'], array_map('strval', range(1, 12))))],
             'tahun_ajaran_id' => 'nullable|exists:tahun_ajaran,id',
         ]);
 
         $namaKelas = $request->nama_kelas === '-' ? '' : $request->nama_kelas;
+        $tingkat = $request->tingkat === 'none' ? null : (int) $request->tingkat;
 
         $kelas = Kelas::create([
             'sekolah_id'      => $request->sekolah_id,
             'nama_kelas'      => $namaKelas,
-            'tingkat'         => $request->tingkat,
+            'tingkat'         => $tingkat,
             'tahun_ajaran_id' => $request->tahun_ajaran_id,
         ]);
 
@@ -81,7 +82,7 @@ class KelasController extends Controller
         LogAktivitas::create([
             'aktor_type' => 'admin',
             'aktor_id'   => Auth::guard('web')->id(),
-            'aktivitas'  => 'Menambahkan kelas: ' . $kelas->nama_kelas . ' (Tingkat ' . $kelas->tingkat . ')',
+            'aktivitas'  => 'Menambahkan kelas: ' . $kelas->kelas,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
@@ -93,7 +94,7 @@ class KelasController extends Controller
     {
         $sekolah = Sekolah::all();
         $tahunAjaran = TahunAjaran::validPeriods();
-        $tingkatOptions = range(1, 6);
+        $tingkatOptions = range(1, 12);
 
         return view('kelas.edit', compact('kela', 'sekolah', 'tahunAjaran', 'tingkatOptions'));
     }
@@ -103,7 +104,7 @@ class KelasController extends Controller
         $request->validate([
             'sekolah_id'      => 'required|exists:sekolah,id',
             'nama_kelas'      => 'required|string|max:100',
-            'tingkat'         => ['required', Rule::in([1,2,3,4,5,6])],
+            'tingkat'         => ['required', Rule::in(array_merge(['none'], array_map('strval', range(1, 12))))],
             'tahun_ajaran_id' => 'nullable|exists:tahun_ajaran,id',
         ]);
 
@@ -112,11 +113,12 @@ class KelasController extends Controller
 
         // ✅ Update data
         $namaKelas = $request->nama_kelas === '-' ? '' : $request->nama_kelas;
+        $tingkat = $request->tingkat === 'none' ? null : (int) $request->tingkat;
         
         $kela->update([
             'sekolah_id'      => $request->sekolah_id,
             'nama_kelas'      => $namaKelas,
-            'tingkat'         => $request->tingkat,
+            'tingkat'         => $tingkat,
             'tahun_ajaran_id' => $request->tahun_ajaran_id,
         ]);
 
@@ -125,7 +127,7 @@ class KelasController extends Controller
         $newData = [
             'sekolah_id'      => $request->sekolah_id,
             'nama_kelas'      => $namaKelas,
-            'tingkat'         => $request->tingkat,
+            'tingkat'         => $tingkat,
             'tahun_ajaran_id' => $request->tahun_ajaran_id,
         ];
 
@@ -157,8 +159,7 @@ class KelasController extends Controller
 
     public function destroy(Kelas $kela)
     {
-        $nama = $kela->nama_kelas;
-        $tingkat = $kela->tingkat;
+        $labelKelas = $kela->kelas;
 
         $kela->delete();
 
@@ -166,7 +167,7 @@ class KelasController extends Controller
         LogAktivitas::create([
             'aktor_type' => 'admin',
             'aktor_id'   => Auth::guard('web')->id(),
-            'aktivitas'  => 'Menghapus kelas: ' . $nama . ' (Tingkat ' . $tingkat . ')',
+            'aktivitas'  => 'Menghapus kelas: ' . $labelKelas,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);

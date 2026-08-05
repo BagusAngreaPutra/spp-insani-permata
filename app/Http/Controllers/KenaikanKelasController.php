@@ -58,6 +58,12 @@ class KenaikanKelasController extends Controller
                     continue;
                 }
 
+                if ($kelasLama->tingkat === null) {
+                    Log::warning("Kelas tanpa tingkat tidak dapat diproses otomatis untuk siswa ID {$siswa->id}");
+                    $jumlahGagal++;
+                    continue;
+                }
+
                 $durasiPendidikan = $kelasLama->sekolah->durasi_pendidikan;
 
                 // ✅ Jika kelas tingkat terakhir → lulus

@@ -18,8 +18,8 @@
     $classLabel = !$student?->kelas
         ? 'Kelas belum diatur'
         : (in_array($className, ['', '-', '–'], true)
-            ? 'Tingkat ' . $student->kelas->tingkat
-            : 'Tingkat ' . $student->kelas->tingkat . ' · ' . $className);
+            ? $student->kelas->label_tingkat
+            : $student->kelas->label_tingkat . ' · ' . $className);
     $rawNote = trim((string) ($receipt['note'] ?? ''));
     $showNote = $rawNote !== ''
         && !preg_match('/^Pembayaran multi-tagihan(?:\s+\(Diskon:.*\))?$/i', $rawNote);

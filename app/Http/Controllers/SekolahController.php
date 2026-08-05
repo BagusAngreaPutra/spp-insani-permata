@@ -102,7 +102,7 @@ class SekolahController extends Controller
         $tahunAjaranAktifId = optional($tahunAjaran->firstWhere('aktif', true))->id;
         $kelasRows = $sekolah->kelas->map(fn (Kelas $kelas) => [
             'id' => $kelas->id,
-            'tingkat' => $kelas->tingkat,
+            'tingkat' => $kelas->tingkat ?? 'none',
             'nama_kelas' => trim((string) $kelas->nama_kelas) === '-' ? '' : $kelas->nama_kelas,
             'tahun_ajaran_id' => $kelas->tahun_ajaran_id,
             'hapus' => 0,
@@ -180,7 +180,10 @@ class SekolahController extends Controller
             'durasi_pendidikan' => ['nullable', 'integer', 'min:1', 'max:12'],
             'kelas' => ['nullable', 'array', 'max:100'],
             'kelas.*.id' => ['nullable', 'integer', 'exists:kelas,id'],
-            'kelas.*.tingkat' => ['nullable', 'integer', 'min:1', 'max:12'],
+            'kelas.*.tingkat' => [
+                'nullable',
+                Rule::in(array_merge(['none'], array_map('strval', range(1, 12)))),
+            ],
             'kelas.*.nama_kelas' => ['nullable', 'string', 'max:100'],
             'kelas.*.tahun_ajaran_id' => ['nullable', 'integer', 'exists:tahun_ajaran,id'],
             'kelas.*.hapus' => ['nullable', 'boolean'],
@@ -195,9 +198,7 @@ class SekolahController extends Controller
             'durasi_pendidikan.min' => 'Durasi pendidikan minimal 1 tahun.',
             'durasi_pendidikan.max' => 'Durasi pendidikan maksimal 12 tahun.',
             'kelas.max' => 'Maksimal 100 kelas dapat disimpan dalam satu sekolah.',
-            'kelas.*.tingkat.integer' => 'Tingkat kelas harus berupa angka.',
-            'kelas.*.tingkat.min' => 'Tingkat kelas minimal 1.',
-            'kelas.*.tingkat.max' => 'Tingkat kelas maksimal 12.',
+            'kelas.*.tingkat.in' => 'Pilihan tingkat kelas tidak valid.',
             'kelas.*.nama_kelas.max' => 'Nama kelas maksimal 100 karakter.',
             'kelas.*.tahun_ajaran_id.exists' => 'Tahun ajaran pada salah satu kelas tidak valid.',
         ]);
@@ -215,13 +216,16 @@ class SekolahController extends Controller
                 }
 
                 $id = filled($row['id'] ?? null) ? (int) $row['id'] : null;
-                $tingkat = filled($row['tingkat'] ?? null) ? (int) $row['tingkat'] : null;
+                $rawTingkat = $row['tingkat'] ?? null;
+                $tanpaTingkat = $rawTingkat === 'none';
+                $tingkat = filled($rawTingkat) && !$tanpaTingkat ? (int) $rawTingkat : null;
+                $tingkatDipilih = $tanpaTingkat || $tingkat !== null;
                 $namaKelas = trim((string) ($row['nama_kelas'] ?? ''));
                 $tahunAjaranId = filled($row['tahun_ajaran_id'] ?? null)
                     ? (int) $row['tahun_ajaran_id']
                     : null;
                 $hapus = filter_var($row['hapus'] ?? false, FILTER_VALIDATE_BOOLEAN);
-                $isEmpty = !$id && !$tingkat && $namaKelas === '';
+                $isEmpty = !$id && !$tingkatDipilih && $namaKelas === '';
 
                 if ($isEmpty || ($hapus && !$id)) {
                     continue;
@@ -236,13 +240,13 @@ class SekolahController extends Controller
                     continue;
                 }
 
-                if (!$tingkat) {
-                    $validator->errors()->add("kelas.{$index}.tingkat", 'Tingkat wajib dipilih untuk setiap kelas.');
+                if (!$tingkatDipilih) {
+                    $validator->errors()->add("kelas.{$index}.tingkat", 'Pilih tingkat atau opsi Tanpa tingkat untuk setiap kelas.');
                     continue;
                 }
 
                 $normalizedName = mb_strtolower(preg_replace('/\s+/', ' ', $namaKelas));
-                $duplicateKey = implode('|', [$tingkat, $normalizedName, $tahunAjaranId ?? 'none']);
+                $duplicateKey = implode('|', [$tanpaTingkat ? 'none' : $tingkat, $normalizedName, $tahunAjaranId ?? 'none']);
 
                 if (isset($seen[$duplicateKey])) {
                     $validator->errors()->add(
@@ -260,9 +264,13 @@ class SekolahController extends Controller
         $kelasRows = collect($request->input('kelas', []))
             ->filter(fn ($row) => is_array($row))
             ->map(function ($row) {
+                $rawTingkat = $row['tingkat'] ?? null;
+                $tanpaTingkat = $rawTingkat === 'none';
+
                 return [
                     'id' => filled($row['id'] ?? null) ? (int) $row['id'] : null,
-                    'tingkat' => filled($row['tingkat'] ?? null) ? (int) $row['tingkat'] : null,
+                    'tingkat' => filled($rawTingkat) && !$tanpaTingkat ? (int) $rawTingkat : null,
+                    'tingkat_dipilih' => $tanpaTingkat || filled($rawTingkat),
                     'nama_kelas' => trim((string) ($row['nama_kelas'] ?? '')),
                     'tahun_ajaran_id' => filled($row['tahun_ajaran_id'] ?? null)
                         ? (int) $row['tahun_ajaran_id']
@@ -272,7 +280,7 @@ class SekolahController extends Controller
             })
             ->filter(function ($row) {
                 return $row['id']
-                    || $row['tingkat']
+                    || $row['tingkat_dipilih']
                     || $row['nama_kelas'] !== '';
             })
             ->values()
@@ -312,7 +320,7 @@ class SekolahController extends Controller
                 $studentCount = $kelas->siswa()->count();
                 if ($studentCount > 0) {
                     throw ValidationException::withMessages([
-                        "kelas.{$index}.id" => "Kelas Tingkat {$kelas->tingkat} {$kelas->nama_kelas} tidak dapat dihapus karena masih memiliki {$studentCount} siswa.",
+                        "kelas.{$index}.id" => "Kelas {$kelas->kelas} tidak dapat dihapus karena masih memiliki {$studentCount} siswa.",
                     ]);
                 }
 
@@ -320,7 +328,7 @@ class SekolahController extends Controller
                 continue;
             }
 
-            if (!$row['tingkat']) {
+            if (!$row['tingkat_dipilih']) {
                 continue;
             }
 

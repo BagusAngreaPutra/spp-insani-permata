@@ -325,7 +325,7 @@
                                 <option value="">-- Pilih Kelas --</option>
                                 @foreach($kelas as $k)
                                     @php
-                                        $labelKelas = 'Tingkat ' . $k->tingkat;
+                                        $labelKelas = $k->label_tingkat;
                                         if (!empty($k->nama_kelas)) $labelKelas .= ' ' . $k->nama_kelas;
                                     @endphp
                                     <option value="{{ $k->id }}" {{ old('kelas_id', $siswa->kelas_id) == $k->id ? 'selected' : '' }}>
@@ -349,7 +349,7 @@
                                         success: function (data) {
                                             $('#kelas_id').empty().append('<option value="">-- Pilih Kelas --</option>');
                                             data.forEach(function (k) {
-                                                let label = 'Tingkat ' + k.tingkat;
+                                                let label = k.label_tingkat || (k.tingkat === null ? 'Tanpa tingkat' : 'Tingkat ' + k.tingkat);
                                                 if (k.nama_kelas) label += ' ' + k.nama_kelas;
                                                 $('#kelas_id').append(`<option value="${k.id}">${label}</option>`);
                                             });

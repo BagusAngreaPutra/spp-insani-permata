@@ -317,7 +317,7 @@
                         <tr>
                             <td>{{ $loop->iteration + ($kelas->currentPage() - 1) * $kelas->perPage() }}</td>
                             <td>{{ $item->nama_kelas ?: '' }}</td>
-                            <td>{{ $item->tingkat }}</td>
+                            <td>{{ $item->label_tingkat }}</td>
                             <td>{{ $item->sekolah->nama_sekolah ?? '-' }}</td>
                             <td>{{ $item->tahunAjaran->nama_tahun ?? '-' }}</td>
                             <td class="flex gap-2">

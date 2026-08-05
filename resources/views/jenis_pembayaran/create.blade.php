@@ -768,7 +768,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function classLabel(item) {
         const name = String(item.nama_kelas || '').trim();
-        return name && name !== '-' ? `Tingkat ${item.tingkat} · ${name}` : `Tingkat ${item.tingkat}`;
+        const level = item.label_tingkat || (item.tingkat === null ? 'Tanpa tingkat' : `Tingkat ${item.tingkat}`);
+        return name && name !== '-' ? `${level} · ${name}` : level;
     }
 
     function renderStudents() {

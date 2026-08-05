@@ -11,7 +11,7 @@
         </span>
         <div>
             <h4>Data Kelas</h4>
-            <p>Kelola tingkat, nama rombel, dan tahun ajaran langsung dari sekolah ini.</p>
+            <p>Kelola tingkat atau kelas tanpa tingkat, nama rombel, dan tahun ajaran langsung dari sekolah ini.</p>
         </div>
         <button type="button" class="btn btn-primary school-class-add" id="addClassRow">
             <i class="fas fa-plus" aria-hidden="true"></i>
@@ -49,7 +49,9 @@
                             <span class="school-class-number" data-class-number>{{ $loop->iteration }}</span>
                             <div>
                                 <strong data-class-title>
-                                    {{ filled($row['tingkat'] ?? null) ? 'Tingkat '.$row['tingkat'].' '.($row['nama_kelas'] ?? '') : 'Kelas baru' }}
+                                    {{ ($row['tingkat'] ?? null) === 'none'
+                                        ? trim('Tanpa tingkat '.($row['nama_kelas'] ?? ''))
+                                        : (filled($row['tingkat'] ?? null) ? trim('Tingkat '.$row['tingkat'].' '.($row['nama_kelas'] ?? '')) : 'Kelas baru') }}
                                 </strong>
                                 <span>{{ $classId ? 'Kelas tersimpan' : 'Kelas baru' }}</span>
                             </div>
@@ -86,6 +88,7 @@
                                     class="form-control @error('kelas.'.$index.'.tingkat') is-invalid @enderror"
                                     data-class-level>
                                 <option value="">Pilih tingkat</option>
+                                <option value="none" @selected(($row['tingkat'] ?? null) === 'none')>Tanpa tingkat</option>
                                 @for($level = 1; $level <= 12; $level++)
                                     <option value="{{ $level }}" @selected((string) ($row['tingkat'] ?? '') === (string) $level)>
                                         Tingkat {{ $level }}
@@ -186,6 +189,7 @@
                 </label>
                 <select name="kelas[__INDEX__][tingkat]" id="kelas___INDEX___tingkat" class="form-control" data-class-level>
                     <option value="">Pilih tingkat</option>
+                    <option value="none">Tanpa tingkat</option>
                     @for($level = 1; $level <= 12; $level++)
                         <option value="{{ $level }}">Tingkat {{ $level }}</option>
                     @endfor
@@ -246,7 +250,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const level = row.querySelector('[data-class-level]')?.value || '';
         const name = row.querySelector('[data-class-name]')?.value.trim() || '';
         const title = row.querySelector('[data-class-title]');
-        if (title) title.textContent = level ? `Tingkat ${level}${name ? ` ${name}` : ''}` : 'Kelas baru';
+        if (!title) return;
+
+        if (level === 'none') {
+            title.textContent = `Tanpa tingkat${name ? ` ${name}` : ''}`;
+        } else {
+            title.textContent = level ? `Tingkat ${level}${name ? ` ${name}` : ''}` : 'Kelas baru';
+        }
     };
 
     const refresh = function () {

@@ -228,6 +228,9 @@
                         <label for="tingkat"><i class="fas fa-layer-group"></i> Tingkat</label>
                         <select name="tingkat" id="tingkat" class="form-control">
                             <option value="">Semua tingkat</option>
+                            @if($adaKelasTanpaTingkat)
+                                <option value="none" {{ request('tingkat') === 'none' ? 'selected' : '' }}>Tanpa tingkat</option>
+                            @endif
                             @foreach($daftarTingkat as $tingkatItem)
                                 <option value="{{ $tingkatItem }}" {{ (string) request('tingkat') === (string) $tingkatItem ? 'selected' : '' }}>
                                     Tingkat {{ $tingkatItem }}
@@ -339,7 +342,7 @@
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td class="class-name">{{ $className }}</td>
-                                    <td>Tingkat {{ $kelas->tingkat }}</td>
+                                    <td>{{ $kelas->label_tingkat }}</td>
                                     <td>{{ $kelas->tahunAjaran?->label ?? '-' }}</td>
                                     <td>{{ number_format($kelas->siswa_count, 0, ',', '.') }} siswa</td>
                                 </tr>

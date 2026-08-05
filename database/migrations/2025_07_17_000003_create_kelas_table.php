@@ -17,7 +17,7 @@ return new class extends Migration
         $table->unsignedBigInteger('sekolah_id');
         $table->unsignedBigInteger('tahun_ajaran_id')->nullable();
         $table->string('nama_kelas', 255);
-        $table->integer('tingkat');
+        $table->integer('tingkat')->nullable();
         $table->timestamps();
 
         $table->foreign('sekolah_id')->references('id')->on('sekolah')->onDelete('cascade');

@@ -13,8 +13,8 @@
     $classLabel = !$siswa->kelas
         ? 'Kelas belum diatur'
         : (in_array($className, ['', '-', '–'], true)
-            ? 'Tingkat ' . $siswa->kelas->tingkat
-            : 'Tingkat ' . $siswa->kelas->tingkat . ' · ' . $className);
+            ? $siswa->kelas->label_tingkat
+            : $siswa->kelas->label_tingkat . ' · ' . $className);
     $studentInitial = strtoupper(substr($siswa->nama, 0, 1));
     $groupedTagihanList = collect($tagihanList)
         ->filter(fn ($item) => $item['is_grouped'])

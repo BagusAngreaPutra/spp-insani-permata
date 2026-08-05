@@ -162,7 +162,8 @@
                 <label class="form-label">Tingkat</label>
                 <select name="tingkat" class="form-control" required>
                     <option value="">-- Pilih Tingkat --</option>
-                    @for($i = 1; $i <= 6; $i++)
+                    <option value="none" {{ old('tingkat', $kela->tingkat ?? 'none') === 'none' ? 'selected' : '' }}>Tanpa tingkat</option>
+                    @for($i = 1; $i <= 12; $i++)
                         <option value="{{ $i }}" {{ old('tingkat', $kela->tingkat) == $i ? 'selected' : '' }}>
                             Kelas {{ $i }}
                         </option>

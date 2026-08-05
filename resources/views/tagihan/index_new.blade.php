@@ -18,8 +18,8 @@
         $name = trim((string) $kelas->nama_kelas);
 
         return in_array($name, ['', '-', '–'], true)
-            ? 'Tingkat ' . $kelas->tingkat
-            : 'Tingkat ' . $kelas->tingkat . ' · ' . $name;
+            ? $kelas->label_tingkat
+            : $kelas->label_tingkat . ' · ' . $name;
     };
     $selectedContext = match (true) {
         (bool) $selectedKelas => ($selectedSekolah?->nama_sekolah

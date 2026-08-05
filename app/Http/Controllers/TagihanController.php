@@ -621,8 +621,8 @@ class TagihanController extends Controller
                 $classLabel = !$siswa->kelas
                     ? 'Kelas belum diatur'
                     : (in_array($className, ['', '-', '–'], true)
-                        ? 'Tingkat ' . $siswa->kelas->tingkat
-                        : 'Tingkat ' . $siswa->kelas->tingkat . ' · ' . $className);
+                        ? $siswa->kelas->label_tingkat
+                        : $siswa->kelas->label_tingkat . ' · ' . $className);
 
                 return [
                     'id' => $siswa->id,

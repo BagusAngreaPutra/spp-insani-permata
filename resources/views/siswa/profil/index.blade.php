@@ -105,7 +105,7 @@
                 </tr>
                 <tr>
                     <th>Kelas</th>
-                     <td>Tingkat {{ $siswa->kelas->tingkat ?? '-' }} {{ $siswa->kelas->nama ?? '-' }}</td>
+                     <td>{{ $siswa->kelas?->kelas ?? '-' }}</td>
                 </tr>
                 <tr>
                     <th>Email</th>

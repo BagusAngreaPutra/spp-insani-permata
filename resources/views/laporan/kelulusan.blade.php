@@ -397,8 +397,8 @@
                             @php
                                 $className = trim((string) $k->nama_kelas);
                                 $classLabel = in_array($className, ['', '-', '–'], true)
-                                    ? 'Tingkat '.$k->tingkat
-                                    : 'Tingkat '.$k->tingkat.' · '.$className;
+                                    ? $k->label_tingkat
+                                    : $k->label_tingkat.' · '.$className;
                             @endphp
                             <option value="{{ $k->id }}"
                                     data-school-id="{{ $k->sekolah_id }}"
@@ -454,7 +454,7 @@
                         <td class="align-middle text-nowrap">{{ $k->sekolah->nama_sekolah ?? '-' }}</td>
                         <td class="align-middle text-nowrap">
                             @if($k->kelas)
-                                {{ $k->kelas->tingkat }} {{ $k->kelas->nama_kelas }}
+                                {{ $k->kelas->kelas }}
                             @else
                                 -
                             @endif

@@ -28,6 +28,7 @@ class LaporanSekolahController extends Controller
             ->distinct()
             ->orderBy('tingkat')
             ->pluck('tingkat');
+        $adaKelasTanpaTingkat = Kelas::query()->whereNull('tingkat')->exists();
 
         $ringkasan = [
             'sekolah' => $sekolahs->count(),
@@ -45,6 +46,7 @@ class LaporanSekolahController extends Controller
             'daftarSekolah',
             'daftarTahun',
             'daftarTingkat',
+            'adaKelasTanpaTingkat',
             'ringkasan',
             'tanggalLaporan'
         ));
@@ -88,9 +90,7 @@ class LaporanSekolahController extends Controller
 
             foreach ($kelasRows as $kelas) {
                 $contact = $sekolah->kontak ?: ($sekolah->telepon ?: '-');
-                $classLabel = $kelas
-                    ? trim('Tingkat '.$kelas->tingkat.' '.$kelas->nama_kelas)
-                    : 'Belum ada kelas';
+                $classLabel = $kelas?->kelas ?? 'Belum ada kelas';
 
                 $sheet->setCellValue('A'.$row, $number++);
                 $sheet->setCellValue('B'.$row, $sekolah->nama_sekolah);
@@ -179,7 +179,13 @@ class LaporanSekolahController extends Controller
         }
 
         if ($request->filled('tingkat')) {
-            $query->where('tingkat', trim((string) $request->input('tingkat')));
+            $tingkat = trim((string) $request->input('tingkat'));
+
+            if ($tingkat === 'none') {
+                $query->whereNull('tingkat');
+            } else {
+                $query->where('tingkat', $tingkat);
+            }
         }
     }
 }

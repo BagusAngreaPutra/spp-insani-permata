@@ -381,8 +381,8 @@
                                 @php
                                     $className = trim((string) $k->nama_kelas);
                                     $classLabel = in_array($className, ['', '-', '–'], true)
-                                        ? 'Tingkat '.$k->tingkat
-                                        : 'Tingkat '.$k->tingkat.' · '.$className;
+                                        ? $k->label_tingkat
+                                        : $k->label_tingkat.' · '.$className;
                                 @endphp
                                 <option value="{{ $k->id }}"
                                         data-school-id="{{ $k->sekolah_id }}"
@@ -441,8 +441,8 @@
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $r->siswa->nama }}</td>
                             <td>{{ $r->siswa->sekolah->nama_sekolah ?? '-' }}</td>
-                            <td>{{ 'Tingkat ' . ($r->kelasAwal->tingkat ?? '-') . ' ' . ($r->kelasAwal->nama_kelas ?? '-') }}</td>
-                            <td>{{ 'Tingkat ' . ($r->kelasBaru->tingkat ?? '-') . ' ' . ($r->kelasBaru->nama_kelas ?? '-') }}</td>
+                            <td>{{ $r->kelasAwal?->kelas ?? '-' }}</td>
+                            <td>{{ $r->kelasBaru?->kelas ?? '-' }}</td>
                             <td>{{ $r->tahunAjaran->nama_tahun ?? '-' }}</td>
                             <td>
                                 @if($r->tanggal_kenaikan)

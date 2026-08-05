@@ -589,7 +589,7 @@
                                 @foreach($kelasBySekolah as $index => $kelas)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
-                                        <td>Tingkat {{ $kelas->tingkat }} {{ $kelas->nama_kelas }}</td>
+                                        <td>{{ $kelas->kelas }}</td>
                                         <td>{{ $kelas->siswa->count() }}</td>
                                         
                                     </tr>

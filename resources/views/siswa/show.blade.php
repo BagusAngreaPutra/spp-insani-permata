@@ -6,7 +6,7 @@
     $studentName = trim($siswa->nama ?: 'Siswa');
     $studentInitial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($studentName, 0, 1));
     $className = $siswa->kelas
-        ? 'Tingkat '.$siswa->kelas->tingkat.' '.$siswa->kelas->nama_kelas
+        ? $siswa->kelas->kelas
         : '-';
     $studentStatus = $siswa->status ?: 'Tidak tersedia';
     $isActive = in_array(strtolower((string) $siswa->status), ['aktif', 'active'], true);

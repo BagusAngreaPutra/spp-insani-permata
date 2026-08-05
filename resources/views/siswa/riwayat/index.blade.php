@@ -228,8 +228,8 @@
                                 @php
                                     $className = trim((string) $kelas->nama_kelas);
                                     $classLabel = in_array($className, ['', '-', '–'], true)
-                                        ? 'Tingkat '.$kelas->tingkat
-                                        : 'Tingkat '.$kelas->tingkat.' · '.$className;
+                                        ? $kelas->label_tingkat
+                                        : $kelas->label_tingkat.' · '.$className;
                                 @endphp
                                 <option value="{{ $kelas->id }}"
                                         data-school-id="{{ $kelas->sekolah_id }}"

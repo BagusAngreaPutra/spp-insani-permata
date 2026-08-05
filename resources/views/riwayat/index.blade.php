@@ -14,8 +14,8 @@
         $name = trim((string) $kelas->nama_kelas);
 
         return in_array($name, ['', '-', '–'], true)
-            ? 'Tingkat ' . $kelas->tingkat
-            : 'Tingkat ' . $kelas->tingkat . ' · ' . $name;
+            ? $kelas->label_tingkat
+            : $kelas->label_tingkat . ' · ' . $name;
     };
     $selectedSchoolName = $selectedSekolah
         ? optional($sekolahList->firstWhere('id', $selectedSekolah))->nama_sekolah

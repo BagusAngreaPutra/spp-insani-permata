@@ -31,7 +31,7 @@ class Kelas extends Model
     }
 
     // 👉 Accessor untuk nama sekolah
-    protected $appends = ['nama_sekolah', 'nama_tahun', 'kelas'];
+    protected $appends = ['nama_sekolah', 'nama_tahun', 'label_tingkat', 'kelas'];
 
     public function getNamaSekolahAttribute()
     {
@@ -44,9 +44,14 @@ class Kelas extends Model
     }
 
     // 👉 Accessor untuk gabungan tingkat + nama_kelas
+    public function getLabelTingkatAttribute()
+    {
+        return $this->tingkat === null ? 'Tanpa tingkat' : 'Tingkat ' . $this->tingkat;
+    }
+
     public function getKelasAttribute()
     {
-        return 'Tingkat ' . $this->tingkat . ' ' . $this->nama_kelas;
+        return trim($this->label_tingkat . ' ' . $this->nama_kelas);
     }
 
     // 👉 Relasi ke Siswa
